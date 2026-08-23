@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Registro de Proveedores — Feria</title>
+<meta name="theme-color" content="#1B2A41">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Feria China">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+
+<style>
+  :root{
+    --ink: #1B2A41;
+    --ink-2: #2C4059;
+    --paper: #F7F3EC;
+    --paper-2: #EFE8DA;
+    --brass: #B8873F;
+    --brass-dark: #8F6A2E;
+    --clay: #A8442E;
+    --moss: #4C7A5E;
+    --slate: #5B6B7C;
+    --line: #D9D0BC;
+    --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+    --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-tap-highlight-color:transparent;min-height:100vh;}
+  .app{max-width:640px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative;}
+
+  .header{background:var(--ink);color:var(--paper);padding:18px 20px 16px;position:relative;overflow:hidden;}
+  .header::after{content:"";position:absolute;bottom:0;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg, var(--paper) 0 8px, transparent 8px 16px);opacity:.35;}
+  .header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .brand{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);}
+  .title{font-size:20px;font-weight:600;margin:4px 0 2px;letter-spacing:-.01em;}
+  .subtitle{font-size:12px;color:#B9C2CE;font-family:var(--mono);}
+  .stat-pill{font-family:var(--mono);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:6px 12px;font-size:12px;text-align:center;white-space:nowrap;}
+  .stat-pill b{display:block;font-size:16px;color:var(--brass);}
+
+  .tabs{display:flex;background:var(--paper-2);border-bottom:1px solid var(--line);}
+  .tab{flex:1;text-align:center;padding:13px 6px;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;border-bottom:2px solid transparent;font-family:var(--sans);}
+  .tab.active{color:var(--ink);border-bottom-color:var(--brass);}
+
+  .view{display:none;padding:16px 18px 100px;}
+  .view.active{display:block;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass-dark);margin-bottom:6px;font-weight:600;}
+  .field .hint{font-size:11.5px;color:var(--slate);margin-top:5px;font-family:var(--sans);}
+  input[type=text], input[type=search], textarea, select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-family:var(--sans);font-size:15px;}
+  input:focus, textarea:focus, select:focus{outline:none;border-color:var(--brass);}
+  textarea{resize:vertical;min-height:64px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{font-size:12.5px;padding:7px 12px;border-radius:16px;border:1.5px solid var(--line);background:#fff;color:var(--slate);cursor:pointer;user-select:none;}
+  .chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .chip.cat.on{background:var(--brass);border-color:var(--brass);color:#fff;}
+
+  .toggle2{display:flex;gap:8px;}
+  .toggle2 .opt{flex:1;padding:11px 8px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;font-weight:600;text-align:center;cursor:pointer;color:var(--slate);}
+  .toggle2 .opt.on{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+
+  .stars{display:flex;gap:6px;}
+  .star{font-size:30px;color:var(--line);cursor:pointer;line-height:1;}
+  .star.on{color:var(--brass);}
+
+  .rating-block{background:#fff;border:1.5px solid var(--line);border-radius:9px;padding:10px 14px;}
+  .rating-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+  .rating-row + .rating-row{border-top:1px solid var(--paper-2);}
+  .rating-label{font-size:13.5px;color:var(--ink-2);font-weight:600;width:70px;flex-shrink:0;}
+  .stars-mini{display:flex;gap:5px;}
+  .stars-mini .star{font-size:21px;}
+
+  .priority-opts{display:flex;gap:8px;}
+  .prio-btn{flex:1;padding:10px 6px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-size:12.5px;font-weight:600;text-align:center;cursor:pointer;color:var(--slate);}
+  .prio-btn[data-p="alta"].on{background:var(--clay);border-color:var(--clay);color:#fff;}
+  .prio-btn[data-p="media"].on{background:var(--brass);border-color:var(--brass);color:#fff;}
+  .prio-btn[data-p="baja"].on{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .prio-btn[data-p="descartado"].on{background:var(--slate);border-color:var(--slate);color:#fff;}
+
+  .btn-primary{width:100%;padding:14px;background:var(--ink);color:var(--paper);border:none;border-radius:9px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans);margin-top:6px;}
+  .btn-primary:active{background:var(--ink-2);}
+  .btn-secondary{width:100%;padding:12px;background:transparent;color:var(--slate);border:1.5px solid var(--line);border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;font-family:var(--sans);}
+  .btn-photo{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--paper-2);color:var(--ink-2);border:1.5px dashed var(--brass);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+  input[type=file]{display:none;}
+
+  /* card photo preview */
+  .card-photo-wrap{position:relative;margin-top:10px;}
+  .card-photo-wrap img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1.5px solid var(--line);}
+  .rm-photo{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(27,42,65,.85);color:#fff;border:none;font-size:15px;cursor:pointer;line-height:1;}
+  .ocr-status{font-family:var(--mono);font-size:11px;margin-top:8px;color:var(--slate);}
+  .ocr-status.ok{color:var(--moss);}
+  .ocr-status.err{color:var(--clay);}
+
+  .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+  .prod-thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1.5px solid var(--line);}
+  .prod-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .prod-thumb button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(27,42,65,.85);color:#fff;border:none;font-size:12px;cursor:pointer;line-height:1;}
+
+  .toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .toolbar select{flex:1;min-width:110px;font-size:12.5px;padding:8px 8px;}
+  .search-wrap{margin-bottom:12px;}
+
+  .card{display:flex;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden;}
+  .stub{width:56px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:var(--mono);position:relative;background:var(--slate);}
+  .stub.alta{background:var(--clay);} .stub.media{background:var(--brass);} .stub.baja{background:var(--moss);} .stub.descartado{background:#9BA6AF;}
+  .stub .rate{font-size:20px;font-weight:700;}
+  .stub .rate-lbl{font-size:9px;letter-spacing:.06em;opacity:.85;margin-top:1px;}
+  .stub::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;background:var(--paper);border-radius:50%;}
+  .card-body{padding:12px 14px;flex:1;min-width:0;}
+  .card-top{display:flex;justify-content:space-between;gap:8px;align-items:center;}
+  .card-empresa-row{display:flex;align-items:center;gap:8px;min-width:0;}
+  .card-thumb{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line);}
+  .card-empresa{font-weight:700;font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .card-feria{font-family:var(--mono);font-size:9.5px;color:var(--slate);white-space:nowrap;}
+  .card-meta{font-size:12.5px;color:var(--slate);margin-top:2px;}
+  .card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .card-tags span{font-size:10.5px;background:var(--paper-2);color:var(--ink-2);padding:3px 8px;border-radius:10px;}
+  .card-tags span.cat{background:#EAD9BC;color:var(--brass-dark);}
+  .card-notes{font-size:12.5px;color:var(--ink-2);margin-top:8px;line-height:1.4;}
+  .card-actions{display:flex;gap:14px;margin-top:10px;}
+  .card-actions button{background:none;border:none;color:var(--brass-dark);font-size:12px;font-weight:600;cursor:pointer;padding:0;font-family:var(--sans);}
+  .card-actions button.del{color:var(--clay);}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--slate);}
+  .empty .big{font-size:38px;margin-bottom:10px;}
+
+  .fab{position:fixed;bottom:22px;right:calc(50% - 320px + 22px);width:56px;height:56px;border-radius:50%;background:var(--brass);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;border:none;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;z-index:20;}
+  @media(max-width:680px){.fab{right:22px;}}
+
+  .status-bar{font-family:var(--mono);font-size:10.5px;padding:6px 18px;text-align:center;background:var(--paper-2);color:var(--slate);border-bottom:1px solid var(--line);}
+  .status-bar.err{background:#F3E3DE;color:var(--clay);}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(27,42,65,.55);z-index:50;align-items:flex-end;justify-content:center;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--paper);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 18px 30px;}
+  .modal h3{font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--brass-dark);margin:0 0 14px;}
+  .modal-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+  .modal-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;}
+  .modal-card-img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;margin-top:6px;}
+
+  .export-row{display:flex;gap:10px;}
+  .export-row .btn-secondary{margin-top:0;}
+  .import-box{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="brand">Sundesign Muebles · China</div>
+        <div class="title">Registro de Feria</div>
+        <div class="subtitle" id="headerSub">—</div>
+      </div>
+      <div class="stat-pill"><b id="statCount">0</b>fichas</div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">listo</div>
+  <div class="status-bar err" id="backupBanner" style="display:none;cursor:pointer;">⚠ hace tiempo que no hacés backup — tocá para ir a Backup</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="form">+ Nueva ficha</div>
+    <div class="tab" data-tab="list">Proveedores</div>
+    <div class="tab" data-tab="tools">Backup</div>
+  </div>
+
+  <!-- FORM VIEW -->
+  <div class="view active" id="view-form">
+
+    <div class="field">
+      <label>Feria</label>
+      <div class="toggle2" id="f_feria">
+        <div class="opt" data-v="CIFF">CIFF</div>
+        <div class="opt" data-v="Furniture China 2026">Furniture China 2026</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tarjeta personal del proveedor</label>
+      <button type="button" class="btn-photo" id="btnCardPhoto">📇 Sacar foto de la tarjeta</button>
+      <input type="file" id="cardInput" accept="image/*">
+      <div id="cardPreviewWrap"></div>
+      <div class="ocr-status" id="ocrStatus"></div>
+      <div class="hint">Se lee automáticamente para completar empresa y contacto — revisá antes de guardar.</div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Empresa</label>
+        <input type="text" id="f_empresa" placeholder="Nombre del proveedor">
+      </div>
+      <div class="field">
+        <label>Persona de contacto</label>
+        <input type="text" id="f_persona" placeholder="Nombre del vendedor">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Pabellón / Stand</label>
+      <input type="text" id="f_stand" placeholder="Ej: Hall 3, E45">
+    </div>
+
+    <div class="field">
+      <label>Categorías que abarca</label>
+      <div class="chips" id="f_cats">
+        <div class="chip cat" data-c="Sofás">Sofás</div>
+        <div class="chip cat" data-c="Sofá camas">Sofá camas</div>
+        <div class="chip cat" data-c="Mesas y sillas">Mesas y sillas</div>
+        <div class="chip cat" data-c="Muebles de exterior">Muebles de exterior</div>
+        <div class="chip cat" data-c="Decoración">Decoración</div>
+        <div class="chip cat" data-c="Oficina">Oficina</div>
+        <div class="chip cat" data-c="Infantiles">Infantiles</div>
+        <div class="chip cat" data-c="Novedad">Novedad</div>
+        <div class="chip cat" data-c="Otro">Otro</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Valoración</label>
+      <div class="rating-block" id="f_ratings">
+        <div class="rating-row" data-key="stand"><span class="rating-label">Stand</span><div class="stars-mini"><span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span></div></div>
+        <div class="rating-row" data-key="precio"><span class="rating-label">Precio</span><div class="stars-mini"><span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span></div></div>
+        <div class="rating-row" data-key="calidad"><span class="rating-label">Calidad</span><div class="stars-mini"><span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span></div></div>
+        <div class="rating-row" data-key="diseno"><span class="rating-label">Diseño</span><div class="stars-mini"><span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span></div></div>
+        <div class="rating-row" data-key="atencion"><span class="rating-label">Atención</span><div class="stars-mini"><span class="star" data-v="1">★</span><span class="star" data-v="2">★</span><span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span></div></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Prioridad de seguimiento</label>
+      <div class="priority-opts" id="f_prio">
+        <div class="prio-btn" data-p="alta">Alta</div>
+        <div class="prio-btn" data-p="media">Media</div>
+        <div class="prio-btn" data-p="baja">Baja</div>
+        <div class="prio-btn" data-p="descartado">Descartar</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Etiquetas rápidas</label>
+      <div class="chips" id="f_chips">
+        <div class="chip" data-t="Fabricante directo">Fabricante directo</div>
+        <div class="chip" data-t="Trader/Intermediario">Trader/Intermediario</div>
+        <div class="chip" data-t="Buen inglés">Buen inglés</div>
+        <div class="chip" data-t="MOQ alto">MOQ alto</div>
+        <div class="chip" data-t="MOQ bajo">MOQ bajo</div>
+        <div class="chip" data-t="Vende en Argentina">Vende en Argentina</div>
+        <div class="chip" data-t="Multirubros">Multirubros</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Precio de referencia</label>
+      <input type="text" id="f_precio" placeholder="Ej: USD 120/u FOB, MOQ 50">
+    </div>
+
+    <div class="field">
+      <label>Contacto (tel / mail / WeChat / web)</label>
+      <textarea id="f_contacto" placeholder="Se completa solo al leer la tarjeta, o cargalo a mano" style="min-height:44px;"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Fotos de producto (hasta 5)</label>
+      <button type="button" class="btn-photo" id="btnProdPhoto">🛋️ Agregar fotos de producto</button>
+      <input type="file" id="prodInput" accept="image/*" multiple>
+      <div class="prod-grid" id="prodGrid"></div>
+    </div>
+
+    <div class="field">
+      <label>Notas libres</label>
+      <textarea id="f_notas" placeholder="Lo que no querés olvidar: detalles del producto, tiempos de entrega, sensaciones..."></textarea>
+    </div>
+
+    <button class="btn-primary" id="btnSave">Guardar ficha</button>
+    <div style="text-align:center;font-size:11px;color:var(--slate);margin-top:8px;font-family:var(--mono);" id="editingNote"></div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div class="view" id="view-list">
+    <div class="search-wrap"><input type="search" id="searchBox" placeholder="Buscar por empresa, tag o nota..."></div>
+    <div class="toolbar">
+      <select id="filterFeria"><option value="">Todas las ferias</option><option value="CIFF">CIFF</option><option value="Furniture China 2026">Furniture China 2026</option></select>
+      <select id="filterCat"><option value="">Todas las categorías</option></select>
+      <select id="filterPrio">
+        <option value="">Toda prioridad</option>
+        <option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option><option value="descartado">Descartado</option>
+      </select>
+    </div>
+    <div class="toolbar">
+      <select id="filterRatingDim">
+        <option value="">Toda valoración</option>
+        <option value="stand">Mejor Stand (4-5★)</option>
+        <option value="precio">Mejor Precio (4-5★)</option>
+        <option value="calidad">Mejor Calidad (4-5★)</option>
+        <option value="diseno">Mejor Diseño (4-5★)</option>
+        <option value="atencion">Mejor Atención (4-5★)</option>
+      </select>
+      <select id="filterTag"><option value="">Toda etiqueta</option></select>
+    </div>
+    <div id="listContainer"></div>
+  </div>
+
+  <!-- TOOLS VIEW -->
+  <div class="view" id="view-tools">
+    <div class="field">
+      <label>Backup diario (celular → PC → celular)</label>
+      <p style="font-size:13px;color:var(--slate);line-height:1.5;margin-top:4px;">
+        Todo se guarda en este celular, sin necesitar internet. Al final de cada día de feria: exportá el JSON acá y
+        pasalo a tu PC (cable USB, Bluetooth, WhatsApp, lo que tengas a mano). En la PC podés abrir este mismo archivo
+        .html en cualquier navegador para revisar y ordenar los datos con teclado. Cuando termines, exportá de nuevo
+        desde la PC y volvé a importar ese JSON acá: la app fusiona los cambios sin duplicar ni perder fichas nuevas
+        que hayas cargado mientras tanto.
+      </p>
+      <div class="hint" id="lastBackupInfo" style="font-family:var(--mono);">sin backups todavía</div>
+      <div class="hint" id="storageInfo" style="font-family:var(--mono);"></div>
+    </div>
+    <div class="export-row">
+      <button class="btn-secondary" id="btnExportCsv">↓ Exportar CSV</button>
+      <button class="btn-secondary" id="btnExportJson">↓ Exportar JSON</button>
+    </div>
+    <div class="import-box">
+      <div class="field">
+        <label>Restaurar / fusionar backup (JSON)</label>
+        <input type="file" id="importFile" accept="application/json">
+        <div class="hint">El CSV es solo para mirar en Excel (no tiene fotos) — no se puede volver a importar. Para editar datos en la PC y volver a subirlos, usá siempre el JSON.</div>
+      </div>
+    </div>
+    <div class="import-box">
+      <div class="field">
+        <label>Lectura automática de tarjetas (opcional)</label>
+        <div class="toggle2" id="ocrToggle">
+          <div class="opt" data-v="0">Desactivada</div>
+          <div class="opt" data-v="1">Activada</div>
+        </div>
+        <div class="hint">Necesita internet (en China, con VPN) para funcionar. Cargar y guardar fichas SIEMPRE anda offline, esto es solo una ayuda opcional.</div>
+      </div>
+      <div class="field">
+        <label>API key de Anthropic (opcional, solo si activás la lectura)</label>
+        <input type="text" id="apiKeyInput" placeholder="sk-ant-...">
+        <div class="hint">Se guarda solo en este celular. Sin esto, sacás la foto de la tarjeta igual y completás los datos a mano.</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" id="fabAdd">+</button>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3>Ficha completa</h3>
+    <div id="modalContent">Cargando…</div>
+    <button class="btn-secondary" id="modalClose">Cerrar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
+  const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
+  const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
+  let index = [];      // lightweight list: {id, feria, empresa, persona, stand, categorias, ratings, rating, prioridad, tags, fecha, thumb}
+  let editingId = null;
+  let selRatings = {stand:0,precio:0,calidad:0,diseno:0,atencion:0};
+  let selPrio = '', selFeria = '';
+  let selTags = new Set(), selCats = new Set();
+
+  function computeAvgRating(ratings){
+    const vals = RATING_KEYS.map(k=>ratings[k]||0).filter(v=>v>0);
+    if(!vals.length) return 0;
+    return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*10)/10;
+  }
+  let cardImg = null;         // dataURL
+  let prodImgs = [];          // array of dataURL
+
+  const $ = id => document.getElementById(id);
+  const statusBar = $('statusBar');
+  function setStatus(msg, isErr){ statusBar.textContent = msg; statusBar.className = 'status-bar' + (isErr?' err':''); }
+  function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ---------- category filter select ----------
+  $('filterCat').innerHTML = '<option value="">Todas las categorías</option>' + CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  $('filterTag').innerHTML = '<option value="">Toda etiqueta</option>' + TAGS.map(t=>`<option value="${t}">${t}</option>`).join('');
+  $('filterRatingDim').addEventListener('change', renderList);
+  $('filterTag').addEventListener('change', renderList);
+
+  // ---------- image helpers ----------
+  function resizeFile(file, maxDim, quality){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = e=>{
+        const img = new Image();
+        img.onload = ()=>{
+          let w=img.width,h=img.height;
+          if(w>=h){ if(w>maxDim){h=Math.round(h*maxDim/w); w=maxDim;} }
+          else{ if(h>maxDim){w=Math.round(w*maxDim/h); h=maxDim;} }
+          const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  function squareThumb(dataUrl, size){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const canvas=document.createElement('canvas'); canvas.width=size; canvas.height=size;
+        const ctx=canvas.getContext('2d');
+        const side = Math.min(img.width, img.height);
+        const sx=(img.width-side)/2, sy=(img.height-side)/2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+
+  // ---------- storage: IndexedDB local al dispositivo, 100% offline ----------
+  // No depende de internet ni de servidores de Claude/Anthropic: funciona igual
+  // abierto como archivo local en el celular, instalado como app, o en la PC.
+  const DB_NAME = 'feriaChinaDB', DB_VERSION = 1, STORE = 'kv';
+  let dbPromise = null;
+  function openDb(){
+    if(dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject)=>{
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = ()=>{ req.result.createObjectStore(STORE); };
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    });
+    return dbPromise;
+  }
+  async function idbSet(key, value){
+    const db = await openDb();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(value, key);
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> reject(tx.error);
+    });
+  }
+  async function idbGet(key){
+    const db = await openDb();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).get(key);
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    });
+  }
+  async function idbDelete(key){
+    const db = await openDb();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(key);
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> reject(tx.error);
+    });
+  }
+
+  async function loadIndex(){
+    setStatus('cargando...');
+    try{
+      const raw = await idbGet('supplier-index');
+      index = raw ? JSON.parse(raw) : [];
+      setStatus(index.length ? ('listo ✓ (' + index.length + ' fichas en este dispositivo)') : 'listo — todavía no hay fichas');
+    }catch(e){
+      index = [];
+      setStatus('⚠ no se pudo leer el almacenamiento del dispositivo', true);
+    }
+    renderAll();
+  }
+  async function saveIndex(){
+    try{
+      await idbSet('supplier-index', JSON.stringify(index));
+      setStatus('guardado en este dispositivo ✓ (' + index.length + ' fichas)');
+    }catch(e){
+      setStatus('⚠ no se pudo guardar en este dispositivo (¿sin espacio?) — exportá JSON ya', true);
+    }
+    checkBackupReminder();
+  }
+  async function saveFullSupplier(data){
+    await idbSet('supplier:'+data.id, JSON.stringify(data));
+  }
+  async function loadFullSupplier(id){
+    const raw = await idbGet('supplier:'+id);
+    return raw ? JSON.parse(raw) : null;
+  }
+  async function deleteFullSupplier(id){
+    try{ await idbDelete('supplier:'+id); }catch(e){}
+  }
+
+  // ---------- ajustes (OCR opcional, guardado local) ----------
+  function loadSettings(){
+    const enabled = localStorage.getItem('ocrEnabled')==='1';
+    document.querySelectorAll('#ocrToggle .opt').forEach(o=>o.classList.toggle('on', o.dataset.v === (enabled?'1':'0')));
+    $('apiKeyInput').value = localStorage.getItem('anthropicApiKey')||'';
+  }
+  $('ocrToggle').addEventListener('click', e=>{
+    const opt = e.target.closest('.opt'); if(!opt) return;
+    localStorage.setItem('ocrEnabled', opt.dataset.v);
+    document.querySelectorAll('#ocrToggle .opt').forEach(o=>o.classList.toggle('on', o===opt));
+  });
+  $('apiKeyInput').addEventListener('change', ()=>{
+    localStorage.setItem('anthropicApiKey', $('apiKeyInput').value.trim());
+  });
+
+  // ---------- recordatorio de backup ----------
+  function checkBackupReminder(){
+    const last = parseInt(localStorage.getItem('lastExportAt')||'0',10);
+    const hours = last ? (Date.now()-last)/3600000 : Infinity;
+    $('backupBanner').style.display = (index.length>0 && hours>6) ? 'block' : 'none';
+  }
+  $('backupBanner').addEventListener('click', ()=> document.querySelector('[data-tab="tools"]').click());
+  function updateLastBackupInfo(){
+    const last = parseInt(localStorage.getItem('lastExportAt')||'0',10);
+    $('lastBackupInfo').textContent = last ? ('último backup: ' + new Date(last).toLocaleString('es-AR')) : 'todavía no hiciste ningún backup — hacé uno antes de terminar el día';
+  }
+  async function updateStorageInfo(){
+    const el = $('storageInfo');
+    if(!el || !navigator.storage || !navigator.storage.estimate) { if(el) el.textContent=''; return; }
+    try{
+      const {usage, quota} = await navigator.storage.estimate();
+      const mb = b => ((b||0)/1048576).toFixed(1);
+      el.textContent = `espacio usado en el dispositivo: ${mb(usage)} MB de ${mb(quota)} MB disponibles`;
+    }catch(e){ el.textContent=''; }
+  }
+
+  // ---------- borrador automático (por si el celular cierra la app a mitad de una ficha) ----------
+  let draftTimer = null;
+  function scheduleDraftSave(){
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(saveDraftNow, 600);
+  }
+  async function saveDraftNow(){
+    const empresa = $('f_empresa').value.trim();
+    const hasContent = empresa || $('f_persona').value.trim() || $('f_notas').value.trim() || cardImg || prodImgs.length;
+    if(!hasContent){ await clearDraft(); return; }
+    const draft = {
+      editingId, selFeria, selRatings, selPrio, selTags: Array.from(selTags), selCats: Array.from(selCats),
+      empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(), precio: $('f_precio').value.trim(),
+      contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(), cardImg, prodImgs, savedAt: Date.now()
+    };
+    try{ await idbSet('draft-form', JSON.stringify(draft)); }catch(e){}
+  }
+  async function clearDraft(){ try{ await idbDelete('draft-form'); }catch(e){} }
+  async function checkDraftOnLoad(){
+    try{
+      const raw = await idbGet('draft-form');
+      if(!raw) return;
+      const draft = JSON.parse(raw);
+      const when = draft.savedAt ? new Date(draft.savedAt).toLocaleString('es-AR') : '';
+      if(confirm(`Encontramos una ficha sin guardar (${when}). ¿Querés recuperarla?`)){
+        restoreDraft(draft);
+        document.querySelector('[data-tab="form"]').click();
+      } else {
+        await clearDraft();
+      }
+    }catch(e){}
+  }
+  function restoreDraft(draft){
+    editingId = draft.editingId || null;
+    $('f_empresa').value = draft.empresa||''; $('f_persona').value = draft.persona||'';
+    $('f_stand').value = draft.stand||''; $('f_precio').value = draft.precio||'';
+    $('f_contacto').value = draft.contacto||''; $('f_notas').value = draft.notas||'';
+    selRatings = Object.assign({stand:0,precio:0,calidad:0,diseno:0,atencion:0}, draft.selRatings||{});
+    paintRatings();
+    selPrio = draft.selPrio||'';
+    document.querySelectorAll('.prio-btn').forEach(b=>b.classList.toggle('on', b.dataset.p===selPrio));
+    selFeria = draft.selFeria||'';
+    document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o.dataset.v===selFeria));
+    selTags = new Set(draft.selTags||[]);
+    document.querySelectorAll('#f_chips .chip').forEach(c=>c.classList.toggle('on', selTags.has(c.dataset.t)));
+    selCats = new Set(draft.selCats||[]);
+    document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
+    cardImg = draft.cardImg||null; prodImgs = draft.prodImgs||[];
+    renderCardPreview(); renderProdGrid();
+    if(editingId){ $('editingNote').textContent = 'Editando ficha existente (recuperado)'; $('btnSave').textContent = 'Guardar cambios'; }
+  }
+
+  // ---------- tabs ----------
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active'); $('view-'+t.dataset.tab).classList.add('active');
+      if(t.dataset.tab==='list') renderList();
+      if(t.dataset.tab==='tools'){ updateStorageInfo(); updateLastBackupInfo(); }
+    });
+  });
+  $('fabAdd').addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    document.querySelector('[data-tab="form"]').classList.add('active');
+    $('view-form').classList.add('active');
+  });
+
+  // ---------- form: simple selectors ----------
+  $('f_feria').addEventListener('click', e=>{
+    const opt = e.target.closest('.opt'); if(!opt) return;
+    selFeria = opt.dataset.v;
+    document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o===opt));
+    scheduleDraftSave();
+  });
+  $('f_ratings').addEventListener('click', e=>{
+    if(!e.target.classList.contains('star')) return;
+    const row = e.target.closest('.rating-row');
+    const key = row.dataset.key;
+    selRatings[key] = parseInt(e.target.dataset.v);
+    paintRatings();
+    scheduleDraftSave();
+  });
+  function paintRatings(){
+    document.querySelectorAll('#f_ratings .rating-row').forEach(row=>{
+      const key = row.dataset.key;
+      const v = selRatings[key]||0;
+      row.querySelectorAll('.star').forEach(s=> s.classList.toggle('on', parseInt(s.dataset.v)<=v));
+    });
+  }
+  $('f_prio').addEventListener('click', e=>{
+    const btn = e.target.closest('.prio-btn'); if(!btn) return;
+    selPrio = btn.dataset.p;
+    document.querySelectorAll('.prio-btn').forEach(b=>b.classList.toggle('on', b===btn));
+    scheduleDraftSave();
+  });
+  $('f_chips').addEventListener('click', e=>{
+    const chip = e.target.closest('.chip'); if(!chip) return;
+    const t = chip.dataset.t;
+    if(selTags.has(t)){ selTags.delete(t); chip.classList.remove('on'); } else { selTags.add(t); chip.classList.add('on'); }
+    scheduleDraftSave();
+  });
+  $('f_cats').addEventListener('click', e=>{
+    const chip = e.target.closest('.chip'); if(!chip) return;
+    const c = chip.dataset.c;
+    if(selCats.has(c)){ selCats.delete(c); chip.classList.remove('on'); } else { selCats.add(c); chip.classList.add('on'); }
+    scheduleDraftSave();
+  });
+  ['f_empresa','f_persona','f_stand','f_precio','f_contacto','f_notas'].forEach(id=>{
+    $(id).addEventListener('input', scheduleDraftSave);
+  });
+
+  // ---------- business card photo + OCR ----------
+  $('btnCardPhoto').addEventListener('click', ()=> $('cardInput').click());
+  $('cardInput').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    try{
+      cardImg = await resizeFile(file, 900, 0.72);
+      renderCardPreview();
+      scheduleDraftSave();
+      await extractCardData(cardImg);
+      scheduleDraftSave();
+    }catch(err){
+      $('ocrStatus').textContent = 'No se pudo procesar la foto.';
+      $('ocrStatus').className = 'ocr-status err';
+    }
+    e.target.value = '';
+  });
+  function renderCardPreview(){
+    const wrap = $('cardPreviewWrap');
+    if(!cardImg){ wrap.innerHTML=''; return; }
+    wrap.innerHTML = `<div class="card-photo-wrap"><img src="${cardImg}"><button type="button" class="rm-photo" id="rmCard">×</button></div>`;
+    $('rmCard').addEventListener('click', ()=>{ cardImg=null; renderCardPreview(); scheduleDraftSave(); });
+  }
+  async function extractCardData(dataUrl){
+    // La lectura automática es 100% opcional y nunca bloquea el guardado manual.
+    // Requiere que el usuario active la opción y cargue su propia API key (Ajustes en la pestaña Backup),
+    // y solo funciona si hay conexión real a internet — algo que no se puede garantizar en China sin VPN.
+    const ocrEnabled = localStorage.getItem('ocrEnabled') === '1';
+    const apiKey = (localStorage.getItem('anthropicApiKey')||'').trim();
+    if(!ocrEnabled || !apiKey){
+      $('ocrStatus').textContent = 'Foto guardada. Lectura automática desactivada — completá los datos a mano (activala en Backup › Ajustes si tenés internet).';
+      $('ocrStatus').className = 'ocr-status';
+      return;
+    }
+    if(typeof navigator!=='undefined' && navigator.onLine===false){
+      $('ocrStatus').textContent = 'Foto guardada. Sin conexión ahora — completá los datos a mano.';
+      $('ocrStatus').className = 'ocr-status';
+      return;
+    }
+    $('ocrStatus').textContent = 'Leyendo tarjeta...'; $('ocrStatus').className = 'ocr-status';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), 12000);
+    try{
+      const base64 = dataUrl.split(',')[1];
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 500,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64 } },
+              { type: "text", text: "Esta imagen es una tarjeta personal (business card) de un proveedor en una feria de muebles en China. Devolvé SOLO un objeto JSON, sin texto adicional ni backticks, con estas claves exactas: empresa, persona, telefono, email, wechat, sitioWeb. Usá cadena vacía si un dato no aparece en la imagen. No inventes datos que no estén visibles." }
+            ]
+          }]
+        })
+      });
+      if(!response.ok) throw new Error('http '+response.status);
+      const data = await response.json();
+      const textBlock = (data.content||[]).find(b=>b.type==='text');
+      if(!textBlock) throw new Error('sin respuesta');
+      let clean = textBlock.text.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      if(parsed.empresa && !$('f_empresa').value.trim()) $('f_empresa').value = parsed.empresa;
+      if(parsed.persona && !$('f_persona').value.trim()) $('f_persona').value = parsed.persona;
+      const contactoBits = [];
+      if(parsed.telefono) contactoBits.push('Tel: '+parsed.telefono);
+      if(parsed.email) contactoBits.push('Mail: '+parsed.email);
+      if(parsed.wechat) contactoBits.push('WeChat: '+parsed.wechat);
+      if(parsed.sitioWeb) contactoBits.push('Web: '+parsed.sitioWeb);
+      if(contactoBits.length){
+        const existing = $('f_contacto').value.trim();
+        $('f_contacto').value = existing ? existing + '\n' + contactoBits.join(' · ') : contactoBits.join('\n');
+      }
+      $('ocrStatus').textContent = 'Datos completados — revisalos antes de guardar ✓';
+      $('ocrStatus').className = 'ocr-status ok';
+    }catch(err){
+      $('ocrStatus').textContent = 'No se pudo leer automáticamente (sin conexión o falló el servicio). Completá los campos a mano — la foto queda guardada igual.';
+      $('ocrStatus').className = 'ocr-status err';
+    }finally{
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // ---------- product photos ----------
+  $('btnProdPhoto').addEventListener('click', ()=> $('prodInput').click());
+  $('prodInput').addEventListener('change', async e=>{
+    const files = Array.from(e.target.files||[]);
+    const room = 5 - prodImgs.length;
+    for(const file of files.slice(0, room)){
+      try{ prodImgs.push(await resizeFile(file, 700, 0.65)); }catch(err){}
+    }
+    renderProdGrid();
+    scheduleDraftSave();
+    e.target.value = '';
+  });
+  function renderProdGrid(){
+    $('prodGrid').innerHTML = prodImgs.map((src,i)=>`<div class="prod-thumb"><img src="${src}"><button type="button" data-i="${i}">×</button></div>`).join('');
+    $('prodGrid').querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click', ()=>{ prodImgs.splice(parseInt(b.dataset.i),1); renderProdGrid(); scheduleDraftSave(); });
+    });
+  }
+
+  // ---------- form reset / save ----------
+  function resetForm(){
+    editingId = null; selRatings={stand:0,precio:0,calidad:0,diseno:0,atencion:0}; selPrio=''; selFeria=''; selTags=new Set(); selCats=new Set();
+    cardImg=null; prodImgs=[];
+    ['f_empresa','f_persona','f_stand','f_precio','f_notas'].forEach(id=>$(id).value='');
+    $('f_contacto').value='';
+    paintRatings();
+    document.querySelectorAll('.prio-btn').forEach(b=>b.classList.remove('on'));
+    document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.remove('on'));
+    document.querySelectorAll('#f_chips .chip').forEach(c=>c.classList.remove('on'));
+    document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.remove('on'));
+    renderCardPreview(); renderProdGrid();
+    $('ocrStatus').textContent=''; $('ocrStatus').className='ocr-status';
+    $('editingNote').textContent=''; $('btnSave').textContent='Guardar ficha';
+  }
+
+  $('btnSave').addEventListener('click', async ()=>{
+    const empresa = $('f_empresa').value.trim();
+    if(!empresa){ alert('Poné al menos el nombre de la empresa.'); return; }
+    if(!selFeria){ alert('Elegí a qué feria corresponde (CIFF o Furniture China 2026).'); return; }
+    const id = editingId || uid();
+    const fecha = editingId ? (index.find(s=>s.id===editingId)||{}).fecha || new Date().toISOString() : new Date().toISOString();
+    const categorias = Array.from(selCats);
+    const avgRating = computeAvgRating(selRatings);
+    const updatedAt = Date.now();
+    const full = {
+      id, feria: selFeria, empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(),
+      categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags),
+      precio: $('f_precio').value.trim(), contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(),
+      fecha, updatedAt, tarjetaImg: cardImg, productImgs: prodImgs
+    };
+    setStatus('guardando...');
+    await saveFullSupplier(full);
+    let thumb = null;
+    try{
+      if(cardImg) thumb = await squareThumb(cardImg, 72);
+      else if(prodImgs.length) thumb = await squareThumb(prodImgs[0], 72);
+    }catch(e){}
+    const idxEntry = { id, feria: selFeria, empresa, persona: full.persona, stand: full.stand, categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags), fecha, updatedAt, thumb };
+    const existingPos = index.findIndex(s=>s.id===id);
+    if(existingPos>=0) index[existingPos] = idxEntry; else index.unshift(idxEntry);
+    await saveIndex();
+    await clearDraft();
+    resetForm();
+    renderAll();
+    document.querySelector('[data-tab="list"]').click();
+  });
+
+  // ---------- list ----------
+  function renderList(){
+    const q = $('searchBox').value.trim().toLowerCase();
+    const ff = $('filterFeria').value, fc = $('filterCat').value, fp = $('filterPrio').value;
+    const frd = $('filterRatingDim').value, ftag = $('filterTag').value;
+    let items = index.filter(s=>{
+      if(ff && s.feria!==ff) return false;
+      if(fp && s.prioridad!==fp) return false;
+      if(fc && !(s.categorias||[]).includes(fc)) return false;
+      if(frd){
+        const r = s.ratings||{};
+        if((r[frd]||0) < 4) return false;
+      }
+      if(ftag && !(s.tags||[]).includes(ftag)) return false;
+      if(q){
+        const hay = [s.empresa, s.persona, s.stand].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    const cont = $('listContainer');
+    if(items.length===0){
+      cont.innerHTML = `<div class="empty"><div class="big">📋</div>Todavía no hay fichas que coincidan.<br>Cargá proveedores desde "+ Nueva ficha".</div>`;
+      return;
+    }
+    cont.innerHTML = items.map(s=>{
+      const prio = s.prioridad || 'baja';
+      const prioLabel = {alta:'ALTA',media:'MEDIA',baja:'BAJA',descartado:'NO'}[prio] || '—';
+      return `
+      <div class="card" data-id="${s.id}">
+        <div class="stub ${prio}"><div class="rate">${s.rating||'–'}</div><div class="rate-lbl">${prioLabel}</div></div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-empresa-row">
+              ${s.thumb ? `<img class="card-thumb" src="${s.thumb}">` : ''}
+              <div class="card-empresa">${escapeHtml(s.empresa)}</div>
+            </div>
+            <div class="card-feria">${escapeHtml(s.feria||'')}</div>
+          </div>
+          <div class="card-meta">${escapeHtml(s.stand||'')}${s.persona?' · '+escapeHtml(s.persona):''}</div>
+          ${(s.categorias&&s.categorias.length) ? `<div class="card-tags">${s.categorias.map(c=>`<span class="cat">${escapeHtml(c)}</span>`).join('')}</div>`:''}
+          <div class="card-actions">
+            <button class="edit">Editar</button>
+            <button class="view-full">Ver ficha</button>
+            <button class="del">Eliminar</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    cont.querySelectorAll('.card').forEach(card=>{
+      const id = card.dataset.id;
+      card.querySelector('.edit').addEventListener('click', ()=> editSupplier(id));
+      card.querySelector('.view-full').addEventListener('click', ()=> viewSupplier(id));
+      card.querySelector('.del').addEventListener('click', ()=> deleteSupplier(id));
+    });
+  }
+
+  async function editSupplier(id){
+    setStatus('cargando ficha...');
+    const full = await loadFullSupplier(id);
+    if(!full){ setStatus('no se pudo cargar la ficha completa', true); return; }
+    editingId = id;
+    $('f_empresa').value = full.empresa||''; $('f_persona').value = full.persona||'';
+    $('f_stand').value = full.stand||''; $('f_precio').value = full.precio||'';
+    $('f_contacto').value = full.contacto||''; $('f_notas').value = full.notas||'';
+    selRatings = Object.assign({stand:0,precio:0,calidad:0,diseno:0,atencion:0}, full.ratings||{});
+    paintRatings();
+    selPrio = full.prioridad||'';
+    document.querySelectorAll('.prio-btn').forEach(b=>b.classList.toggle('on', b.dataset.p===selPrio));
+    selFeria = full.feria||'';
+    document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o.dataset.v===selFeria));
+    selTags = new Set(full.tags||[]);
+    document.querySelectorAll('#f_chips .chip').forEach(c=>c.classList.toggle('on', selTags.has(c.dataset.t)));
+    selCats = new Set(full.categorias||[]);
+    document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
+    cardImg = full.tarjetaImg||null; prodImgs = full.productImgs||[];
+    renderCardPreview(); renderProdGrid();
+    $('editingNote').textContent = 'Editando ficha existente';
+    $('btnSave').textContent = 'Guardar cambios';
+    setStatus('listo');
+    document.querySelector('[data-tab="form"]').click();
+  }
+
+  async function viewSupplier(id){
+    $('modalContent').innerHTML = 'Cargando…';
+    $('modalBg').classList.add('show');
+    const full = await loadFullSupplier(id);
+    if(!full){ $('modalContent').innerHTML = 'No se pudo cargar esta ficha.'; return; }
+    $('modalContent').innerHTML = `
+      <div style="font-size:17px;font-weight:700;">${escapeHtml(full.empresa)}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--slate);margin:4px 0 10px;">${escapeHtml(full.feria||'')} · ${escapeHtml(full.stand||'')}</div>
+      ${full.tarjetaImg ? `<img class="modal-card-img" src="${full.tarjetaImg}" onclick="window.open('${full.tarjetaImg}')">` : ''}
+      <table style="width:100%;font-size:13.5px;border-collapse:collapse;margin-top:10px;">
+        <tr><td style="color:var(--slate);padding:5px 0;width:38%;">Persona</td><td>${escapeHtml(full.persona||'—')}</td></tr>
+        <tr><td style="color:var(--slate);padding:5px 0;">Prioridad</td><td>${escapeHtml(full.prioridad||'—')}</td></tr>
+        <tr><td style="color:var(--slate);padding:5px 0;">Precio ref.</td><td>${escapeHtml(full.precio||'—')}</td></tr>
+        <tr><td style="color:var(--slate);padding:5px 0;">Contacto</td><td style="white-space:pre-wrap;">${escapeHtml(full.contacto||'—')}</td></tr>
+      </table>
+      <div style="margin-top:12px;">
+        <b style="font-size:13px;">Valoración (prom. ${full.rating||'—'})</b>
+        <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:6px;">
+          ${RATING_KEYS.map(k=>{
+            const labels = {stand:'Stand',precio:'Precio',calidad:'Calidad',diseno:'Diseño',atencion:'Atención'};
+            const v = (full.ratings&&full.ratings[k])||0;
+            return `<tr><td style="color:var(--slate);padding:3px 0;width:38%;">${labels[k]}</td><td>${v?('★'.repeat(v)+'☆'.repeat(5-v)):'—'}</td></tr>`;
+          }).join('')}
+        </table>
+      </div>
+      ${(full.categorias&&full.categorias.length)?`<div class="card-tags" style="margin-top:10px;">${full.categorias.map(c=>`<span class="cat">${escapeHtml(c)}</span>`).join('')}</div>`:''}
+      ${(full.tags&&full.tags.length)?`<div class="card-tags" style="margin-top:8px;">${full.tags.map(t=>`<span>${escapeHtml(t)}</span>`).join('')}</div>`:''}
+      ${full.notas?`<div style="margin-top:14px;font-size:13.5px;line-height:1.5;"><b>Notas:</b><br>${escapeHtml(full.notas)}</div>`:''}
+      ${(full.productImgs&&full.productImgs.length)?`<div style="margin-top:14px;"><b style="font-size:13px;">Fotos de producto</b><div class="modal-gallery">${full.productImgs.map(src=>`<img src="${src}" onclick="window.open('${src}')">`).join('')}</div></div>`:''}
+      <div style="margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--slate);">Cargado: ${new Date(full.fecha).toLocaleString('es-AR')}</div>
+    `;
+  }
+  $('modalClose').addEventListener('click', ()=> $('modalBg').classList.remove('show'));
+  $('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) $('modalBg').classList.remove('show'); });
+
+  async function deleteSupplier(id){
+    if(!confirm('¿Eliminar esta ficha?')) return;
+    index = index.filter(s=>s.id!==id);
+    await saveIndex();
+    await deleteFullSupplier(id);
+    renderAll();
+  }
+
+  $('searchBox').addEventListener('input', renderList);
+  $('filterFeria').addEventListener('change', renderList);
+  $('filterCat').addEventListener('change', renderList);
+  $('filterPrio').addEventListener('change', renderList);
+
+  // ---------- export / import ----------
+  function download(filename, content, mime){
+    const blob = new Blob([content], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  $('btnExportJson').addEventListener('click', async ()=>{
+    setStatus('preparando backup completo...');
+    const full = [];
+    for(const s of index){ const f = await loadFullSupplier(s.id); if(f) full.push(f); }
+    const stamp = new Date().toISOString().slice(0,10);
+    download(`proveedores_feria_backup_${stamp}.json`, JSON.stringify(full, null, 2), 'application/json');
+    localStorage.setItem('lastExportAt', String(Date.now()));
+    updateLastBackupInfo(); checkBackupReminder();
+    setStatus('backup descargado ✓ — pasalo ya a tu PC');
+  });
+  $('btnExportCsv').addEventListener('click', async ()=>{
+    setStatus('preparando CSV...');
+    const cols = ['feria','empresa','persona','stand','categorias','promedio','stand_rating','precio_rating','calidad_rating','diseno_rating','atencion_rating','prioridad','tags','precio','contacto','notas','fecha'];
+    const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+    const rows = [cols.join(',')];
+    for(const s of index){
+      const full = await loadFullSupplier(s.id) || {};
+      const r = full.ratings || {};
+      const map = { feria:full.feria, empresa:full.empresa, persona:full.persona, stand:full.stand, categorias:(full.categorias||[]).join(' | '),
+        promedio: s.rating, stand_rating:r.stand||'', precio_rating:r.precio||'', calidad_rating:r.calidad||'', diseno_rating:r.diseno||'', atencion_rating:r.atencion||'',
+        prioridad:full.prioridad, tags:(full.tags||[]).join(' | '), precio:full.precio, contacto:full.contacto, notas:full.notas, fecha:full.fecha };
+      rows.push(cols.map(c=> esc(map[c])).join(','));
+    }
+    const stamp = new Date().toISOString().slice(0,10);
+    download(`proveedores_feria_${stamp}.csv`, rows.join('\n'), 'text/csv');
+    setStatus('CSV descargado ✓');
+  });
+  $('importFile').addEventListener('change', async e=>{
+    const file = e.target.files[0]; if(!file) return;
+    try{
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if(!Array.isArray(imported)) throw new Error('formato inválido');
+      // Fusión segura: solo pisa una ficha local si la del backup es más nueva
+      // (evita que un backup viejo de la PC borre cambios hechos después en el celular).
+      let created=0, updated=0, skipped=0;
+      const decisions = [];
+      for(const full of imported){
+        if(!full.id) continue;
+        const existing = await loadFullSupplier(full.id);
+        const incomingTime = full.updatedAt || 0;
+        const localTime = existing ? (existing.updatedAt||0) : -1;
+        if(!existing){ decisions.push(full); created++; }
+        else if(incomingTime > localTime){ decisions.push(full); updated++; }
+        else { skipped++; }
+      }
+      if(decisions.length===0){
+        alert('Este backup no trae nada nuevo para este dispositivo: todo ya está actualizado acá.');
+        e.target.value=''; return;
+      }
+      const ok = confirm(`Se van a agregar ${created} fichas nuevas y actualizar ${updated}.` + (skipped? ` ${skipped} se omiten porque ya están más actualizadas en este dispositivo.` : '') + ' ¿Continuar?');
+      if(!ok){ e.target.value=''; return; }
+      setStatus('importando...');
+      for(const full of decisions){
+        await saveFullSupplier(full);
+        let thumb = null;
+        try{ if(full.tarjetaImg) thumb = await squareThumb(full.tarjetaImg,72); else if(full.productImgs&&full.productImgs.length) thumb = await squareThumb(full.productImgs[0],72); }catch(err){}
+        const idxEntry = { id: full.id, feria: full.feria, empresa: full.empresa, persona: full.persona, stand: full.stand, categorias: full.categorias||[], ratings: full.ratings||{}, rating: full.rating||0, prioridad: full.prioridad||'', tags: full.tags||[], fecha: full.fecha, updatedAt: full.updatedAt||Date.now(), thumb };
+        const pos = index.findIndex(s=>s.id===full.id);
+        if(pos>=0) index[pos]=idxEntry; else index.push(idxEntry);
+      }
+      await saveIndex();
+      renderAll();
+      alert(`Importación completa: ${created} nuevas, ${updated} actualizadas, ${skipped} omitidas. Total fichas: ${index.length}`);
+    }catch(err){
+      alert('No se pudo leer el archivo. Verificá que sea un backup JSON exportado desde esta app.');
+    }
+    e.target.value='';
+  });
+
+  function renderAll(){
+    $('statCount').textContent = index.length;
+    const ciff = index.filter(s=>s.feria==='CIFF').length;
+    const fc = index.filter(s=>s.feria==='Furniture China 2026').length;
+    $('headerSub').textContent = `CIFF: ${ciff}  ·  Furniture China 2026: ${fc}`;
+    renderList();
+    checkBackupReminder();
+  }
+
+  loadSettings();
+  updateLastBackupInfo();
+  loadIndex();
+  checkDraftOnLoad();
+  setInterval(checkBackupReminder, 15*60*1000);
+})();
+</script>
+</body>
+</html>
