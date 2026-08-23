@@ -10,12 +10,35 @@ App de una sola página (`feria-china-tracker.html`) para registrar proveedores 
 
 ## Instalación en el celular/tablet (antes de viajar, con internet normal)
 
-1. Descargá `feria-china-tracker.html` a tu celular (por mail a vos mismo, Drive, cable, etc.).
-2. Abrilo con el navegador (Chrome/Safari) directo desde el Explorador de archivos / Files.
-3. En el menú del navegador, elegí **"Agregar a pantalla de inicio"**. Vas a tener un ícono como el de una app, en pantalla completa.
-4. Probala una vez (cargá una ficha de prueba) **antes de viajar**, para confirmar que en tu celular guarda bien.
+En Android, si abrís el `.html` directo desde el Explorador de archivos / Files, Chrome muchas veces lo abre en una
+ventana simplificada **sin el menú completo** — por eso no aparece "Agregar a pantalla de inicio". Hay dos formas de
+instalarla, la B es la robusta (recomendada para el viaje):
 
-No hace falta Play Store, ni conexión, ni volver a abrir esto desde claude.ai una vez instalado.
+### Opción A — rápida, sin configurar nada (funciona ya)
+
+1. Descargá `feria-china-tracker.html` a tu celular.
+2. Abrí la app **Chrome** primero (no el Explorador de archivos), tocá la barra de direcciones y escribí `file:///` —
+   Chrome te muestra tus carpetas; navegá hasta el archivo descargado y abrilo desde ahí. Así se abre con la barra de
+   Chrome completa y su menú entero.
+3. Menú ⋮ (arriba a la derecha) → **"Agregar a pantalla de inicio"**.
+4. Con este método el ícono se crea, pero al abrirlo se ve con la barra de Chrome (no pantalla completa tipo app) —
+   funciona igual, guarda todo local.
+
+### Opción B — instalación real de un toque, offline garantizado (recomendada)
+
+Convertí la carpeta en un sitio (gratis, con GitHub Pages) para que Chrome la reconozca como app instalable de
+verdad, con ícono propio y pantalla completa. Se hace **una sola vez, antes de viajar**:
+
+1. En GitHub, andá al repo → **Settings → Pages**.
+2. En "Build and deployment" → Source: **Deploy from a branch**. Elegí la rama `claude/mobile-app-china-trip-lz80j5`
+   (o `main` si ya la mergeaste) y carpeta `/ (root)`. Guardar.
+3. Esperá 1-2 minutos y GitHub te va a dar una URL tipo `https://TU-USUARIO.github.io/expo-apk/feria-china-tracker.html`.
+4. Abrí esa URL en Chrome del celular. Al ratito Chrome va a mostrar (solo o en el menú ⋮) **"Instalar app"**. Tocalo.
+5. Listo: ícono propio en pantalla de inicio, abre en pantalla completa como una app real, y queda **cacheada para
+   andar sin internet** desde ese momento (por eso hay que hacer este paso con internet normal, antes de viajar).
+
+Con cualquiera de las dos opciones: probá cargando una ficha de prueba **antes de viajar**, para confirmar que en tu
+celular guarda bien. Una vez instalada, no hace falta volver a abrir nada desde claude.ai ni tener conexión.
 
 ## Rutina diaria en la feria
 
