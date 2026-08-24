@@ -345,18 +345,25 @@
     </div>
     <div class="import-box">
       <div class="field">
-        <label>Análisis con IA de las tarjetas</label>
-        <p style="font-size:13px;color:var(--slate);line-height:1.5;margin:4px 0 10px;">
-          Sacar la foto NUNCA depende de internet. Completar los datos con IA a partir de esa foto (o del texto que
-          hayas pegado del OCR nativo) es un paso aparte que corrés cuando tengas conexión real — en el hotel con
-          VPN, o ya de vuelta en Buenos Aires. Mientras tanto las fichas quedan marcadas como pendientes, sin
-          perderse.
+        <label>Completar los datos de las tarjetas con IA</label>
+        <p style="font-size:13px;color:var(--slate);line-height:1.5;margin:4px 0 0;">
+          Sacar la foto NUNCA depende de internet — eso se guarda siempre al toque. Las fichas con foto (o con texto
+          pegado del OCR nativo) quedan marcadas <b>"⏳ IA pendiente"</b> hasta que alguien las complete.
         </p>
-        <button class="btn-primary" id="btnAnalyzePending" style="margin-top:0;">🔎 Analizar pendientes con IA (<span id="pendingCount">0</span>)</button>
+        <p style="font-size:13px;color:var(--slate);line-height:1.5;margin:10px 0 0;">
+          <b>Forma simple (recomendada):</b> cuando tengas Claude a mano (de vuelta, o en cualquier momento), exportá
+          el JSON acá arriba y compartíselo en un chat. Te va a devolver los datos completos para volver a importar
+          — sin crear ninguna cuenta ni configurar nada más.
+        </p>
+      </div>
+      <div class="field" style="border-top:1px dashed var(--line);padding-top:14px;">
+        <label>Opción avanzada: que la app lo haga sola (no hace falta)</label>
+        <div class="hint" style="margin-bottom:10px;">Solo si en algún momento querés configurar tu propia API key de Anthropic. Si no, ignorá esto — la opción de arriba alcanza.</div>
+        <button class="btn-secondary" id="btnAnalyzePending" style="margin-top:0;">🔎 Analizar pendientes con IA (<span id="pendingCount">0</span>)</button>
         <div class="ocr-status" id="batchStatus"></div>
       </div>
       <div class="field">
-        <label>Leer la tarjeta al toque de sacar la foto (opcional)</label>
+        <label>Leer la tarjeta al toque de sacar la foto (opcional, avanzado)</label>
         <div class="toggle2" id="ocrToggle">
           <div class="opt" data-v="0">Desactivada</div>
           <div class="opt" data-v="1">Activada</div>
@@ -364,9 +371,9 @@
         <div class="hint">Si la activás, además de quedar pendiente, intenta leerla en el momento — solo funciona si en ese instante tenés internet real. Si no hay conexión no pasa nada, sigue quedando pendiente igual.</div>
       </div>
       <div class="field">
-        <label>API key de Anthropic</label>
+        <label>API key de Anthropic (opcional, avanzado)</label>
         <input type="text" id="apiKeyInput" placeholder="sk-ant-...">
-        <div class="hint">Se guarda solo en este celular. Sin esto ni la lectura al toque ni el análisis por lote funcionan — pero cargar y guardar fichas sigue andando igual.</div>
+        <div class="hint">Se guarda solo en este celular. Sin esto ni la lectura al toque ni el análisis por lote funcionan — pero cargar y guardar fichas, y compartir el JSON en un chat, siguen andando igual.</div>
       </div>
     </div>
   </div>

@@ -64,21 +64,31 @@ Como la app es un solo archivo HTML autocontenido, podés abrir **ese mismo arch
 
 La importación es **segura para repetir**: compara fecha de última edición ficha por ficha y solo pisa una ficha local si la del backup es más nueva. Así, si mientras procesabas en la PC seguiste cargando proveedores nuevos en el celular, no se pierden — la fusión los deja intactos.
 
-## Lectura de tarjetas con IA — capturá offline, analizá cuando haya conexión
+## Lectura de tarjetas con IA — capturá offline, completá los datos después
 
-Sacar la foto de la tarjeta **nunca** depende de internet. Completar los datos con IA es un paso aparte, pensado para
-correrlo cuando tengas conexión real: WiFi del hotel con VPN, o ya de vuelta en Buenos Aires. Mientras tanto, cada
-ficha con foto (o con texto pegado, ver abajo) queda marcada **"⏳ IA pendiente"** — no se pierde nada, no hace falta
-completarla a mano en el momento.
+Sacar la foto de la tarjeta **nunca** depende de internet — eso se guarda siempre al toque. Cada ficha con foto (o
+con texto pegado del OCR nativo, ver abajo) queda marcada **"⏳ IA pendiente"** hasta que se completen sus datos. No
+se pierde nada por no tener conexión en la feria.
 
-1. En **Backup**, pegá tu API key de Anthropic (una vez; queda guardada solo en ese dispositivo).
-2. Cuando tengas conexión, entrá a **Backup** y tocá **"🔎 Analizar pendientes con IA"**. Procesa todas las fichas
-   pendientes una por una (mostrando el progreso), completa empresa/persona/teléfono/mail/WeChat/web con lo que
-   encuentre, y las marca como hechas. Las que fallen (por ejemplo si en ese momento se corta la conexión) quedan
-   pendientes para reintentar la próxima vez — podés tocar el botón las veces que haga falta.
-3. Si además querés que intente leerla al toque de sacar la foto (útil si en ese momento sí tenés internet), activá
-   "Leer la tarjeta al toque" — es opcional, y si no hay conexión en ese instante no pasa nada, la ficha sigue
-   quedando pendiente para el análisis por lote.
+### Forma simple (recomendada): pasarlo por un chat con Claude
+
+No hace falta crear ninguna cuenta ni pagar nada aparte. Cuando tengas Claude a mano (de vuelta en Buenos Aires, o
+en cualquier momento):
+
+1. En **Backup → Exportar JSON**, bajá el backup completo (trae las fotos incluidas).
+2. Abrí un chat con Claude y compartile ese archivo, pidiéndole que complete empresa/persona/teléfono/mail/WeChat/
+   web de las fichas marcadas como pendientes.
+3. Te va a devolver un JSON con esos datos completos. Volvé a la app → **Backup → Restaurar/fusionar backup (JSON)**
+   → elegí ese archivo. Se fusiona solo, sin pisar nada más nuevo que hayas cargado mientras tanto.
+
+### Opción avanzada (no hace falta): que la app lo haga sola
+
+Si en algún momento querés que el botón **"Analizar pendientes con IA"** de la app lo haga automáticamente, podés
+cargar tu propia API key de Anthropic en Backup — pero esto requiere crear una cuenta en console.anthropic.com y
+cargar una tarjeta (se cobra por uso, centavos por tarjeta). Para la mayoría alcanza con la opción simple de arriba.
+Si igual la activás, también podés prender "Leer la tarjeta al toque" para que intente leerla en el momento en que
+saques la foto (solo funciona si en ese instante hay internet real; si no, no pasa nada, la ficha sigue quedando
+pendiente).
 
 ### Texto reconocido por el celular (OCR nativo del sistema)
 
