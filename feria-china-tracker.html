@@ -21,7 +21,7 @@
     --paper: #F7F3EC;
     --paper-2: #EFE8DA;
     --brass: #B8873F;
-    --star-on: #E8900C;
+    --star-on: #16202F;
     --brass-dark: #8F6A2E;
     --clay: #A8442E;
     --moss: #4C7A5E;
@@ -72,7 +72,7 @@
 
   .stars{display:flex;gap:6px;}
   .star{font-size:30px;color:#CFC7B4;cursor:pointer;line-height:1;}
-  .star.on{color:var(--star-on);text-shadow:0 1px 2px rgba(180,110,0,.35);}
+  .star.on{color:var(--star-on);}
 
   .rating-block{background:#fff;border:1.5px solid var(--line);border-radius:9px;padding:10px 14px;}
   .rating-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
@@ -91,11 +91,16 @@
   .btn-primary{width:100%;padding:14px;background:var(--ink);color:var(--paper);border:none;border-radius:9px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans);margin-top:6px;}
   .btn-primary:active{background:var(--ink-2);}
   .btn-secondary{width:100%;padding:12px;background:transparent;color:var(--slate);border:1.5px solid var(--line);border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;font-family:var(--sans);}
-  /* Se aplica también a label.btn-photo, ganándole a la regla `.field label`
-     (los selectores de archivo se disparan con un <label for>, no con JS). */
-  .btn-photo, .field label.btn-photo{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--paper-2);color:var(--ink-2);border:1.5px dashed var(--brass);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);text-transform:none;letter-spacing:normal;margin-bottom:0;}
-  .btn-photo:active, .field label.btn-photo:active{background:var(--line);}
+  .btn-photo{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--paper-2);color:var(--ink-2);border:1.5px dashed var(--brass);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);text-transform:none;letter-spacing:normal;margin-bottom:0;}
   input[type=file]{display:none;}
+
+  /* El input de archivo va TRANSPARENTE ENCIMA del botón: el dedo toca el input real.
+     Sin label ni click() por JS de por medio — es lo único que abre la cámara de forma
+     confiable en todos los navegadores, incluida la app instalada (PWA) en Android. */
+  .photo-picker{position:relative;}
+  .photo-picker input[type=file]{display:block;position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;z-index:2;}
+  .photo-picker .btn-photo{position:relative;z-index:1;}
+  .photo-picker:active .btn-photo{background:var(--line);}
 
   /* card photo preview */
   .card-photo-wrap{position:relative;margin-top:10px;}
@@ -195,8 +200,10 @@
       <div class="group-title">Datos del proveedor</div>
       <div class="field">
         <label>Tarjeta personal</label>
-        <label class="btn-photo" for="cardInput">📇 Sacar foto de la tarjeta</label>
-        <input type="file" id="cardInput" accept="image/*">
+        <div class="photo-picker">
+          <span class="btn-photo">📇 Sacar foto de la tarjeta</span>
+          <input type="file" id="cardInput" accept="image/*">
+        </div>
         <div id="cardPreviewWrap"></div>
         <div class="ocr-status" id="ocrStatus"></div>
       </div>
@@ -273,8 +280,10 @@
 
     <div class="field">
       <label>Fotos de producto (hasta 5)</label>
-      <label class="btn-photo" for="prodInput">🛋️ Agregar fotos de producto</label>
-      <input type="file" id="prodInput" accept="image/*" multiple>
+      <div class="photo-picker">
+        <span class="btn-photo">🛋️ Agregar fotos de producto</span>
+        <input type="file" id="prodInput" accept="image/*" multiple>
+      </div>
       <div class="prod-grid" id="prodGrid"></div>
     </div>
 
@@ -333,8 +342,10 @@
     <div class="import-box">
       <div class="field">
         <label>Restaurar / fusionar backup (JSON)</label>
-        <label class="btn-photo" for="importFile">↑ Elegir archivo JSON</label>
-        <input type="file" id="importFile" accept="application/json">
+        <div class="photo-picker">
+          <span class="btn-photo">↑ Elegir archivo JSON</span>
+          <input type="file" id="importFile" accept="application/json">
+        </div>
         <div class="hint">El CSV es solo para mirar en Excel (no tiene fotos) — no se puede volver a importar. Para editar datos en la PC y volver a subirlos, usá siempre el JSON.</div>
       </div>
     </div>
