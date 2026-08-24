@@ -191,7 +191,14 @@
       <input type="file" id="cardInput" accept="image/*">
       <div id="cardPreviewWrap"></div>
       <div class="ocr-status" id="ocrStatus"></div>
-      <div class="hint">Se lee automáticamente para completar empresa y contacto — revisá antes de guardar.</div>
+      <div class="hint">La lectura con IA es opcional. Si ahora no tenés internet no importa: la ficha queda guardada y marcada como pendiente para analizarla después (pestaña Backup).</div>
+    </div>
+
+    <div class="field">
+      <label>Texto reconocido por el celular (OCR nativo, opcional)</label>
+      <textarea id="f_ocrText" placeholder="Mantené presionada la foto en tu galería → 'Copiar texto' (o Google Lens) y pegalo acá. Anda sin internet." style="min-height:64px;"></textarea>
+      <button type="button" class="btn-secondary" id="btnParseOcrText" style="margin-top:8px;">Completar teléfono / mail con este texto</button>
+      <div class="hint">Este texto queda guardado con la ficha y también se usa para el análisis con IA más completo cuando tengas conexión.</div>
     </div>
 
     <div class="row2">
@@ -331,23 +338,35 @@
     <div class="import-box">
       <div class="field">
         <label>Restaurar / fusionar backup (JSON)</label>
+        <button type="button" class="btn-photo" id="btnImportTrigger">↑ Elegir archivo JSON</button>
         <input type="file" id="importFile" accept="application/json">
         <div class="hint">El CSV es solo para mirar en Excel (no tiene fotos) — no se puede volver a importar. Para editar datos en la PC y volver a subirlos, usá siempre el JSON.</div>
       </div>
     </div>
     <div class="import-box">
       <div class="field">
-        <label>Lectura automática de tarjetas (opcional)</label>
+        <label>Análisis con IA de las tarjetas</label>
+        <p style="font-size:13px;color:var(--slate);line-height:1.5;margin:4px 0 10px;">
+          Sacar la foto NUNCA depende de internet. Completar los datos con IA a partir de esa foto (o del texto que
+          hayas pegado del OCR nativo) es un paso aparte que corrés cuando tengas conexión real — en el hotel con
+          VPN, o ya de vuelta en Buenos Aires. Mientras tanto las fichas quedan marcadas como pendientes, sin
+          perderse.
+        </p>
+        <button class="btn-primary" id="btnAnalyzePending" style="margin-top:0;">🔎 Analizar pendientes con IA (<span id="pendingCount">0</span>)</button>
+        <div class="ocr-status" id="batchStatus"></div>
+      </div>
+      <div class="field">
+        <label>Leer la tarjeta al toque de sacar la foto (opcional)</label>
         <div class="toggle2" id="ocrToggle">
           <div class="opt" data-v="0">Desactivada</div>
           <div class="opt" data-v="1">Activada</div>
         </div>
-        <div class="hint">Necesita internet (en China, con VPN) para funcionar. Cargar y guardar fichas SIEMPRE anda offline, esto es solo una ayuda opcional.</div>
+        <div class="hint">Si la activás, además de quedar pendiente, intenta leerla en el momento — solo funciona si en ese instante tenés internet real. Si no hay conexión no pasa nada, sigue quedando pendiente igual.</div>
       </div>
       <div class="field">
-        <label>API key de Anthropic (opcional, solo si activás la lectura)</label>
+        <label>API key de Anthropic</label>
         <input type="text" id="apiKeyInput" placeholder="sk-ant-...">
-        <div class="hint">Se guarda solo en este celular. Sin esto, sacás la foto de la tarjeta igual y completás los datos a mano.</div>
+        <div class="hint">Se guarda solo en este celular. Sin esto ni la lectura al toque ni el análisis por lote funcionan — pero cargar y guardar fichas sigue andando igual.</div>
       </div>
     </div>
   </div>
@@ -379,8 +398,16 @@
     if(!vals.length) return 0;
     return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*10)/10;
   }
+  // 'done' = ya la completó la IA; 'pending' = tiene foto/texto pero falta analizar; 'none' = no hay nada para analizar
+  function computeAiStatus(hasCard, hasOcrText, analyzedAt){
+    if(analyzedAt) return 'done';
+    if(hasCard || hasOcrText) return 'pending';
+    return 'none';
+  }
   let cardImg = null;         // dataURL
   let prodImgs = [];          // array of dataURL
+  let ocrRawText = '';        // texto pegado del OCR nativo del celular
+  let aiAnalyzedAt = null;    // timestamp de la última vez que la IA completó esta ficha
 
   const $ = id => document.getElementById(id);
   const statusBar = $('statusBar');
@@ -520,6 +547,7 @@
   $('apiKeyInput').addEventListener('change', ()=>{
     localStorage.setItem('anthropicApiKey', $('apiKeyInput').value.trim());
   });
+  $('btnImportTrigger').addEventListener('click', ()=> $('importFile').click());
 
   // ---------- recordatorio de backup ----------
   function checkBackupReminder(){
@@ -550,12 +578,13 @@
   }
   async function saveDraftNow(){
     const empresa = $('f_empresa').value.trim();
-    const hasContent = empresa || $('f_persona').value.trim() || $('f_notas').value.trim() || cardImg || prodImgs.length;
+    const hasContent = empresa || $('f_persona').value.trim() || $('f_notas').value.trim() || cardImg || prodImgs.length || $('f_ocrText').value.trim();
     if(!hasContent){ await clearDraft(); return; }
     const draft = {
       editingId, selFeria, selRatings, selPrio, selTags: Array.from(selTags), selCats: Array.from(selCats),
       empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(), precio: $('f_precio').value.trim(),
-      contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(), cardImg, prodImgs, savedAt: Date.now()
+      contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(), cardImg, prodImgs,
+      ocrText: $('f_ocrText').value, aiAnalyzedAt, savedAt: Date.now()
     };
     try{ await idbSet('draft-form', JSON.stringify(draft)); }catch(e){}
   }
@@ -590,6 +619,7 @@
     selCats = new Set(draft.selCats||[]);
     document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
     cardImg = draft.cardImg||null; prodImgs = draft.prodImgs||[];
+    ocrRawText = draft.ocrText||''; $('f_ocrText').value = ocrRawText; aiAnalyzedAt = draft.aiAnalyzedAt||null;
     renderCardPreview(); renderProdGrid();
     if(editingId){ $('editingNote').textContent = 'Editando ficha existente (recuperado)'; $('btnSave').textContent = 'Guardar cambios'; }
   }
@@ -601,7 +631,7 @@
       document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
       t.classList.add('active'); $('view-'+t.dataset.tab).classList.add('active');
       if(t.dataset.tab==='list') renderList();
-      if(t.dataset.tab==='tools'){ updateStorageInfo(); updateLastBackupInfo(); }
+      if(t.dataset.tab==='tools'){ updateStorageInfo(); updateLastBackupInfo(); updatePendingCount(); }
     });
   });
   $('fabAdd').addEventListener('click', ()=>{
@@ -708,7 +738,7 @@
           "anthropic-dangerous-direct-browser-access": "true"
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-sonnet-5",
           max_tokens: 500,
           messages: [{
             role: "user",
@@ -738,13 +768,49 @@
       }
       $('ocrStatus').textContent = 'Datos completados — revisalos antes de guardar ✓';
       $('ocrStatus').className = 'ocr-status ok';
+      aiAnalyzedAt = Date.now();
     }catch(err){
-      $('ocrStatus').textContent = 'No se pudo leer automáticamente (sin conexión o falló el servicio). Completá los campos a mano — la foto queda guardada igual.';
+      $('ocrStatus').textContent = 'No se pudo leer ahora (sin conexión o falló el servicio). No pasa nada: la foto queda guardada y marcada pendiente para analizar después en Backup › Analizar pendientes.';
       $('ocrStatus').className = 'ocr-status err';
     }finally{
       clearTimeout(timeoutId);
     }
   }
+
+  // ---------- OCR nativo del celular: texto pegado a mano, análisis local sin IA ni red ----------
+  function parseOcrTextLocally(text){
+    const emailMatch = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+    const phoneMatch = text.match(/(\+?\d[\d\s().-]{6,}\d)/);
+    const webMatch = text.match(/\bwww\.[^\s,]+|\bhttps?:\/\/[^\s,]+/i);
+    const wechatMatch = text.match(/(?:wechat|微信)[:\s]*([A-Za-z0-9_.-]+)/i);
+    return {
+      email: emailMatch ? emailMatch[0] : '',
+      telefono: phoneMatch ? phoneMatch[0].trim() : '',
+      sitioWeb: webMatch ? webMatch[0] : '',
+      wechat: wechatMatch ? wechatMatch[1] : ''
+    };
+  }
+  $('f_ocrText').addEventListener('input', ()=>{ ocrRawText = $('f_ocrText').value; scheduleDraftSave(); });
+  $('btnParseOcrText').addEventListener('click', ()=>{
+    const text = $('f_ocrText').value.trim();
+    if(!text){ return; }
+    ocrRawText = text;
+    const parsed = parseOcrTextLocally(text);
+    const bits = [];
+    if(parsed.telefono) bits.push('Tel: '+parsed.telefono);
+    if(parsed.email) bits.push('Mail: '+parsed.email);
+    if(parsed.wechat) bits.push('WeChat: '+parsed.wechat);
+    if(parsed.sitioWeb) bits.push('Web: '+parsed.sitioWeb);
+    if(bits.length){
+      const existing = $('f_contacto').value.trim();
+      $('f_contacto').value = existing ? existing + '\n' + bits.join(' · ') : bits.join('\n');
+    }
+    $('ocrStatus').textContent = bits.length
+      ? 'Completado desde el texto pegado ✓ (este texto también queda guardado para el análisis con IA más completo)'
+      : 'No encontré teléfono/mail en el texto — igual queda guardado para analizarlo con IA después.';
+    $('ocrStatus').className = bits.length ? 'ocr-status ok' : 'ocr-status';
+    scheduleDraftSave();
+  });
 
   // ---------- product photos ----------
   $('btnProdPhoto').addEventListener('click', ()=> $('prodInput').click());
@@ -768,9 +834,9 @@
   // ---------- form reset / save ----------
   function resetForm(){
     editingId = null; selRatings={stand:0,precio:0,calidad:0,diseno:0,atencion:0}; selPrio=''; selFeria=''; selTags=new Set(); selCats=new Set();
-    cardImg=null; prodImgs=[];
+    cardImg=null; prodImgs=[]; ocrRawText=''; aiAnalyzedAt=null;
     ['f_empresa','f_persona','f_stand','f_precio','f_notas'].forEach(id=>$(id).value='');
-    $('f_contacto').value='';
+    $('f_contacto').value=''; $('f_ocrText').value='';
     paintRatings();
     document.querySelectorAll('.prio-btn').forEach(b=>b.classList.remove('on'));
     document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.remove('on'));
@@ -790,11 +856,13 @@
     const categorias = Array.from(selCats);
     const avgRating = computeAvgRating(selRatings);
     const updatedAt = Date.now();
+    ocrRawText = $('f_ocrText').value.trim();
+    const aiStatus = computeAiStatus(!!cardImg, !!ocrRawText, aiAnalyzedAt);
     const full = {
       id, feria: selFeria, empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(),
       categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags),
       precio: $('f_precio').value.trim(), contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(),
-      fecha, updatedAt, tarjetaImg: cardImg, productImgs: prodImgs
+      fecha, updatedAt, tarjetaImg: cardImg, productImgs: prodImgs, ocrText: ocrRawText, aiAnalyzedAt
     };
     setStatus('guardando...');
     await saveFullSupplier(full);
@@ -803,7 +871,7 @@
       if(cardImg) thumb = await squareThumb(cardImg, 72);
       else if(prodImgs.length) thumb = await squareThumb(prodImgs[0], 72);
     }catch(e){}
-    const idxEntry = { id, feria: selFeria, empresa, persona: full.persona, stand: full.stand, categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags), fecha, updatedAt, thumb };
+    const idxEntry = { id, feria: selFeria, empresa, persona: full.persona, stand: full.stand, categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags), fecha, updatedAt, aiStatus, thumb };
     const existingPos = index.findIndex(s=>s.id===id);
     if(existingPos>=0) index[existingPos] = idxEntry; else index.unshift(idxEntry);
     await saveIndex();
@@ -853,6 +921,7 @@
             <div class="card-feria">${escapeHtml(s.feria||'')}</div>
           </div>
           <div class="card-meta">${escapeHtml(s.stand||'')}${s.persona?' · '+escapeHtml(s.persona):''}</div>
+          ${s.aiStatus==='pending' ? `<div class="card-tags"><span class="cat" style="background:#EAD9BC;">⏳ IA pendiente</span></div>` : ''}
           ${(s.categorias&&s.categorias.length) ? `<div class="card-tags">${s.categorias.map(c=>`<span class="cat">${escapeHtml(c)}</span>`).join('')}</div>`:''}
           <div class="card-actions">
             <button class="edit">Editar</button>
@@ -889,6 +958,7 @@
     selCats = new Set(full.categorias||[]);
     document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
     cardImg = full.tarjetaImg||null; prodImgs = full.productImgs||[];
+    ocrRawText = full.ocrText||''; $('f_ocrText').value = ocrRawText; aiAnalyzedAt = full.aiAnalyzedAt||null;
     renderCardPreview(); renderProdGrid();
     $('editingNote').textContent = 'Editando ficha existente';
     $('btnSave').textContent = 'Guardar cambios';
@@ -1009,7 +1079,8 @@
         await saveFullSupplier(full);
         let thumb = null;
         try{ if(full.tarjetaImg) thumb = await squareThumb(full.tarjetaImg,72); else if(full.productImgs&&full.productImgs.length) thumb = await squareThumb(full.productImgs[0],72); }catch(err){}
-        const idxEntry = { id: full.id, feria: full.feria, empresa: full.empresa, persona: full.persona, stand: full.stand, categorias: full.categorias||[], ratings: full.ratings||{}, rating: full.rating||0, prioridad: full.prioridad||'', tags: full.tags||[], fecha: full.fecha, updatedAt: full.updatedAt||Date.now(), thumb };
+        const aiStatus = computeAiStatus(!!full.tarjetaImg, !!(full.ocrText&&full.ocrText.trim()), full.aiAnalyzedAt);
+        const idxEntry = { id: full.id, feria: full.feria, empresa: full.empresa, persona: full.persona, stand: full.stand, categorias: full.categorias||[], ratings: full.ratings||{}, rating: full.rating||0, prioridad: full.prioridad||'', tags: full.tags||[], fecha: full.fecha, updatedAt: full.updatedAt||Date.now(), aiStatus, thumb };
         const pos = index.findIndex(s=>s.id===full.id);
         if(pos>=0) index[pos]=idxEntry; else index.push(idxEntry);
       }
@@ -1022,6 +1093,89 @@
     e.target.value='';
   });
 
+  // ---------- análisis con IA por lote (para cuando haya conexión: hotel con VPN, o de vuelta) ----------
+  function updatePendingCount(){
+    const n = index.filter(s=>s.aiStatus==='pending').length;
+    $('pendingCount').textContent = n;
+    $('btnAnalyzePending').disabled = n===0;
+  }
+  async function analyzeOneCard(full){
+    const apiKey = (localStorage.getItem('anthropicApiKey')||'').trim();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), 20000);
+    try{
+      let content;
+      const promptTail = "Devolvé SOLO un objeto JSON, sin texto adicional ni backticks, con estas claves exactas: empresa, persona, telefono, email, wechat, sitioWeb. Usá cadena vacía si un dato no aparece. No inventes datos que no estén presentes.";
+      if(full.ocrText && full.ocrText.trim()){
+        content = [{ type:'text', text: `Este es el texto crudo leído por OCR de una tarjeta personal (business card) de un proveedor de una feria de muebles en China:\n\n"""${full.ocrText.trim()}"""\n\n${promptTail}` }];
+      } else if(full.tarjetaImg){
+        const base64 = full.tarjetaImg.split(',')[1];
+        content = [
+          { type:'image', source:{ type:'base64', media_type:'image/jpeg', data: base64 } },
+          { type:'text', text: `Esta imagen es una tarjeta personal (business card) de un proveedor en una feria de muebles en China. ${promptTail}` }
+        ];
+      } else {
+        return { ok:false, reason:'sin foto ni texto' };
+      }
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method:'POST', signal: controller.signal,
+        headers: { "Content-Type":"application/json", "x-api-key":apiKey, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
+        body: JSON.stringify({ model:"claude-sonnet-5", max_tokens:500, messages:[{ role:'user', content }] })
+      });
+      if(!response.ok) return { ok:false, reason:'http '+response.status };
+      const data = await response.json();
+      const textBlock = (data.content||[]).find(b=>b.type==='text');
+      if(!textBlock) return { ok:false, reason:'sin respuesta' };
+      const clean = textBlock.text.replace(/```json|```/g,'').trim();
+      return { ok:true, parsed: JSON.parse(clean) };
+    }catch(err){
+      return { ok:false, reason: err.name==='AbortError' ? 'timeout' : 'red' };
+    }finally{
+      clearTimeout(timeoutId);
+    }
+  }
+  async function analyzePendingCards(){
+    const apiKey = (localStorage.getItem('anthropicApiKey')||'').trim();
+    if(!apiKey){ alert('Cargá tu API key de Anthropic primero, más abajo en esta misma pestaña.'); return; }
+    const pending = index.filter(s=>s.aiStatus==='pending');
+    if(!pending.length){ alert('No hay fichas pendientes de analizar.'); return; }
+    $('btnAnalyzePending').disabled = true;
+    let ok=0, failed=0;
+    for(let i=0;i<pending.length;i++){
+      const entry = pending[i];
+      $('batchStatus').textContent = `Analizando ${i+1} de ${pending.length}: ${entry.empresa||'(sin nombre)'}...`;
+      $('batchStatus').className = 'ocr-status';
+      const full = await loadFullSupplier(entry.id);
+      if(!full){ failed++; continue; }
+      const res = await analyzeOneCard(full);
+      if(res.ok){
+        const p = res.parsed;
+        if(p.empresa && !full.empresa) full.empresa = p.empresa;
+        if(p.persona && !full.persona) full.persona = p.persona;
+        const bits = [];
+        if(p.telefono) bits.push('Tel: '+p.telefono);
+        if(p.email) bits.push('Mail: '+p.email);
+        if(p.wechat) bits.push('WeChat: '+p.wechat);
+        if(p.sitioWeb) bits.push('Web: '+p.sitioWeb);
+        if(bits.length) full.contacto = (full.contacto ? full.contacto+'\n' : '') + bits.join(' · ');
+        full.aiAnalyzedAt = Date.now();
+        full.updatedAt = Date.now();
+        await saveFullSupplier(full);
+        entry.aiStatus = 'done';
+        entry.empresa = full.empresa; entry.persona = full.persona; entry.updatedAt = full.updatedAt;
+        ok++;
+      } else {
+        failed++;
+      }
+    }
+    await saveIndex();
+    renderAll();
+    $('btnAnalyzePending').disabled = false;
+    $('batchStatus').textContent = `Listo: ${ok} analizadas, ${failed} sin poder procesar (quedan pendientes para reintentar más tarde).`;
+    $('batchStatus').className = ok>0 ? 'ocr-status ok' : 'ocr-status err';
+  }
+  $('btnAnalyzePending').addEventListener('click', analyzePendingCards);
+
   function renderAll(){
     $('statCount').textContent = index.length;
     const ciff = index.filter(s=>s.feria==='CIFF').length;
@@ -1029,6 +1183,7 @@
     $('headerSub').textContent = `CIFF: ${ciff}  ·  Furniture China 2026: ${fc}`;
     renderList();
     checkBackupReminder();
+    updatePendingCount();
   }
 
   loadSettings();

@@ -64,9 +64,32 @@ Como la app es un solo archivo HTML autocontenido, podés abrir **ese mismo arch
 
 La importación es **segura para repetir**: compara fecha de última edición ficha por ficha y solo pisa una ficha local si la del backup es más nueva. Así, si mientras procesabas en la PC seguiste cargando proveedores nuevos en el celular, no se pierden — la fusión los deja intactos.
 
-## Lectura automática de tarjetas (opcional)
+## Lectura de tarjetas con IA — capturá offline, analizá cuando haya conexión
 
-En pestaña **Backup › Ajustes** podés activarla y pegar tu propia API key de Anthropic (se guarda solo en ese dispositivo). Solo va a funcionar si en ese momento tenés internet real (por ejemplo WiFi del hotel con VPN activa). Si no tenés conexión, la app no intenta nada raro: guarda la foto y te deja completar los campos vos.
+Sacar la foto de la tarjeta **nunca** depende de internet. Completar los datos con IA es un paso aparte, pensado para
+correrlo cuando tengas conexión real: WiFi del hotel con VPN, o ya de vuelta en Buenos Aires. Mientras tanto, cada
+ficha con foto (o con texto pegado, ver abajo) queda marcada **"⏳ IA pendiente"** — no se pierde nada, no hace falta
+completarla a mano en el momento.
+
+1. En **Backup**, pegá tu API key de Anthropic (una vez; queda guardada solo en ese dispositivo).
+2. Cuando tengas conexión, entrá a **Backup** y tocá **"🔎 Analizar pendientes con IA"**. Procesa todas las fichas
+   pendientes una por una (mostrando el progreso), completa empresa/persona/teléfono/mail/WeChat/web con lo que
+   encuentre, y las marca como hechas. Las que fallen (por ejemplo si en ese momento se corta la conexión) quedan
+   pendientes para reintentar la próxima vez — podés tocar el botón las veces que haga falta.
+3. Si además querés que intente leerla al toque de sacar la foto (útil si en ese momento sí tenés internet), activá
+   "Leer la tarjeta al toque" — es opcional, y si no hay conexión en ese instante no pasa nada, la ficha sigue
+   quedando pendiente para el análisis por lote.
+
+### Texto reconocido por el celular (OCR nativo del sistema)
+
+La mayoría de los Android/iPhone pueden sacar el texto de una foto sin ninguna app ni internet: mantenés presionada
+la foto en la Galería → **"Copiar texto"** (o usás Google Lens / Circle to Search). Pegá ese texto en el campo
+**"Texto reconocido por el celular"** de la ficha:
+
+- El botón **"Completar teléfono / mail con este texto"** busca el email, teléfono, web y WeChat con reglas simples
+  **al instante, sin IA y sin conexión**, y te completa el campo de contacto.
+- Ese mismo texto queda guardado con la ficha y es lo que usa el análisis por lote más tarde — cuando hay texto
+  pegado, el análisis con IA lo usa a él (más rápido y confiable) en vez de la imagen.
 
 ## Notas técnicas
 
