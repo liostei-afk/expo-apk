@@ -91,7 +91,9 @@
   .btn-primary:active{background:var(--ink-2);}
   .btn-secondary{width:100%;padding:12px;background:transparent;color:var(--slate);border:1.5px solid var(--line);border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;font-family:var(--sans);}
   .btn-photo{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--paper-2);color:var(--ink-2);border:1.5px dashed var(--brass);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);}
-  input[type=file]{display:none;}
+  /* Oculto visualmente (no display:none) — algunos navegadores móviles no abren
+     cámara/selector al hacer click() por JS en un input[type=file] con display:none. */
+  input[type=file]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
   /* card photo preview */
   .card-photo-wrap{position:relative;margin-top:10px;}
@@ -192,7 +194,7 @@
       <div class="field">
         <label>Tarjeta personal</label>
         <button type="button" class="btn-photo" id="btnCardPhoto">📇 Sacar foto de la tarjeta</button>
-        <input type="file" id="cardInput" accept="image/*">
+        <input type="file" id="cardInput" accept="image/*" capture="environment">
         <div id="cardPreviewWrap"></div>
         <div class="ocr-status" id="ocrStatus"></div>
       </div>
