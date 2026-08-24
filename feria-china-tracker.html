@@ -99,8 +99,11 @@
      confiable en todos los navegadores, incluida la app instalada (PWA) en Android. */
   .photo-picker{position:relative;}
   .photo-picker input[type=file]{display:block;position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;z-index:2;}
-  .photo-picker .btn-photo{position:relative;z-index:1;}
+  .photo-picker .btn-photo, .photo-picker .btn-alt{position:relative;z-index:1;}
   .photo-picker:active .btn-photo{background:var(--line);}
+  /* Acceso secundario (galería), por si el celular no abre la cámara directamente */
+  .btn-alt{display:block;width:100%;text-align:center;padding:8px;margin-top:6px;font-size:12.5px;color:var(--slate);text-decoration:underline;cursor:pointer;font-family:var(--sans);}
+  .picker-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
   /* card photo preview */
   .card-photo-wrap{position:relative;margin-top:10px;}
@@ -201,8 +204,12 @@
       <div class="field">
         <label>Tarjeta personal</label>
         <div class="photo-picker">
-          <span class="btn-photo">📇 Sacar foto de la tarjeta</span>
-          <input type="file" id="cardInput" accept="image/*">
+          <span class="btn-photo">📷 Sacar foto de la tarjeta</span>
+          <input type="file" id="cardInput" accept="image/*" capture="environment">
+        </div>
+        <div class="photo-picker">
+          <span class="btn-alt">o elegir de la galería</span>
+          <input type="file" id="cardInputGallery" accept="image/*">
         </div>
         <div id="cardPreviewWrap"></div>
         <div class="ocr-status" id="ocrStatus"></div>
@@ -280,9 +287,15 @@
 
     <div class="field">
       <label>Fotos de producto (hasta 5)</label>
-      <div class="photo-picker">
-        <span class="btn-photo">🛋️ Agregar fotos de producto</span>
-        <input type="file" id="prodInput" accept="image/*" multiple>
+      <div class="picker-row">
+        <div class="photo-picker">
+          <span class="btn-photo">📷 Cámara</span>
+          <input type="file" id="prodInputCam" accept="image/*" capture="environment">
+        </div>
+        <div class="photo-picker">
+          <span class="btn-photo">🖼️ Galería</span>
+          <input type="file" id="prodInput" accept="image/*" multiple>
+        </div>
       </div>
       <div class="prod-grid" id="prodGrid"></div>
     </div>
@@ -380,7 +393,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v5 · 2026-08-24';
+  const APP_VERSION = 'v6 · 2026-08-24';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -668,9 +681,10 @@
   });
 
   // ---------- business card photo ----------
-  // El <label for="cardInput"> abre el selector de forma nativa: no hace falta
-  // (ni conviene) un click() por JS, que en apps instaladas puede fallar en silencio.
-  $('cardInput').addEventListener('change', async e=>{
+  // El input real va transparente encima del botón (ver .photo-picker en el CSS):
+  // el dedo toca el input, sin label ni click() por JS de por medio.
+  // Hay dos entradas al mismo flujo: cámara directa (capture) y galería como respaldo.
+  async function handleCardFile(e){
     const file = e.target.files[0]; if(!file) return;
     try{
       cardImg = await resizeFile(file, 900, 0.72);
@@ -683,7 +697,9 @@
       $('ocrStatus').className = 'ocr-status err';
     }
     e.target.value = '';
-  });
+  }
+  $('cardInput').addEventListener('change', handleCardFile);
+  $('cardInputGallery').addEventListener('change', handleCardFile);
   function renderCardPreview(){
     const wrap = $('cardPreviewWrap');
     if(!cardImg){ wrap.innerHTML=''; return; }
@@ -691,17 +707,20 @@
     $('rmCard').addEventListener('click', ()=>{ cardImg=null; renderCardPreview(); scheduleDraftSave(); });
   }
 
-  // ---------- product photos ----------
-  $('prodInput').addEventListener('change', async e=>{
+  // ---------- product photos (cámara directa o galería con selección múltiple) ----------
+  async function handleProdFiles(e){
     const files = Array.from(e.target.files||[]);
     const room = 5 - prodImgs.length;
+    if(room <= 0){ alert('Ya tenés 5 fotos de producto en esta ficha.'); e.target.value=''; return; }
     for(const file of files.slice(0, room)){
       try{ prodImgs.push(await resizeFile(file, 700, 0.65)); }catch(err){}
     }
     renderProdGrid();
     scheduleDraftSave();
     e.target.value = '';
-  });
+  }
+  $('prodInput').addEventListener('change', handleProdFiles);
+  $('prodInputCam').addEventListener('change', handleProdFiles);
   function renderProdGrid(){
     $('prodGrid').innerHTML = prodImgs.map((src,i)=>`<div class="prod-thumb"><img src="${src}"><button type="button" data-i="${i}">×</button></div>`).join('');
     $('prodGrid').querySelectorAll('button').forEach(b=>{
