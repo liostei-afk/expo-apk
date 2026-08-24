@@ -52,7 +52,9 @@
 
   .field{margin-bottom:16px;}
   .field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass-dark);margin-bottom:6px;font-weight:600;}
-  .field .hint{font-size:11.5px;color:var(--slate);margin-top:5px;font-family:var(--sans);}
+  .field .hint, .group-card .hint{font-size:11.5px;color:var(--slate);margin-top:5px;font-family:var(--sans);}
+  .group-card{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:14px 14px 12px;margin-bottom:16px;}
+  .group-title{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass-dark);font-weight:700;margin-bottom:12px;}
   input[type=text], input[type=search], textarea, select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-family:var(--sans);font-size:15px;}
   input:focus, textarea:focus, select:focus{outline:none;border-color:var(--brass);}
   textarea{resize:vertical;min-height:64px;}
@@ -185,31 +187,30 @@
       </div>
     </div>
 
-    <div class="field">
-      <label>Tarjeta personal del proveedor</label>
-      <button type="button" class="btn-photo" id="btnCardPhoto">📇 Sacar foto de la tarjeta</button>
-      <input type="file" id="cardInput" accept="image/*">
-      <div id="cardPreviewWrap"></div>
-      <div class="ocr-status" id="ocrStatus"></div>
-      <div class="hint">La lectura con IA es opcional. Si ahora no tenés internet no importa: la ficha queda guardada y marcada como pendiente para analizarla después (pestaña Backup).</div>
-    </div>
-
-    <div class="field">
-      <label>Texto reconocido por el celular (OCR nativo, opcional)</label>
-      <textarea id="f_ocrText" placeholder="Mantené presionada la foto en tu galería → 'Copiar texto' (o Google Lens) y pegalo acá. Anda sin internet." style="min-height:64px;"></textarea>
-      <button type="button" class="btn-secondary" id="btnParseOcrText" style="margin-top:8px;">Completar teléfono / mail con este texto</button>
-      <div class="hint">Este texto queda guardado con la ficha y también se usa para el análisis con IA más completo cuando tengas conexión.</div>
-    </div>
-
-    <div class="row2">
+    <div class="group-card">
+      <div class="group-title">Datos del proveedor</div>
       <div class="field">
-        <label>Empresa</label>
-        <input type="text" id="f_empresa" placeholder="Nombre del proveedor">
+        <label>Tarjeta personal</label>
+        <button type="button" class="btn-photo" id="btnCardPhoto">📇 Sacar foto de la tarjeta</button>
+        <input type="file" id="cardInput" accept="image/*">
+        <div id="cardPreviewWrap"></div>
+        <div class="ocr-status" id="ocrStatus"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Empresa</label>
+          <input type="text" id="f_empresa" placeholder="(se completa solo)">
+        </div>
+        <div class="field">
+          <label>Persona de contacto</label>
+          <input type="text" id="f_persona" placeholder="(se completa solo)">
+        </div>
       </div>
       <div class="field">
-        <label>Persona de contacto</label>
-        <input type="text" id="f_persona" placeholder="Nombre del vendedor">
+        <label>Contacto (tel / mail / WeChat / web)</label>
+        <textarea id="f_contacto" placeholder="(se completa solo)" style="min-height:44px;"></textarea>
       </div>
+      <div class="hint" style="margin-top:-4px;">No hace falta cargar nada de esto a mano: sacá la foto y listo. Cuando compartas el backup en un chat con Claude, te devuelve estos campos completos — cargalos vos solo si querés o tenés tiempo en el momento.</div>
     </div>
 
     <div class="field">
@@ -267,16 +268,6 @@
     </div>
 
     <div class="field">
-      <label>Precio de referencia</label>
-      <input type="text" id="f_precio" placeholder="Ej: USD 120/u FOB, MOQ 50">
-    </div>
-
-    <div class="field">
-      <label>Contacto (tel / mail / WeChat / web)</label>
-      <textarea id="f_contacto" placeholder="Se completa solo al leer la tarjeta, o cargalo a mano" style="min-height:44px;"></textarea>
-    </div>
-
-    <div class="field">
       <label>Fotos de producto (hasta 5)</label>
       <button type="button" class="btn-photo" id="btnProdPhoto">🛋️ Agregar fotos de producto</button>
       <input type="file" id="prodInput" accept="image/*" multiple>
@@ -285,7 +276,7 @@
 
     <div class="field">
       <label>Notas libres</label>
-      <textarea id="f_notas" placeholder="Lo que no querés olvidar: detalles del producto, tiempos de entrega, sensaciones..."></textarea>
+      <textarea id="f_notas" placeholder="Lo que no querés olvidar: precio, detalles del producto, tiempos de entrega, sensaciones..."></textarea>
     </div>
 
     <button class="btn-primary" id="btnSave">Guardar ficha</button>
@@ -387,16 +378,15 @@
     if(!vals.length) return 0;
     return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*10)/10;
   }
-  // 'done' = ya la completó la IA; 'pending' = tiene foto/texto pero falta analizar; 'none' = no hay nada para analizar
-  function computeAiStatus(hasCard, hasOcrText, analyzedAt){
+  // 'done' = ya la completó la IA; 'pending' = tiene foto pero falta completar; 'none' = no hay foto
+  function computeAiStatus(hasCard, analyzedAt){
     if(analyzedAt) return 'done';
-    if(hasCard || hasOcrText) return 'pending';
+    if(hasCard) return 'pending';
     return 'none';
   }
   let cardImg = null;         // dataURL
   let prodImgs = [];          // array of dataURL
-  let ocrRawText = '';        // texto pegado del OCR nativo del celular
-  let aiAnalyzedAt = null;    // timestamp de la última vez que la IA completó esta ficha
+  let aiAnalyzedAt = null;    // timestamp de la última vez que la IA completó esta ficha (al reimportar el JSON procesado)
 
   const $ = id => document.getElementById(id);
   const statusBar = $('statusBar');
@@ -553,13 +543,13 @@
   }
   async function saveDraftNow(){
     const empresa = $('f_empresa').value.trim();
-    const hasContent = empresa || $('f_persona').value.trim() || $('f_notas').value.trim() || cardImg || prodImgs.length || $('f_ocrText').value.trim();
+    const hasContent = empresa || $('f_persona').value.trim() || $('f_notas').value.trim() || cardImg || prodImgs.length;
     if(!hasContent){ await clearDraft(); return; }
     const draft = {
       editingId, selFeria, selRatings, selPrio, selTags: Array.from(selTags), selCats: Array.from(selCats),
-      empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(), precio: $('f_precio').value.trim(),
+      empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(),
       contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(), cardImg, prodImgs,
-      ocrText: $('f_ocrText').value, aiAnalyzedAt, savedAt: Date.now()
+      aiAnalyzedAt, savedAt: Date.now()
     };
     try{ await idbSet('draft-form', JSON.stringify(draft)); }catch(e){}
   }
@@ -581,7 +571,7 @@
   function restoreDraft(draft){
     editingId = draft.editingId || null;
     $('f_empresa').value = draft.empresa||''; $('f_persona').value = draft.persona||'';
-    $('f_stand').value = draft.stand||''; $('f_precio').value = draft.precio||'';
+    $('f_stand').value = draft.stand||'';
     $('f_contacto').value = draft.contacto||''; $('f_notas').value = draft.notas||'';
     selRatings = Object.assign({stand:0,precio:0,calidad:0,diseno:0,atencion:0}, draft.selRatings||{});
     paintRatings();
@@ -594,7 +584,7 @@
     selCats = new Set(draft.selCats||[]);
     document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
     cardImg = draft.cardImg||null; prodImgs = draft.prodImgs||[];
-    ocrRawText = draft.ocrText||''; $('f_ocrText').value = ocrRawText; aiAnalyzedAt = draft.aiAnalyzedAt||null;
+    aiAnalyzedAt = draft.aiAnalyzedAt||null;
     renderCardPreview(); renderProdGrid();
     if(editingId){ $('editingNote').textContent = 'Editando ficha existente (recuperado)'; $('btnSave').textContent = 'Guardar cambios'; }
   }
@@ -657,11 +647,11 @@
     if(selCats.has(c)){ selCats.delete(c); chip.classList.remove('on'); } else { selCats.add(c); chip.classList.add('on'); }
     scheduleDraftSave();
   });
-  ['f_empresa','f_persona','f_stand','f_precio','f_contacto','f_notas'].forEach(id=>{
+  ['f_empresa','f_persona','f_stand','f_contacto','f_notas'].forEach(id=>{
     $(id).addEventListener('input', scheduleDraftSave);
   });
 
-  // ---------- business card photo + OCR ----------
+  // ---------- business card photo ----------
   $('btnCardPhoto').addEventListener('click', ()=> $('cardInput').click());
   $('cardInput').addEventListener('change', async e=>{
     const file = e.target.files[0]; if(!file) return;
@@ -669,7 +659,7 @@
       cardImg = await resizeFile(file, 900, 0.72);
       renderCardPreview();
       scheduleDraftSave();
-      $('ocrStatus').textContent = 'Foto guardada ✓ — completá los datos a mano, o pegá el texto del OCR nativo abajo. Queda marcada pendiente para completar con IA cuando compartas el backup en un chat.';
+      $('ocrStatus').textContent = 'Foto guardada ✓ — no hace falta cargar nada más ahora. Queda pendiente para completar con IA cuando compartas el backup en un chat.';
       $('ocrStatus').className = 'ocr-status ok';
     }catch(err){
       $('ocrStatus').textContent = 'No se pudo procesar la foto.';
@@ -683,41 +673,6 @@
     wrap.innerHTML = `<div class="card-photo-wrap"><img src="${cardImg}"><button type="button" class="rm-photo" id="rmCard">×</button></div>`;
     $('rmCard').addEventListener('click', ()=>{ cardImg=null; renderCardPreview(); scheduleDraftSave(); });
   }
-
-  // ---------- OCR nativo del celular: texto pegado a mano, análisis local sin IA ni red ----------
-  function parseOcrTextLocally(text){
-    const emailMatch = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
-    const phoneMatch = text.match(/(\+?\d[\d\s().-]{6,}\d)/);
-    const webMatch = text.match(/\bwww\.[^\s,]+|\bhttps?:\/\/[^\s,]+/i);
-    const wechatMatch = text.match(/(?:wechat|微信)[:\s]*([A-Za-z0-9_.-]+)/i);
-    return {
-      email: emailMatch ? emailMatch[0] : '',
-      telefono: phoneMatch ? phoneMatch[0].trim() : '',
-      sitioWeb: webMatch ? webMatch[0] : '',
-      wechat: wechatMatch ? wechatMatch[1] : ''
-    };
-  }
-  $('f_ocrText').addEventListener('input', ()=>{ ocrRawText = $('f_ocrText').value; scheduleDraftSave(); });
-  $('btnParseOcrText').addEventListener('click', ()=>{
-    const text = $('f_ocrText').value.trim();
-    if(!text){ return; }
-    ocrRawText = text;
-    const parsed = parseOcrTextLocally(text);
-    const bits = [];
-    if(parsed.telefono) bits.push('Tel: '+parsed.telefono);
-    if(parsed.email) bits.push('Mail: '+parsed.email);
-    if(parsed.wechat) bits.push('WeChat: '+parsed.wechat);
-    if(parsed.sitioWeb) bits.push('Web: '+parsed.sitioWeb);
-    if(bits.length){
-      const existing = $('f_contacto').value.trim();
-      $('f_contacto').value = existing ? existing + '\n' + bits.join(' · ') : bits.join('\n');
-    }
-    $('ocrStatus').textContent = bits.length
-      ? 'Completado desde el texto pegado ✓ (este texto también queda guardado para el análisis con IA más completo)'
-      : 'No encontré teléfono/mail en el texto — igual queda guardado para analizarlo con IA después.';
-    $('ocrStatus').className = bits.length ? 'ocr-status ok' : 'ocr-status';
-    scheduleDraftSave();
-  });
 
   // ---------- product photos ----------
   $('btnProdPhoto').addEventListener('click', ()=> $('prodInput').click());
@@ -743,9 +698,9 @@
     // La feria NO se resetea: se mantiene la última elegida, para no tener que
     // volver a tocarla en cada ficha mientras estés varios días seguidos en la misma.
     editingId = null; selRatings={stand:0,precio:0,calidad:0,diseno:0,atencion:0}; selPrio=''; selTags=new Set(); selCats=new Set();
-    cardImg=null; prodImgs=[]; ocrRawText=''; aiAnalyzedAt=null;
-    ['f_empresa','f_persona','f_stand','f_precio','f_notas'].forEach(id=>$(id).value='');
-    $('f_contacto').value=''; $('f_ocrText').value='';
+    cardImg=null; prodImgs=[]; aiAnalyzedAt=null;
+    ['f_empresa','f_persona','f_stand','f_notas'].forEach(id=>$(id).value='');
+    $('f_contacto').value='';
     paintRatings();
     document.querySelectorAll('.prio-btn').forEach(b=>b.classList.remove('on'));
     document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o.dataset.v===selFeria));
@@ -758,20 +713,19 @@
 
   $('btnSave').addEventListener('click', async ()=>{
     const empresa = $('f_empresa').value.trim();
-    if(!empresa){ alert('Poné al menos el nombre de la empresa.'); return; }
     if(!selFeria){ alert('Elegí a qué feria corresponde (CIFF o Furniture China 2026).'); return; }
+    if(!cardImg && !empresa){ alert('Sacá la foto de la tarjeta, o al menos escribí el nombre de la empresa.'); return; }
     const id = editingId || uid();
     const fecha = editingId ? (index.find(s=>s.id===editingId)||{}).fecha || new Date().toISOString() : new Date().toISOString();
     const categorias = Array.from(selCats);
     const avgRating = computeAvgRating(selRatings);
     const updatedAt = Date.now();
-    ocrRawText = $('f_ocrText').value.trim();
-    const aiStatus = computeAiStatus(!!cardImg, !!ocrRawText, aiAnalyzedAt);
+    const aiStatus = computeAiStatus(!!cardImg, aiAnalyzedAt);
     const full = {
       id, feria: selFeria, empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(),
       categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags),
-      precio: $('f_precio').value.trim(), contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(),
-      fecha, updatedAt, tarjetaImg: cardImg, productImgs: prodImgs, ocrText: ocrRawText, aiAnalyzedAt
+      contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(),
+      fecha, updatedAt, tarjetaImg: cardImg, productImgs: prodImgs, aiAnalyzedAt
     };
     setStatus('guardando...');
     await saveFullSupplier(full);
@@ -825,7 +779,7 @@
           <div class="card-top">
             <div class="card-empresa-row">
               ${s.thumb ? `<img class="card-thumb" src="${s.thumb}">` : ''}
-              <div class="card-empresa">${escapeHtml(s.empresa)}</div>
+              <div class="card-empresa">${s.empresa ? escapeHtml(s.empresa) : '(sin completar aún)'}</div>
             </div>
             <div class="card-feria">${escapeHtml(s.feria||'')}</div>
           </div>
@@ -854,7 +808,7 @@
     if(!full){ setStatus('no se pudo cargar la ficha completa', true); return; }
     editingId = id;
     $('f_empresa').value = full.empresa||''; $('f_persona').value = full.persona||'';
-    $('f_stand').value = full.stand||''; $('f_precio').value = full.precio||'';
+    $('f_stand').value = full.stand||'';
     $('f_contacto').value = full.contacto||''; $('f_notas').value = full.notas||'';
     selRatings = Object.assign({stand:0,precio:0,calidad:0,diseno:0,atencion:0}, full.ratings||{});
     paintRatings();
@@ -867,7 +821,7 @@
     selCats = new Set(full.categorias||[]);
     document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
     cardImg = full.tarjetaImg||null; prodImgs = full.productImgs||[];
-    ocrRawText = full.ocrText||''; $('f_ocrText').value = ocrRawText; aiAnalyzedAt = full.aiAnalyzedAt||null;
+    aiAnalyzedAt = full.aiAnalyzedAt||null;
     renderCardPreview(); renderProdGrid();
     $('editingNote').textContent = 'Editando ficha existente';
     $('btnSave').textContent = 'Guardar cambios';
@@ -881,13 +835,12 @@
     const full = await loadFullSupplier(id);
     if(!full){ $('modalContent').innerHTML = 'No se pudo cargar esta ficha.'; return; }
     $('modalContent').innerHTML = `
-      <div style="font-size:17px;font-weight:700;">${escapeHtml(full.empresa)}</div>
+      <div style="font-size:17px;font-weight:700;">${full.empresa ? escapeHtml(full.empresa) : '(sin completar aún)'}</div>
       <div style="font-family:var(--mono);font-size:11px;color:var(--slate);margin:4px 0 10px;">${escapeHtml(full.feria||'')} · ${escapeHtml(full.stand||'')}</div>
       ${full.tarjetaImg ? `<img class="modal-card-img" src="${full.tarjetaImg}" onclick="window.open('${full.tarjetaImg}')">` : ''}
       <table style="width:100%;font-size:13.5px;border-collapse:collapse;margin-top:10px;">
         <tr><td style="color:var(--slate);padding:5px 0;width:38%;">Persona</td><td>${escapeHtml(full.persona||'—')}</td></tr>
         <tr><td style="color:var(--slate);padding:5px 0;">Prioridad</td><td>${escapeHtml(full.prioridad||'—')}</td></tr>
-        <tr><td style="color:var(--slate);padding:5px 0;">Precio ref.</td><td>${escapeHtml(full.precio||'—')}</td></tr>
         <tr><td style="color:var(--slate);padding:5px 0;">Contacto</td><td style="white-space:pre-wrap;">${escapeHtml(full.contacto||'—')}</td></tr>
       </table>
       <div style="margin-top:12px;">
@@ -943,7 +896,7 @@
   });
   $('btnExportCsv').addEventListener('click', async ()=>{
     setStatus('preparando CSV...');
-    const cols = ['feria','empresa','persona','stand','categorias','promedio','stand_rating','precio_rating','calidad_rating','diseno_rating','atencion_rating','prioridad','tags','precio','contacto','notas','fecha'];
+    const cols = ['feria','empresa','persona','stand','categorias','promedio','stand_rating','precio_rating','calidad_rating','diseno_rating','atencion_rating','prioridad','tags','contacto','notas','fecha'];
     const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
     const rows = [cols.join(',')];
     for(const s of index){
@@ -951,7 +904,7 @@
       const r = full.ratings || {};
       const map = { feria:full.feria, empresa:full.empresa, persona:full.persona, stand:full.stand, categorias:(full.categorias||[]).join(' | '),
         promedio: s.rating, stand_rating:r.stand||'', precio_rating:r.precio||'', calidad_rating:r.calidad||'', diseno_rating:r.diseno||'', atencion_rating:r.atencion||'',
-        prioridad:full.prioridad, tags:(full.tags||[]).join(' | '), precio:full.precio, contacto:full.contacto, notas:full.notas, fecha:full.fecha };
+        prioridad:full.prioridad, tags:(full.tags||[]).join(' | '), contacto:full.contacto, notas:full.notas, fecha:full.fecha };
       rows.push(cols.map(c=> esc(map[c])).join(','));
     }
     const stamp = new Date().toISOString().slice(0,10);
@@ -988,7 +941,7 @@
         await saveFullSupplier(full);
         let thumb = null;
         try{ if(full.tarjetaImg) thumb = await squareThumb(full.tarjetaImg,72); else if(full.productImgs&&full.productImgs.length) thumb = await squareThumb(full.productImgs[0],72); }catch(err){}
-        const aiStatus = computeAiStatus(!!full.tarjetaImg, !!(full.ocrText&&full.ocrText.trim()), full.aiAnalyzedAt);
+        const aiStatus = computeAiStatus(!!full.tarjetaImg, full.aiAnalyzedAt);
         const idxEntry = { id: full.id, feria: full.feria, empresa: full.empresa, persona: full.persona, stand: full.stand, categorias: full.categorias||[], ratings: full.ratings||{}, rating: full.rating||0, prioridad: full.prioridad||'', tags: full.tags||[], fecha: full.fecha, updatedAt: full.updatedAt||Date.now(), aiStatus, thumb };
         const pos = index.findIndex(s=>s.id===full.id);
         if(pos>=0) index[pos]=idxEntry; else index.push(idxEntry);

@@ -42,7 +42,9 @@ celular guarda bien. Una vez instalada, no hace falta volver a abrir nada desde 
 
 ## Rutina diaria en la feria
 
-1. Cargá fichas de proveedores normalmente (foto de tarjeta, fotos de producto, valoración, notas). Todo queda guardado al toque, en el celular, sin conexión.
+1. Por cada proveedor: sacá la foto de la tarjeta y guardá. **No hace falta escribir nada más** — ni empresa, ni
+   contacto, ni nada — salvo que quieras (por ejemplo agregar el stand, una categoría, tu valoración, o una nota).
+   La feria (CIFF / Furniture China) queda recordada de una vez que la elegís, no hay que tocarla ficha a ficha.
 2. Si el celular se apaga o la app se cierra a mitad de una ficha, al volver a abrirla te va a preguntar si querés recuperar el borrador — no se pierde nada.
 3. La app te avisa con un cartel si pasaron más de 6 horas sin hacer un backup.
 
@@ -66,33 +68,24 @@ La importación es **segura para repetir**: compara fecha de última edición fi
 
 ## Lectura de tarjetas con IA — capturá offline, completá los datos después
 
-Sacar la foto de la tarjeta **nunca** depende de internet — eso se guarda siempre al toque. Cada ficha con foto (o
-con texto pegado del OCR nativo, ver abajo) queda marcada **"⏳ IA pendiente"** hasta que se completen sus datos. No
-se pierde nada por no tener conexión en la feria. La app no llama a ningún servicio de IA por su cuenta ni pide
-ninguna cuenta o API key — todo el análisis se hace de una sola forma:
+Sacar la foto de la tarjeta **nunca** depende de internet — eso se guarda siempre al toque, sin escribir nada. Cada
+ficha con foto queda marcada **"⏳ IA pendiente"** hasta que se completen sus datos. La app no llama a ningún
+servicio de IA por su cuenta ni pide ninguna cuenta o API key — el análisis se hace de una sola forma:
 
 1. En **Backup → Exportar JSON**, bajá el backup completo (trae las fotos incluidas).
 2. Cuando tengas Claude a mano (de vuelta en Buenos Aires, o con VPN en el hotel), abrí un chat y compartile ese
-   archivo, pidiéndole que complete empresa/persona/teléfono/mail/WeChat/web de las fichas marcadas como pendientes.
+   archivo, pidiéndole que complete **empresa, persona de contacto, mail, WeChat y web** de las fichas marcadas como
+   pendientes, leyendo la foto de cada tarjeta.
 3. Te va a devolver un JSON con esos datos completos. Volvé a la app → **Backup → Restaurar/fusionar backup (JSON)**
    → elegí ese archivo. Se fusiona solo, sin pisar nada más nuevo que hayas cargado mientras tanto.
 
 En **Backup** la app te muestra cuántas fichas están pendientes en cualquier momento, así sabés cuántas te faltan
-completar.
-
-### Texto reconocido por el celular (OCR nativo del sistema)
-
-La mayoría de los Android/iPhone pueden sacar el texto de una foto sin ninguna app ni internet: mantenés presionada
-la foto en la Galería → **"Copiar texto"** (o usás Google Lens / Circle to Search). Pegá ese texto en el campo
-**"Texto reconocido por el celular"** de la ficha:
-
-- El botón **"Completar teléfono / mail con este texto"** busca el email, teléfono, web y WeChat con reglas simples
-  **al instante, sin IA y sin conexión**, y te completa el campo de contacto.
-- Ese mismo texto queda guardado con la ficha y es lo que usa el análisis por lote más tarde — cuando hay texto
-  pegado, el análisis con IA lo usa a él (más rápido y confiable) en vez de la imagen.
+completar. Todos los demás campos (stand, categorías, valoración, prioridad, etiquetas, notas) son manuales por
+naturaleza — nadie más que vos sabe esa parte — y quedan como opcionales: cargalos si querés y tenés tiempo en el
+momento, o después con más calma.
 
 ## Notas técnicas
 
 - Sin dependencias externas, sin CDN, sin build: es un único archivo HTML que corre en cualquier navegador moderno (Android, iOS, escritorio).
-- Almacenamiento: IndexedDB para las fichas (sin límite práctico de tamaño) + `localStorage` para ajustes livianos (fecha del último backup, preferencias de OCR).
+- Almacenamiento: IndexedDB para las fichas (sin límite práctico de tamaño) + `localStorage` para ajustes livianos (última feria elegida, fecha del último backup).
 - Las fotos se comprimen automáticamente al cargarlas (tarjetas a 900px, fotos de producto a 700px, calidad ~70%) para no ocupar espacio de más.
