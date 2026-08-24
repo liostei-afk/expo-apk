@@ -6,7 +6,7 @@ App de una sola página (`feria-china-tracker.html`) para registrar proveedores 
 
 - Todos los datos (fichas, fotos) se guardan **en el propio dispositivo**, en el almacenamiento local del navegador (IndexedDB). No hay servidor, no hay nube, no hay login.
 - La app nunca necesita internet para cargar, guardar, editar o listar proveedores. Funciona igual con el celular en modo avión.
-- La única función que pide internet es la **lectura automática de tarjetas personales** (OCR con IA), y viene **desactivada por defecto**. Si la activás sin tener conexión, simplemente no hace nada y te deja completar los datos a mano — nunca traba la app.
+- La app **nunca** llama a ningún servicio de internet por su cuenta, ni pide API keys ni cuentas. Cuando quieras que la IA complete los datos de las tarjetas (empresa, teléfono, mail...), lo hacés compartiendo el backup JSON en un chat con Claude — ver más abajo.
 
 ## Instalación en el celular/tablet (antes de viajar, con internet normal)
 
@@ -68,27 +68,17 @@ La importación es **segura para repetir**: compara fecha de última edición fi
 
 Sacar la foto de la tarjeta **nunca** depende de internet — eso se guarda siempre al toque. Cada ficha con foto (o
 con texto pegado del OCR nativo, ver abajo) queda marcada **"⏳ IA pendiente"** hasta que se completen sus datos. No
-se pierde nada por no tener conexión en la feria.
-
-### Forma simple (recomendada): pasarlo por un chat con Claude
-
-No hace falta crear ninguna cuenta ni pagar nada aparte. Cuando tengas Claude a mano (de vuelta en Buenos Aires, o
-en cualquier momento):
+se pierde nada por no tener conexión en la feria. La app no llama a ningún servicio de IA por su cuenta ni pide
+ninguna cuenta o API key — todo el análisis se hace de una sola forma:
 
 1. En **Backup → Exportar JSON**, bajá el backup completo (trae las fotos incluidas).
-2. Abrí un chat con Claude y compartile ese archivo, pidiéndole que complete empresa/persona/teléfono/mail/WeChat/
-   web de las fichas marcadas como pendientes.
+2. Cuando tengas Claude a mano (de vuelta en Buenos Aires, o con VPN en el hotel), abrí un chat y compartile ese
+   archivo, pidiéndole que complete empresa/persona/teléfono/mail/WeChat/web de las fichas marcadas como pendientes.
 3. Te va a devolver un JSON con esos datos completos. Volvé a la app → **Backup → Restaurar/fusionar backup (JSON)**
    → elegí ese archivo. Se fusiona solo, sin pisar nada más nuevo que hayas cargado mientras tanto.
 
-### Opción avanzada (no hace falta): que la app lo haga sola
-
-Si en algún momento querés que el botón **"Analizar pendientes con IA"** de la app lo haga automáticamente, podés
-cargar tu propia API key de Anthropic en Backup — pero esto requiere crear una cuenta en console.anthropic.com y
-cargar una tarjeta (se cobra por uso, centavos por tarjeta). Para la mayoría alcanza con la opción simple de arriba.
-Si igual la activás, también podés prender "Leer la tarjeta al toque" para que intente leerla en el momento en que
-saques la foto (solo funciona si en ese instante hay internet real; si no, no pasa nada, la ficha sigue quedando
-pendiente).
+En **Backup** la app te muestra cuántas fichas están pendientes en cualquier momento, así sabés cuántas te faltan
+completar.
 
 ### Texto reconocido por el celular (OCR nativo del sistema)
 
