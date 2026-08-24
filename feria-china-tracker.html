@@ -163,6 +163,17 @@
   .export-row{display:flex;gap:10px;}
   .export-row .btn-secondary{margin-top:0;}
   .import-box{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+
+  /* Cámara propia dentro de la app: no depende de la cámara del sistema, que en la
+     app instalada (PWA) no siempre responde. */
+  .cam-bg{display:none;position:fixed;inset:0;background:#000;z-index:100;flex-direction:column;}
+  .cam-bg.show{display:flex;}
+  .cam-video{flex:1;width:100%;object-fit:cover;background:#000;min-height:0;}
+  .cam-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px calc(16px + env(safe-area-inset-bottom));background:#000;}
+  .cam-txt{background:none;border:none;color:#fff;font-size:14px;font-weight:600;padding:10px;cursor:pointer;font-family:var(--sans);min-width:78px;}
+  .cam-shot{width:68px;height:68px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.35);cursor:pointer;flex-shrink:0;}
+  .cam-shot:active{transform:scale(.94);}
+  .cam-msg{color:#fff;text-align:center;padding:20px;font-size:14px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -203,10 +214,7 @@
       <div class="group-title">Datos del proveedor</div>
       <div class="field">
         <label>Tarjeta personal</label>
-        <div class="photo-picker">
-          <span class="btn-photo">📷 Sacar foto de la tarjeta</span>
-          <input type="file" id="cardInput" accept="image/*" capture="environment">
-        </div>
+        <button type="button" class="btn-photo" id="btnCardCam">📷 Sacar foto de la tarjeta</button>
         <div class="photo-picker">
           <span class="btn-alt">o elegir de la galería</span>
           <input type="file" id="cardInputGallery" accept="image/*">
@@ -288,10 +296,7 @@
     <div class="field">
       <label>Fotos de producto (hasta 5)</label>
       <div class="picker-row">
-        <div class="photo-picker">
-          <span class="btn-photo">📷 Cámara</span>
-          <input type="file" id="prodInputCam" accept="image/*" capture="environment">
-        </div>
+        <button type="button" class="btn-photo" id="btnProdCam">📷 Cámara</button>
         <div class="photo-picker">
           <span class="btn-photo">🖼️ Galería</span>
           <input type="file" id="prodInput" accept="image/*" multiple>
@@ -383,6 +388,16 @@
   <button class="fab" id="fabAdd">+</button>
 </div>
 
+<div class="cam-bg" id="camBg">
+  <video class="cam-video" id="camVideo" autoplay playsinline muted></video>
+  <div class="cam-msg" id="camMsg" style="display:none;"></div>
+  <div class="cam-bar">
+    <button type="button" class="cam-txt" id="camCancel">Cancelar</button>
+    <button type="button" class="cam-shot" id="camShot" aria-label="Sacar foto"></button>
+    <button type="button" class="cam-txt" id="camFlip">Girar</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h3>Ficha completa</h3>
@@ -393,7 +408,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v6 · 2026-08-24';
+  const APP_VERSION = 'v7 · 2026-08-24';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -680,10 +695,96 @@
     $(id).addEventListener('input', scheduleDraftSave);
   });
 
-  // ---------- business card photo ----------
-  // El input real va transparente encima del botón (ver .photo-picker en el CSS):
-  // el dedo toca el input, sin label ni click() por JS de por medio.
-  // Hay dos entradas al mismo flujo: cámara directa (capture) y galería como respaldo.
+  // ---------- cámara propia (getUserMedia) ----------
+  // En la app instalada, delegar en la cámara del sistema (input capture) no abre nada.
+  // Acá se muestra el video en vivo dentro de la app y se captura el cuadro a un canvas,
+  // así no dependemos de ninguna app externa. La galería queda como respaldo.
+  let camStream = null, camTarget = null, camFacing = 'environment';
+  function setCamMsg(text){
+    const el = $('camMsg');
+    if(!text){ el.style.display='none'; el.textContent=''; $('camVideo').style.display=''; return; }
+    el.textContent = text; el.style.display='block'; $('camVideo').style.display='none';
+  }
+  async function startCamStream(){
+    stopCamStream();
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: camFacing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    const v = $('camVideo');
+    v.srcObject = camStream;
+    await v.play().catch(()=>{});
+  }
+  function stopCamStream(){
+    if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
+    $('camVideo').srcObject = null;
+  }
+  async function openCamera(target){
+    camTarget = target;
+    if(target === 'prod' && prodImgs.length >= 5){ alert('Ya tenés 5 fotos de producto en esta ficha.'); return; }
+    $('camBg').classList.add('show');
+    setCamMsg('');
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      setCamMsg('Este dispositivo no permite abrir la cámara dentro de la app. Usá "elegir de la galería" y sacá la foto con la app de cámara.');
+      return;
+    }
+    try{
+      await startCamStream();
+    }catch(err){
+      const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+      setCamMsg(denied
+        ? 'La app no tiene permiso para usar la cámara. Permitilo cuando el celular lo pregunte, o activá Cámara en los permisos de esta app. Mientras tanto podés usar "elegir de la galería".'
+        : 'No se pudo abrir la cámara. Usá "elegir de la galería" como alternativa.');
+    }
+  }
+  function closeCamera(){
+    stopCamStream();
+    $('camBg').classList.remove('show');
+    setCamMsg('');
+  }
+  function grabFrame(maxDim, quality){
+    const v = $('camVideo');
+    let w = v.videoWidth, h = v.videoHeight;
+    if(!w || !h) return null;
+    if(w >= h){ if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; } }
+    else { if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; } }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(v, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+  $('btnCardCam').addEventListener('click', ()=> openCamera('card'));
+  $('btnProdCam').addEventListener('click', ()=> openCamera('prod'));
+  $('camCancel').addEventListener('click', closeCamera);
+  // Si la app pasa a segundo plano, liberamos la cámara (y no la dejamos prendida gastando batería).
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden && camStream) closeCamera(); });
+  $('camFlip').addEventListener('click', async ()=>{
+    camFacing = camFacing === 'environment' ? 'user' : 'environment';
+    try{ await startCamStream(); }catch(err){ setCamMsg('No se pudo cambiar de cámara.'); }
+  });
+  $('camShot').addEventListener('click', ()=>{
+    if(!camStream) return;
+    if(camTarget === 'card'){
+      const data = grabFrame(900, 0.72);
+      if(!data) return;
+      cardImg = data;
+      renderCardPreview();
+      $('ocrStatus').textContent = 'Foto guardada ✓ — no hace falta cargar nada más ahora. Queda pendiente para completar con IA cuando compartas el backup en un chat.';
+      $('ocrStatus').className = 'ocr-status ok';
+      scheduleDraftSave();
+      closeCamera();
+    } else {
+      const data = grabFrame(700, 0.65);
+      if(!data) return;
+      prodImgs.push(data);
+      renderProdGrid();
+      scheduleDraftSave();
+      // Seguimos con la cámara abierta para encadenar varias fotos del stand sin volver atrás.
+      if(prodImgs.length >= 5) closeCamera();
+    }
+  });
+
+  // ---------- business card photo (galería, respaldo de la cámara propia) ----------
   async function handleCardFile(e){
     const file = e.target.files[0]; if(!file) return;
     try{
@@ -698,7 +799,6 @@
     }
     e.target.value = '';
   }
-  $('cardInput').addEventListener('change', handleCardFile);
   $('cardInputGallery').addEventListener('change', handleCardFile);
   function renderCardPreview(){
     const wrap = $('cardPreviewWrap');
@@ -720,7 +820,6 @@
     e.target.value = '';
   }
   $('prodInput').addEventListener('change', handleProdFiles);
-  $('prodInputCam').addEventListener('change', handleProdFiles);
   function renderProdGrid(){
     $('prodGrid').innerHTML = prodImgs.map((src,i)=>`<div class="prod-thumb"><img src="${src}"><button type="button" data-i="${i}">×</button></div>`).join('');
     $('prodGrid').querySelectorAll('button').forEach(b=>{
