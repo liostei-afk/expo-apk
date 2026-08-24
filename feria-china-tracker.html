@@ -379,7 +379,7 @@
   let index = [];      // lightweight list: {id, feria, empresa, persona, stand, categorias, ratings, rating, prioridad, tags, fecha, thumb}
   let editingId = null;
   let selRatings = {stand:0,precio:0,calidad:0,diseno:0,atencion:0};
-  let selPrio = '', selFeria = '';
+  let selPrio = '', selFeria = localStorage.getItem('lastFeria') || '';
   let selTags = new Set(), selCats = new Set();
 
   function computeAvgRating(ratings){
@@ -620,6 +620,7 @@
   $('f_feria').addEventListener('click', e=>{
     const opt = e.target.closest('.opt'); if(!opt) return;
     selFeria = opt.dataset.v;
+    localStorage.setItem('lastFeria', selFeria);
     document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o===opt));
     scheduleDraftSave();
   });
@@ -739,13 +740,15 @@
 
   // ---------- form reset / save ----------
   function resetForm(){
-    editingId = null; selRatings={stand:0,precio:0,calidad:0,diseno:0,atencion:0}; selPrio=''; selFeria=''; selTags=new Set(); selCats=new Set();
+    // La feria NO se resetea: se mantiene la última elegida, para no tener que
+    // volver a tocarla en cada ficha mientras estés varios días seguidos en la misma.
+    editingId = null; selRatings={stand:0,precio:0,calidad:0,diseno:0,atencion:0}; selPrio=''; selTags=new Set(); selCats=new Set();
     cardImg=null; prodImgs=[]; ocrRawText=''; aiAnalyzedAt=null;
     ['f_empresa','f_persona','f_stand','f_precio','f_notas'].forEach(id=>$(id).value='');
     $('f_contacto').value=''; $('f_ocrText').value='';
     paintRatings();
     document.querySelectorAll('.prio-btn').forEach(b=>b.classList.remove('on'));
-    document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.remove('on'));
+    document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o.dataset.v===selFeria));
     document.querySelectorAll('#f_chips .chip').forEach(c=>c.classList.remove('on'));
     document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.remove('on'));
     renderCardPreview(); renderProdGrid();
@@ -1015,6 +1018,7 @@
     updatePendingCount();
   }
 
+  document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o.dataset.v===selFeria));
   updateLastBackupInfo();
   loadIndex();
   checkDraftOnLoad();
