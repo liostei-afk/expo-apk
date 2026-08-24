@@ -334,6 +334,7 @@
       </p>
       <div class="hint" id="lastBackupInfo" style="font-family:var(--mono);">sin backups todavía</div>
       <div class="hint" id="storageInfo" style="font-family:var(--mono);"></div>
+      <div class="hint" id="appVersion" style="font-family:var(--mono);"></div>
     </div>
     <div class="export-row">
       <button class="btn-secondary" id="btnExportCsv">↓ Exportar CSV</button>
@@ -379,6 +380,7 @@
 
 <script>
 (function(){
+  const APP_VERSION = 'v5 · 2026-08-24';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -986,6 +988,7 @@
   }
 
   document.querySelectorAll('#f_feria .opt').forEach(o=>o.classList.toggle('on', o.dataset.v===selFeria));
+  $('appVersion').textContent = 'versión de la app: ' + APP_VERSION;
   updateLastBackupInfo();
   loadIndex();
   checkDraftOnLoad();
@@ -993,8 +996,23 @@
 
   // Registra el service worker (si la app se sirve por http/https, no funciona sobre file://)
   // para que Chrome/Safari la ofrezcan como "Instalar app" y quede cacheada para uso 100% offline.
+  //
+  // updateViaCache:'none' evita que el propio sw.js se sirva de la caché HTTP: sin esto, la app
+  // instalada puede quedar clavada en una versión vieja durante horas o días.
   if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+      .then(reg=>{
+        reg.update().catch(()=>{});
+        // Si aparece una versión nueva mientras la app está abierta, la recarga una sola vez
+        // para que el usuario no se quede usando la anterior sin enterarse.
+        let reloading = false;
+        navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+          if(reloading) return;
+          reloading = true;
+          location.reload();
+        });
+      })
+      .catch(()=>{});
   }
 })();
 </script>
