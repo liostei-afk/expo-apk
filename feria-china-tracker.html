@@ -139,9 +139,15 @@
   .card-tags span{font-size:10.5px;background:var(--paper-2);color:var(--ink-2);padding:3px 8px;border-radius:10px;}
   .card-tags span.cat{background:#EAD9BC;color:var(--brass-dark);}
   .card-notes{font-size:12.5px;color:var(--ink-2);margin-top:8px;line-height:1.4;}
-  .card-actions{display:flex;gap:14px;margin-top:10px;}
-  .card-actions button{background:none;border:none;color:var(--brass-dark);font-size:12px;font-weight:600;cursor:pointer;padding:0;font-family:var(--sans);}
+  .card{cursor:pointer;}
+  .card:active{background:var(--paper-2);}
+  .card-actions{display:flex;align-items:center;gap:16px;margin-top:12px;}
+  .card-actions button{background:none;border:none;color:var(--slate);font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 2px;font-family:var(--sans);}
   .card-actions button.del{color:var(--clay);}
+  /* "Ver ficha" a la derecha, separado de las acciones secundarias: es la acción principal
+     y además toda la tarjeta es tocable. */
+  .card-actions .card-open{margin-left:auto;background:var(--ink);color:var(--paper);font-size:13px;font-weight:700;
+                           padding:9px 14px;border-radius:8px;white-space:nowrap;}
 
   .empty{text-align:center;padding:60px 20px;color:var(--slate);}
   .empty .big{font-size:38px;margin-bottom:10px;}
@@ -424,6 +430,7 @@
 <div class="lightbox" id="lightbox">
   <div class="lb-bar">
     <button type="button" class="lb-btn" id="lbZoom">Ampliar</button>
+    <button type="button" class="lb-btn" id="lbSave">Guardar foto</button>
     <button type="button" class="lb-btn" id="lbClose">Cerrar ✕</button>
   </div>
   <img id="lightboxImg" alt="">
@@ -451,7 +458,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v10 · 2026-08-25';
+  const APP_VERSION = 'v11 · 2026-08-25';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -528,11 +535,16 @@
           out += '<a class="c-link" href="mailto:' + encodeURI(raw) + '">' + escapeHtml(raw) + '</a>';
         } else {
           const href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
-          // Los links de WeChat (u.wechat.com / weixin.qq.com, salidos del QR de la tarjeta)
-          // abren la app directamente: los marcamos para que se note.
+          // Los links salidos del QR (u.wechat.com / weixin.qq.com) son páginas web:
+          // no agregan el contacto por sí solos. Lo útil es abrir la app (esquema weixin://)
+          // y tener el link a mano para pegarlo, así que ofrecemos ambas acciones.
           const isWeChat = /(?:u\.wechat\.com|weixin\.qq\.com)/i.test(raw);
-          out += '<a class="c-link' + (isWeChat ? ' c-wechat' : '') + '" href="' + escapeHtml(encodeURI(href)) + '" target="_blank" rel="noopener noreferrer">'
-               + (isWeChat ? 'Abrir en WeChat <span class="c-ico">del QR</span>' : escapeHtml(raw)) + '</a>';
+          if(isWeChat){
+            out += '<a class="c-link c-wechat" href="weixin://">Abrir WeChat</a>'
+                 + '<span class="c-link c-copy" data-copy="' + escapeHtml(href) + '">link del QR <span class="c-ico">copiar</span></span>';
+          } else {
+            out += '<a class="c-link" href="' + escapeHtml(encodeURI(href)) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(raw) + '</a>';
+          }
         }
         last = m.index + raw.length;
       }
@@ -1077,17 +1089,18 @@
           ${(s.categorias&&s.categorias.length) ? `<div class="card-tags">${s.categorias.map(c=>`<span class="cat">${escapeHtml(c)}</span>`).join('')}</div>`:''}
           <div class="card-actions">
             <button class="edit">Editar</button>
-            <button class="view-full">Ver ficha</button>
             <button class="del">Eliminar</button>
+            <span class="card-open">Ver ficha ›</span>
           </div>
         </div>
       </div>`;
     }).join('');
     cont.querySelectorAll('.card').forEach(card=>{
       const id = card.dataset.id;
-      card.querySelector('.edit').addEventListener('click', ()=> editSupplier(id));
-      card.querySelector('.view-full').addEventListener('click', ()=> viewSupplier(id));
-      card.querySelector('.del').addEventListener('click', ()=> deleteSupplier(id));
+      // Tocar cualquier parte de la tarjeta abre la ficha; Editar/Eliminar no propagan.
+      card.addEventListener('click', ()=> viewSupplier(id));
+      card.querySelector('.edit').addEventListener('click', e=>{ e.stopPropagation(); editSupplier(id); });
+      card.querySelector('.del').addEventListener('click', e=>{ e.stopPropagation(); deleteSupplier(id); });
     });
   }
 
@@ -1175,6 +1188,27 @@
     $('lightboxImg').src = '';
   }
   $('lbClose').addEventListener('click', closeLightbox);
+  // Guardar la foto en el celular: sirve para escanear el QR de la tarjeta desde
+  // WeChat (Escanear → elegir imagen de la galería), que es la forma que sí agrega el contacto.
+  $('lbSave').addEventListener('click', ()=>{
+    const src = $('lightboxImg').src;
+    if(!src || !src.startsWith('data:')) return;
+    try{
+      const [meta, b64] = src.split(',');
+      const mime = (meta.match(/data:([^;]+)/)||[])[1] || 'image/jpeg';
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], {type:mime});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tarjeta_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.jpg';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      setStatus('foto guardada en Descargas ✓');
+    }catch(e){ setStatus('no se pudo guardar la foto', true); }
+  });
   $('lbZoom').addEventListener('click', ()=>{
     const lb = $('lightbox');
     const zoomed = lb.classList.toggle('zoom');
