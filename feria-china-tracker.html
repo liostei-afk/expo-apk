@@ -20,13 +20,20 @@
     --ink-2: #2C4059;
     --paper: #F7F3EC;
     --paper-2: #EFE8DA;
+    --surface: #FFFDF9;
     --brass: #B8873F;
     --star-on: #16202F;
     --brass-dark: #8F6A2E;
     --clay: #A8442E;
     --moss: #4C7A5E;
     --slate: #5B6B7C;
-    --line: #D9D0BC;
+    --line: #DFD7C4;
+    --line-soft: #EDE6D8;
+    /* Sombras suaves y en capas: dan profundidad sin ensuciar el papel */
+    --sh-1: 0 1px 2px rgba(27,42,65,.05), 0 1px 3px rgba(27,42,65,.04);
+    --sh-2: 0 2px 4px rgba(27,42,65,.05), 0 6px 14px rgba(27,42,65,.07);
+    --sh-3: 0 8px 28px rgba(27,42,65,.16);
+    --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
     --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
     --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
@@ -35,46 +42,75 @@
   body{background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-tap-highlight-color:transparent;min-height:100vh;}
   .app{max-width:640px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative;}
 
-  .header{background:var(--ink);color:var(--paper);padding:18px 20px 16px;position:relative;overflow:hidden;}
-  .header::after{content:"";position:absolute;bottom:0;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg, var(--paper) 0 8px, transparent 8px 16px);opacity:.35;}
-  .header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
-  .brand{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);}
-  .title{font-size:20px;font-weight:600;margin:4px 0 2px;letter-spacing:-.01em;}
-  .subtitle{font-size:12px;color:#B9C2CE;font-family:var(--mono);}
-  .stat-pill{font-family:var(--mono);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:6px 12px;font-size:12px;text-align:center;white-space:nowrap;}
-  .stat-pill b{display:block;font-size:16px;color:var(--brass);}
+  .header{background:linear-gradient(160deg,#20314A 0%,var(--ink) 60%);color:var(--paper);
+          padding:calc(16px + env(safe-area-inset-top)) 20px 16px;position:relative;overflow:hidden;}
+  .header::after{content:"";position:absolute;bottom:0;left:0;right:0;height:3px;
+                 background:linear-gradient(90deg,var(--brass) 0%,rgba(184,135,63,.15) 100%);}
+  .header-top{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .brand{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);}
+  .title{font-size:21px;font-weight:700;margin:3px 0 3px;letter-spacing:-.02em;}
+  .subtitle{font-size:11.5px;color:#A9B4C3;font-family:var(--mono);letter-spacing:.02em;}
+  .stat-pill{font-family:var(--mono);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);
+             border-radius:var(--r-md);padding:8px 13px;font-size:10px;text-align:center;white-space:nowrap;
+             letter-spacing:.08em;text-transform:uppercase;color:#A9B4C3;}
+  .stat-pill b{display:block;font-size:19px;color:var(--brass);letter-spacing:0;margin-bottom:1px;}
 
-  .tabs{display:flex;background:var(--paper-2);border-bottom:1px solid var(--line);}
-  .tab{flex:1;text-align:center;padding:13px 6px;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;border-bottom:2px solid transparent;font-family:var(--sans);}
-  .tab.active{color:var(--ink);border-bottom-color:var(--brass);}
+  .tabs{display:flex;gap:4px;background:var(--paper);padding:8px 10px 0;border-bottom:1px solid var(--line-soft);
+        position:sticky;top:0;z-index:15;}
+  .tab{flex:1;text-align:center;padding:12px 6px 11px;font-size:13px;font-weight:600;color:var(--slate);
+       cursor:pointer;border-bottom:2.5px solid transparent;font-family:var(--sans);border-radius:var(--r-sm) var(--r-sm) 0 0;
+       transition:color .15s ease, background .15s ease;}
+  .tab.active{color:var(--ink);border-bottom-color:var(--brass);background:var(--paper-2);}
 
-  .view{display:none;padding:16px 18px 100px;}
+  .view{display:none;padding:18px 16px 110px;}
   .view.active{display:block;}
 
+  /* Bloques de contenido (usados en Backup) */
+  .panel{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+         padding:16px;margin-bottom:14px;box-shadow:var(--sh-1);}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .panel h4{margin:0;font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--ink);}
+  .panel-txt{margin:0;font-size:13px;line-height:1.55;color:var(--slate);}
+  .panel-note{margin:10px 0 0;font-size:11.5px;line-height:1.5;color:var(--slate);opacity:.9;}
+  .pill{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+        background:var(--paper-2);border:1px solid var(--line);border-radius:99px;padding:5px 10px;color:var(--brass-dark);white-space:nowrap;}
+  .pill b{font-size:13px;}
+  .meta-list{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);
+             font-family:var(--mono);font-size:10.5px;color:var(--slate);line-height:1.9;}
+
   .field{margin-bottom:16px;}
-  .field label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass-dark);margin-bottom:6px;font-weight:600;}
+  .field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+               color:var(--brass-dark);margin-bottom:7px;font-weight:600;}
   .field .hint, .group-card .hint{font-size:11.5px;color:var(--slate);margin-top:5px;font-family:var(--sans);}
-  .group-card{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:14px 14px 12px;margin-bottom:16px;}
-  .group-title{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass-dark);font-weight:700;margin-bottom:12px;}
-  input[type=text], input[type=search], textarea, select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-family:var(--sans);font-size:15px;}
-  input:focus, textarea:focus, select:focus{outline:none;border-color:var(--brass);}
+  .group-card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+              padding:16px 16px 14px;margin-bottom:18px;box-shadow:var(--sh-1);}
+  .group-title{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+               color:var(--brass-dark);font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line-soft);}
+  input[type=text], input[type=search], textarea, select{width:100%;padding:12px 13px;border:1px solid var(--line);
+    border-radius:var(--r-sm);background:#fff;color:var(--ink);font-family:var(--sans);font-size:15px;
+    transition:border-color .15s ease, box-shadow .15s ease;}
+  input:focus, textarea:focus, select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(184,135,63,.14);}
+  ::placeholder{color:#A8A093;}
   textarea{resize:vertical;min-height:64px;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
   .chips{display:flex;flex-wrap:wrap;gap:7px;}
-  .chip{font-size:12.5px;padding:7px 12px;border-radius:16px;border:1.5px solid var(--line);background:#fff;color:var(--slate);cursor:pointer;user-select:none;}
+  .chip{font-size:12.5px;padding:8px 13px;border-radius:99px;border:1px solid var(--line);background:var(--surface);
+        color:var(--slate);cursor:pointer;user-select:none;transition:background .15s ease, color .15s ease, border-color .15s ease;}
   .chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
   .chip.cat.on{background:var(--brass);border-color:var(--brass);color:#fff;}
 
   .toggle2{display:flex;gap:8px;}
-  .toggle2 .opt{flex:1;padding:11px 8px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;font-weight:600;text-align:center;cursor:pointer;color:var(--slate);}
+  .toggle2 .opt{flex:1;padding:12px 8px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);
+                font-size:13.5px;font-weight:600;text-align:center;cursor:pointer;color:var(--slate);
+                transition:background .15s ease, color .15s ease, border-color .15s ease;}
   .toggle2 .opt.on{background:var(--ink);border-color:var(--ink);color:var(--paper);}
 
   .stars{display:flex;gap:6px;}
   .star{font-size:30px;color:#CFC7B4;cursor:pointer;line-height:1;}
   .star.on{color:var(--star-on);}
 
-  .rating-block{background:#fff;border:1.5px solid var(--line);border-radius:9px;padding:10px 14px;}
+  .rating-block{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:6px 14px;box-shadow:var(--sh-1);}
   .rating-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
   .rating-row + .rating-row{border-top:1px solid var(--paper-2);}
   .rating-label{font-size:13.5px;color:var(--ink-2);font-weight:600;width:70px;flex-shrink:0;}
@@ -82,16 +118,26 @@
   .stars-mini .star{font-size:21px;}
 
   .priority-opts{display:flex;gap:8px;}
-  .prio-btn{flex:1;padding:10px 6px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-size:12.5px;font-weight:600;text-align:center;cursor:pointer;color:var(--slate);}
+  .prio-btn{flex:1;padding:11px 6px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);
+            font-size:12.5px;font-weight:600;text-align:center;cursor:pointer;color:var(--slate);
+            transition:background .15s ease, color .15s ease, border-color .15s ease;}
   .prio-btn[data-p="alta"].on{background:var(--clay);border-color:var(--clay);color:#fff;}
   .prio-btn[data-p="media"].on{background:var(--brass);border-color:var(--brass);color:#fff;}
   .prio-btn[data-p="baja"].on{background:var(--moss);border-color:var(--moss);color:#fff;}
   .prio-btn[data-p="descartado"].on{background:var(--slate);border-color:var(--slate);color:#fff;}
 
-  .btn-primary{width:100%;padding:14px;background:var(--ink);color:var(--paper);border:none;border-radius:9px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--sans);margin-top:6px;}
-  .btn-primary:active{background:var(--ink-2);}
-  .btn-secondary{width:100%;padding:12px;background:transparent;color:var(--slate);border:1.5px solid var(--line);border-radius:9px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;font-family:var(--sans);}
-  .btn-photo{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--paper-2);color:var(--ink-2);border:1.5px dashed var(--brass);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);text-transform:none;letter-spacing:normal;margin-bottom:0;}
+  .btn-primary{width:100%;padding:15px;background:var(--ink);color:var(--paper);border:none;border-radius:var(--r-md);
+               font-size:15px;font-weight:700;letter-spacing:.01em;cursor:pointer;font-family:var(--sans);margin-top:6px;
+               box-shadow:var(--sh-2);transition:transform .12s ease, background .15s ease;}
+  .btn-primary:active{background:var(--ink-2);transform:translateY(1px);}
+  .btn-secondary{width:100%;padding:12px;background:var(--surface);color:var(--ink-2);border:1px solid var(--line);
+                 border-radius:var(--r-md);font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;
+                 font-family:var(--sans);box-shadow:var(--sh-1);transition:background .15s ease;}
+  .btn-secondary:active{background:var(--paper-2);}
+  .btn-photo{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;
+             background:var(--paper-2);color:var(--ink-2);border:1.5px dashed var(--brass);border-radius:var(--r-md);
+             font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);text-transform:none;
+             letter-spacing:normal;margin-bottom:0;transition:background .15s ease;}
   input[type=file]{display:none;}
 
   /* El input de archivo va TRANSPARENTE ENCIMA del botón: el dedo toca el input real.
@@ -122,21 +168,23 @@
   .toolbar select{flex:1;min-width:110px;font-size:12.5px;padding:8px 8px;}
   .search-wrap{margin-bottom:12px;}
 
-  .card{display:flex;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden;}
+  .card{display:flex;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);
+         margin-bottom:12px;overflow:hidden;box-shadow:var(--sh-1);transition:box-shadow .15s ease, transform .12s ease;}
+  .card:active{box-shadow:var(--sh-2);transform:scale(.995);}
   .stub{width:56px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:var(--mono);position:relative;background:var(--slate);}
   .stub.alta{background:var(--clay);} .stub.media{background:var(--brass);} .stub.baja{background:var(--moss);} .stub.descartado{background:#9BA6AF;}
-  .stub .rate{font-size:20px;font-weight:700;}
+  .stub .rate{font-size:21px;font-weight:800;letter-spacing:-.02em;}
   .stub .rate-lbl{font-size:9px;letter-spacing:.06em;opacity:.85;margin-top:1px;}
   .stub::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;background:var(--paper);border-radius:50%;}
   .card-body{padding:12px 14px;flex:1;min-width:0;}
   .card-top{display:flex;justify-content:space-between;gap:8px;align-items:center;}
   .card-empresa-row{display:flex;align-items:center;gap:8px;min-width:0;}
   .card-thumb{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line);}
-  .card-empresa{font-weight:700;font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .card-feria{font-family:var(--mono);font-size:9.5px;color:var(--slate);white-space:nowrap;}
+  .card-empresa{font-weight:700;font-size:15.5px;letter-spacing:-.01em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .card-feria{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate);white-space:nowrap;}
   .card-meta{font-size:12.5px;color:var(--slate);margin-top:2px;}
   .card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
-  .card-tags span{font-size:10.5px;background:var(--paper-2);color:var(--ink-2);padding:3px 8px;border-radius:10px;}
+  .card-tags span{font-size:10.5px;background:var(--paper-2);color:var(--ink-2);padding:4px 9px;border-radius:99px;border:1px solid var(--line-soft);}
   .card-tags span.cat{background:#EAD9BC;color:var(--brass-dark);}
   .card-notes{font-size:12.5px;color:var(--ink-2);margin-top:8px;line-height:1.4;}
   .card{cursor:pointer;}
@@ -149,18 +197,25 @@
   .card-actions .card-open{margin-left:auto;background:var(--ink);color:var(--paper);font-size:13px;font-weight:700;
                            padding:9px 14px;border-radius:8px;white-space:nowrap;}
 
-  .empty{text-align:center;padding:60px 20px;color:var(--slate);}
-  .empty .big{font-size:38px;margin-bottom:10px;}
+  .empty{text-align:center;padding:56px 24px;color:var(--slate);font-size:13.5px;line-height:1.6;
+         background:var(--surface);border:1px dashed var(--line);border-radius:var(--r-lg);}
+  .empty .big{font-size:34px;margin-bottom:12px;opacity:.55;}
 
-  .fab{position:fixed;bottom:22px;right:calc(50% - 320px + 22px);width:56px;height:56px;border-radius:50%;background:var(--brass);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;border:none;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;z-index:20;}
+  .fab{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));right:calc(50% - 320px + 22px);width:58px;height:58px;
+       border-radius:50%;background:var(--brass);color:#fff;display:flex;align-items:center;justify-content:center;
+       font-size:29px;border:none;box-shadow:0 6px 20px rgba(143,106,46,.42);cursor:pointer;z-index:20;
+       transition:transform .12s ease;}
+  .fab:active{transform:scale(.94);}
   @media(max-width:680px){.fab{right:22px;}}
 
-  .status-bar{font-family:var(--mono);font-size:10.5px;padding:6px 18px;text-align:center;background:var(--paper-2);color:var(--slate);border-bottom:1px solid var(--line);}
+  .status-bar{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:7px 18px;text-align:center;
+              background:var(--paper-2);color:var(--slate);border-bottom:1px solid var(--line-soft);}
   .status-bar.err{background:#F3E3DE;color:var(--clay);}
 
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(27,42,65,.55);z-index:50;align-items:flex-end;justify-content:center;}
   .modal-bg.show{display:flex;}
-  .modal{background:var(--paper);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 18px 30px;}
+  .modal{background:var(--paper);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;
+          border-radius:20px 20px 0 0;padding:18px 18px calc(30px + env(safe-area-inset-bottom));box-shadow:var(--sh-3);}
   .modal h3{font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--brass-dark);margin:0;}
   .modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
   .modal-x{background:var(--paper-2);border:1px solid var(--line);color:var(--ink);width:34px;height:34px;border-radius:50%;
@@ -385,48 +440,49 @@
 
   <!-- TOOLS VIEW -->
   <div class="view" id="view-tools">
-    <div class="field">
-      <label>Backup diario (celular → PC → celular)</label>
-      <p style="font-size:13px;color:var(--slate);line-height:1.5;margin-top:4px;">
-        Todo se guarda en este celular, sin necesitar internet. Al final de cada día de feria: exportá el JSON acá y
-        pasalo a tu PC (cable USB, Bluetooth, WhatsApp, lo que tengas a mano). En la PC podés abrir este mismo archivo
-        .html en cualquier navegador para revisar y ordenar los datos con teclado. Cuando termines, exportá de nuevo
-        desde la PC y volvé a importar ese JSON acá: la app fusiona los cambios sin duplicar ni perder fichas nuevas
-        que hayas cargado mientras tanto.
+
+    <div class="panel">
+      <div class="panel-head">
+        <h4>Completar tarjetas con IA</h4>
+        <span class="pill" id="pendingPill"><b id="pendingCount">0</b> pendientes</span>
+      </div>
+      <p class="panel-txt">
+        Exportá solo lo que falta, compartilo en un chat con Claude y volvé a importar el archivo que te devuelve.
+        El resto de las fichas queda intacto.
       </p>
-      <div class="hint" id="lastBackupInfo" style="font-family:var(--mono);">sin backups todavía</div>
-      <div class="hint" id="storageInfo" style="font-family:var(--mono);"></div>
-      <div class="hint" id="appVersion" style="font-family:var(--mono);"></div>
+      <button class="btn-primary" id="btnExportPending" style="margin-top:12px;">↓ Exportar solo pendientes</button>
     </div>
-    <div class="export-row">
-      <button class="btn-secondary" id="btnExportCsv">↓ Exportar CSV</button>
-      <button class="btn-secondary" id="btnExportJson">↓ Exportar JSON</button>
-    </div>
-    <div class="import-box">
-      <div class="field">
-        <label>Restaurar / fusionar backup (JSON)</label>
-        <div class="photo-picker">
-          <span class="btn-photo">↑ Elegir archivo JSON</span>
-          <input type="file" id="importFile" accept="application/json">
-        </div>
-        <div class="hint">El CSV es solo para mirar en Excel (no tiene fotos) — no se puede volver a importar. Para editar datos en la PC y volver a subirlos, usá siempre el JSON.</div>
+
+    <div class="panel">
+      <div class="panel-head"><h4>Backup del día</h4></div>
+      <p class="panel-txt">
+        Todo vive en este celular. Al terminar cada jornada exportá el JSON completo (incluye las fotos) y pasalo a
+        tu PC por cable, Bluetooth o mensaje.
+      </p>
+      <div class="export-row" style="margin-top:12px;">
+        <button class="btn-secondary" id="btnExportJson">↓ JSON completo</button>
+        <button class="btn-secondary" id="btnExportCsv">↓ CSV (Excel)</button>
+      </div>
+      <div class="meta-list">
+        <div id="lastBackupInfo">sin backups todavía</div>
+        <div id="storageInfo"></div>
+        <div id="appVersion"></div>
       </div>
     </div>
-    <div class="import-box">
-      <div class="field">
-        <label>Completar los datos de las tarjetas con IA</label>
-        <p style="font-size:13px;color:var(--slate);line-height:1.5;margin:4px 0 0;">
-          Sacar la foto NUNCA depende de internet — eso se guarda siempre al toque. Las fichas con foto (o con texto
-          pegado del OCR nativo) quedan marcadas <b>"⏳ IA pendiente"</b> hasta que alguien las complete: hoy tenés
-          <b><span id="pendingCount">0</span></b> así.
-        </p>
-        <p style="font-size:13px;color:var(--slate);line-height:1.5;margin:10px 0 0;">
-          Cuando tengas Claude a mano (de vuelta, o con VPN), exportá el JSON acá arriba y compartíselo en un chat,
-          pidiéndole que complete las fichas pendientes. Te va a devolver el archivo listo para volver a importar acá
-          mismo — no hace falta ninguna cuenta ni configuración extra.
-        </p>
+
+    <div class="panel">
+      <div class="panel-head"><h4>Restaurar / fusionar</h4></div>
+      <p class="panel-txt">
+        Importá un JSON para incorporar fichas nuevas o actualizadas. Solo se pisa una ficha si la del archivo es más
+        reciente, así nunca perdés lo cargado acá.
+      </p>
+      <div class="photo-picker" style="margin-top:12px;">
+        <span class="btn-photo">↑ Elegir archivo JSON</span>
+        <input type="file" id="importFile" accept="application/json">
       </div>
+      <p class="panel-note">El CSV es solo para mirar en Excel: no tiene fotos y no se puede reimportar.</p>
     </div>
+
   </div>
 
   <button class="fab" id="fabAdd">+</button>
@@ -466,7 +522,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v14 · 2026-08-25';
+  const APP_VERSION = 'v15 · 2026-08-25';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -1316,6 +1372,18 @@
     localStorage.setItem('lastExportAt', String(Date.now()));
     updateLastBackupInfo(); checkBackupReminder();
     setStatus('backup descargado ✓ — pasalo ya a tu PC');
+  });
+  // Export acotado: solo las fichas que faltan completar con IA. Archivo mucho más liviano
+  // para compartir en un chat, y evita reprocesar lo que ya está hecho.
+  $('btnExportPending').addEventListener('click', async ()=>{
+    const pend = index.filter(s=>s.aiStatus==='pending');
+    if(!pend.length){ alert('No hay fichas pendientes: todas ya tienen sus datos completos.'); return; }
+    setStatus('preparando pendientes...');
+    const full = [];
+    for(const s of pend){ const f = await loadFullSupplier(s.id); if(f) full.push(f); }
+    const stamp = new Date().toISOString().slice(0,10);
+    download(`pendientes_${stamp}.json`, JSON.stringify(full, null, 2), 'application/json');
+    setStatus(`${full.length} ficha${full.length>1?'s':''} pendiente${full.length>1?'s':''} descargada${full.length>1?'s':''} ✓`);
   });
   $('btnExportCsv').addEventListener('click', async ()=>{
     setStatus('preparando CSV...');
