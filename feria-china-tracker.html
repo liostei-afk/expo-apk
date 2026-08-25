@@ -186,6 +186,7 @@
   .c-ico{font-family:var(--mono);font-size:10px;color:var(--brass-dark);text-transform:uppercase;letter-spacing:.06em;margin-left:4px;}
   .c-link.c-wechat{background:#DFF0E2;border-color:var(--moss);color:#245538;}
   .c-link.c-wechat .c-ico{color:var(--moss);}
+  .c-note{display:inline-block;font-size:12px;color:var(--slate);font-style:italic;}
 
   .export-row{display:flex;gap:10px;}
   .export-row .btn-secondary{margin-top:0;}
@@ -458,7 +459,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v11 · 2026-08-25';
+  const APP_VERSION = 'v13 · 2026-08-25';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -512,7 +513,11 @@
   }
   function linkifyContact(text){
     if(!text || !text.trim()) return '—';
-    const WECHAT_LABEL = /^\s*(wechat|we\s*chat|微信|weixin|qq)\s*[:：]/i;
+    // Solo WeChat: QQ no se usa, así que queda como texto plano.
+    const WECHAT_LABEL = /^\s*(wechat|we\s*chat|微信|weixin)\s*[:：]/i;
+    // El botón de WeChat hace siempre lo mismo (guarda la tarjeta y abre la app),
+    // así que se muestra una sola vez aunque la tarjeta tenga varios QR.
+    let wechatBtnShown = false;
     return text.split('\n').map(line=>{
       // Línea de WeChat/QQ: el valor se copia (no hay link que abra la app con ese ID).
       const wl = line.match(WECHAT_LABEL);
@@ -540,8 +545,14 @@
           // y tener el link a mano para pegarlo, así que ofrecemos ambas acciones.
           const isWeChat = /(?:u\.wechat\.com|weixin\.qq\.com)/i.test(raw);
           if(isWeChat){
-            out += '<a class="c-link c-wechat" href="weixin://">Abrir WeChat</a>'
-                 + '<span class="c-link c-copy" data-copy="' + escapeHtml(href) + '">link del QR <span class="c-ico">copiar</span></span>';
+            // Un solo paso: guarda la foto de la tarjeta y abre WeChat, para escanear
+            // el QR desde la galería (que es lo único que agrega el contacto de verdad).
+            if(!wechatBtnShown){
+              out += '<span class="c-link c-wechat" data-wechat="1">Guardar tarjeta y abrir WeChat</span>';
+              wechatBtnShown = true;
+            } else {
+              out += '<span class="c-note">(otro QR en la foto de la tarjeta)</span>';
+            }
           } else {
             out += '<a class="c-link" href="' + escapeHtml(encodeURI(href)) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(raw) + '</a>';
           }
@@ -1131,11 +1142,13 @@
     document.querySelector('[data-tab="form"]').click();
   }
 
+  let viewedFull = null;   // ficha abierta en el modal (para acciones como "abrir WeChat")
   async function viewSupplier(id){
     $('modalContent').innerHTML = 'Cargando…';
     $('modalBg').classList.add('show');
     const full = await loadFullSupplier(id);
     if(!full){ $('modalContent').innerHTML = 'No se pudo cargar esta ficha.'; return; }
+    viewedFull = full;
     $('modalContent').innerHTML = `
       <div style="font-size:17px;font-weight:700;">${full.empresa ? escapeHtml(full.empresa) : '(sin completar aún)'}</div>
       <div style="font-family:var(--mono);font-size:11px;color:var(--slate);margin:4px 0 10px;">${escapeHtml(full.feria||'')} · ${escapeHtml(full.stand||'')}</div>
@@ -1165,6 +1178,8 @@
   }
   // Copiar WeChat/QQ desde la ficha (delegado: el contenido del modal se regenera cada vez).
   $('modalContent').addEventListener('click', e=>{
+    const wc = e.target.closest('[data-wechat]');
+    if(wc){ saveCardsAndOpenWeChat(wc); return; }
     const el = e.target.closest('.c-copy');
     if(el){
       copyToClipboard(el.dataset.copy);
@@ -1175,6 +1190,22 @@
     const img = e.target.closest('img.zoomable');
     if(img) openLightbox(img.src);
   });
+
+  // Guarda las fotos de la tarjeta y abre WeChat, para escanear el QR desde la galería.
+  function saveCardsAndOpenWeChat(btn){
+    const cards = (viewedFull && (viewedFull.tarjetaImgs || (viewedFull.tarjetaImg ? [viewedFull.tarjetaImg] : []))) || [];
+    const empresa = (viewedFull && viewedFull.empresa || 'tarjeta').replace(/[^\wÀ-ſ -]/g,' ').replace(/\s+/g,'_').replace(/^_|_$/g,'').slice(0,40) || 'tarjeta';
+    let saved = 0;
+    cards.forEach((src,i)=>{
+      if(saveImageToDevice(src, `${empresa}_${i===0?'frente':'dorso'}_${stamp()}.jpg`)) saved++;
+    });
+    const original = btn.textContent;
+    btn.textContent = saved ? `${saved} foto${saved>1?'s':''} guardada${saved>1?'s':''} · abriendo WeChat…` : 'Abriendo WeChat…';
+    setStatus(saved ? `tarjeta guardada en Descargas ✓ — en WeChat: Descubrir › Escanear › elegir la imagen` : 'abriendo WeChat…');
+    // Damos aire a que se concreten las descargas antes de salir de la app.
+    setTimeout(()=>{ location.href = 'weixin://'; }, saved ? 900 : 100);
+    setTimeout(()=>{ btn.textContent = original; }, 5000);
+  }
 
   // ---------- visor de fotos ----------
   function openLightbox(src){
@@ -1190,24 +1221,26 @@
   $('lbClose').addEventListener('click', closeLightbox);
   // Guardar la foto en el celular: sirve para escanear el QR de la tarjeta desde
   // WeChat (Escanear → elegir imagen de la galería), que es la forma que sí agrega el contacto.
-  $('lbSave').addEventListener('click', ()=>{
-    const src = $('lightboxImg').src;
-    if(!src || !src.startsWith('data:')) return;
+  function saveImageToDevice(src, name){
+    if(!src || !src.startsWith('data:')) return false;
     try{
       const [meta, b64] = src.split(',');
       const mime = (meta.match(/data:([^;]+)/)||[])[1] || 'image/jpeg';
       const bin = atob(b64);
       const bytes = new Uint8Array(bin.length);
       for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
-      const blob = new Blob([bytes], {type:mime});
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(new Blob([bytes], {type:mime}));
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'tarjeta_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.jpg';
+      a.href = url; a.download = name;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(()=>URL.revokeObjectURL(url), 4000);
-      setStatus('foto guardada en Descargas ✓');
-    }catch(e){ setStatus('no se pudo guardar la foto', true); }
+      return true;
+    }catch(e){ return false; }
+  }
+  function stamp(){ return new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'); }
+  $('lbSave').addEventListener('click', ()=>{
+    const ok = saveImageToDevice($('lightboxImg').src, 'tarjeta_'+stamp()+'.jpg');
+    setStatus(ok ? 'foto guardada en Descargas ✓' : 'no se pudo guardar la foto', !ok);
   });
   $('lbZoom').addEventListener('click', ()=>{
     const lb = $('lightbox');
