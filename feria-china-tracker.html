@@ -160,6 +160,13 @@
   .modal-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;}
   .modal-card-img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;margin-top:6px;}
 
+  /* Datos de contacto tocables (mail, web, teléfono, WeChat) */
+  .contact-cell{line-height:2;padding:5px 0;}
+  .c-link{display:inline-block;color:var(--ink);background:var(--paper-2);border:1px solid var(--line);border-radius:7px;
+          padding:5px 9px;margin:2px 0;text-decoration:none;font-weight:600;font-size:13px;word-break:break-all;cursor:pointer;}
+  .c-link:active{background:var(--line);}
+  .c-ico{font-family:var(--mono);font-size:10px;color:var(--brass-dark);text-transform:uppercase;letter-spacing:.06em;margin-left:4px;}
+
   .export-row{display:flex;gap:10px;}
   .export-row .btn-secondary{margin-top:0;}
   .import-box{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
@@ -422,7 +429,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v8 · 2026-08-24';
+  const APP_VERSION = 'v9 · 2026-08-25';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -454,6 +461,61 @@
   function setStatus(msg, isErr){ statusBar.textContent = msg; statusBar.className = 'status-bar' + (isErr?' err':''); }
   function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ---------- contacto tocable: mail, web, teléfono y WeChat ----------
+  // WeChat no tiene un link que abra un chat directo desde afuera, así que ese ID
+  // se copia al portapapeles para pegarlo en la app de WeChat.
+  function copyToClipboard(text){
+    const done = ()=> setStatus('copiado: ' + text);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+    } else { fallbackCopy(text, done); }
+  }
+  function fallbackCopy(text, done){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      done();
+    }catch(e){ setStatus('no se pudo copiar', true); }
+  }
+  function linkifyContact(text){
+    if(!text || !text.trim()) return '—';
+    const WECHAT_LABEL = /^\s*(wechat|we\s*chat|微信|weixin|qq)\s*[:：]/i;
+    return text.split('\n').map(line=>{
+      // Línea de WeChat/QQ: el valor se copia (no hay link que abra la app con ese ID).
+      const wl = line.match(WECHAT_LABEL);
+      if(wl){
+        const label = line.slice(0, wl[0].length);
+        const value = line.slice(wl[0].length).trim();
+        if(value){
+          return escapeHtml(label) + ' <span class="c-link c-copy" data-copy="' + escapeHtml(value) + '">'
+               + escapeHtml(value) + ' <span class="c-ico">copiar</span></span>';
+        }
+      }
+      // Resto: detectamos mail, web y teléfono dentro de la línea.
+      const re = /([\w.+-]+@[\w-]+\.[\w.-]{2,})|((?:https?:\/\/|www\.)[^\s,;]+)|(\+?\d[\d\s().\-]{6,}\d)/g;
+      let out = '', last = 0, m;
+      while((m = re.exec(line)) !== null){
+        out += escapeHtml(line.slice(last, m.index));
+        const raw = m[0];
+        if(m[1]){
+          out += '<a class="c-link" href="mailto:' + encodeURI(raw) + '">' + escapeHtml(raw) + '</a>';
+        } else if(m[2]){
+          const href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+          out += '<a class="c-link" href="' + escapeHtml(encodeURI(href)) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(raw) + '</a>';
+        } else {
+          const digits = raw.replace(/[^\d+]/g, '');
+          out += '<a class="c-link" href="tel:' + escapeHtml(digits) + '">' + escapeHtml(raw) + '</a>';
+        }
+        last = m.index + raw.length;
+      }
+      out += escapeHtml(line.slice(last));
+      return out;
+    }).join('<br>');
+  }
 
   // ---------- category filter select ----------
   $('filterCat').innerHTML = '<option value="">Todas las categorías</option>' + CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
@@ -1045,7 +1107,7 @@
       <table style="width:100%;font-size:13.5px;border-collapse:collapse;margin-top:10px;">
         <tr><td style="color:var(--slate);padding:5px 0;width:38%;">Persona</td><td>${escapeHtml(full.persona||'—')}</td></tr>
         <tr><td style="color:var(--slate);padding:5px 0;">Prioridad</td><td>${escapeHtml(full.prioridad||'—')}</td></tr>
-        <tr><td style="color:var(--slate);padding:5px 0;">Contacto</td><td style="white-space:pre-wrap;">${escapeHtml(full.contacto||'—')}</td></tr>
+        <tr><td style="color:var(--slate);padding:5px 0;vertical-align:top;">Contacto</td><td class="contact-cell">${linkifyContact(full.contacto)}</td></tr>
       </table>
       <div style="margin-top:12px;">
         <b style="font-size:13px;">Valoración (prom. ${full.rating||'—'})</b>
@@ -1064,6 +1126,14 @@
       <div style="margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--slate);">Cargado: ${new Date(full.fecha).toLocaleString('es-AR')}</div>
     `;
   }
+  // Copiar WeChat/QQ desde la ficha (delegado: el contenido del modal se regenera cada vez).
+  $('modalContent').addEventListener('click', e=>{
+    const el = e.target.closest('.c-copy');
+    if(!el) return;
+    copyToClipboard(el.dataset.copy);
+    const ico = el.querySelector('.c-ico');
+    if(ico){ ico.textContent = '¡copiado!'; setTimeout(()=>{ ico.textContent = 'copiar'; }, 1600); }
+  });
   $('modalClose').addEventListener('click', ()=> $('modalBg').classList.remove('show'));
   $('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) $('modalBg').classList.remove('show'); });
 
