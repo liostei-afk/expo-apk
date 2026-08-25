@@ -160,12 +160,26 @@
   .modal-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;}
   .modal-card-img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;margin-top:6px;}
 
+  /* Visor de fotos a pantalla completa. No se puede usar window.open() con imágenes
+     embebidas (data:) porque los navegadores bloquean esa navegación: da pantalla en blanco. */
+  .lightbox{display:none;position:fixed;inset:0;background:#000;z-index:200;overflow:auto;
+            align-items:center;justify-content:center;padding:0;-webkit-overflow-scrolling:touch;}
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:100%;max-height:100vh;object-fit:contain;display:block;margin:auto;}
+  .lightbox.zoom{align-items:flex-start;justify-content:flex-start;}
+  .lightbox.zoom img{max-width:none;max-height:none;width:250%;}
+  .lb-bar{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;gap:10px;
+          padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:rgba(0,0,0,.8);z-index:201;}
+  .lb-btn{background:none;border:none;color:#fff;font-size:14px;font-weight:600;padding:8px 10px;cursor:pointer;font-family:var(--sans);}
+
   /* Datos de contacto tocables (mail, web, teléfono, WeChat) */
   .contact-cell{line-height:2;padding:5px 0;}
   .c-link{display:inline-block;color:var(--ink);background:var(--paper-2);border:1px solid var(--line);border-radius:7px;
           padding:5px 9px;margin:2px 0;text-decoration:none;font-weight:600;font-size:13px;word-break:break-all;cursor:pointer;}
   .c-link:active{background:var(--line);}
   .c-ico{font-family:var(--mono);font-size:10px;color:var(--brass-dark);text-transform:uppercase;letter-spacing:.06em;margin-left:4px;}
+  .c-link.c-wechat{background:#DFF0E2;border-color:var(--moss);color:#245538;}
+  .c-link.c-wechat .c-ico{color:var(--moss);}
 
   .export-row{display:flex;gap:10px;}
   .export-row .btn-secondary{margin-top:0;}
@@ -407,6 +421,14 @@
   <button class="fab" id="fabAdd">+</button>
 </div>
 
+<div class="lightbox" id="lightbox">
+  <div class="lb-bar">
+    <button type="button" class="lb-btn" id="lbZoom">Ampliar</button>
+    <button type="button" class="lb-btn" id="lbClose">Cerrar ✕</button>
+  </div>
+  <img id="lightboxImg" alt="">
+</div>
+
 <div class="cam-bg" id="camBg">
   <div class="cam-count" id="camCount"></div>
   <video class="cam-video" id="camVideo" autoplay playsinline muted></video>
@@ -429,7 +451,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v9 · 2026-08-25';
+  const APP_VERSION = 'v10 · 2026-08-25';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -495,20 +517,22 @@
                + escapeHtml(value) + ' <span class="c-ico">copiar</span></span>';
         }
       }
-      // Resto: detectamos mail, web y teléfono dentro de la línea.
-      const re = /([\w.+-]+@[\w-]+\.[\w.-]{2,})|((?:https?:\/\/|www\.)[^\s,;]+)|(\+?\d[\d\s().\-]{6,}\d)/g;
+      // Solo mail y web se vuelven accionables. Los teléfonos quedan como texto:
+      // no se usan para llamar y como link solo estorban.
+      const re = /([\w.+-]+@[\w-]+\.[\w.-]{2,})|((?:https?:\/\/|www\.)[^\s,;]+)/g;
       let out = '', last = 0, m;
       while((m = re.exec(line)) !== null){
         out += escapeHtml(line.slice(last, m.index));
         const raw = m[0];
         if(m[1]){
           out += '<a class="c-link" href="mailto:' + encodeURI(raw) + '">' + escapeHtml(raw) + '</a>';
-        } else if(m[2]){
-          const href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
-          out += '<a class="c-link" href="' + escapeHtml(encodeURI(href)) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(raw) + '</a>';
         } else {
-          const digits = raw.replace(/[^\d+]/g, '');
-          out += '<a class="c-link" href="tel:' + escapeHtml(digits) + '">' + escapeHtml(raw) + '</a>';
+          const href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+          // Los links de WeChat (u.wechat.com / weixin.qq.com, salidos del QR de la tarjeta)
+          // abren la app directamente: los marcamos para que se note.
+          const isWeChat = /(?:u\.wechat\.com|weixin\.qq\.com)/i.test(raw);
+          out += '<a class="c-link' + (isWeChat ? ' c-wechat' : '') + '" href="' + escapeHtml(encodeURI(href)) + '" target="_blank" rel="noopener noreferrer">'
+               + (isWeChat ? 'Abrir en WeChat <span class="c-ico">del QR</span>' : escapeHtml(raw)) + '</a>';
         }
         last = m.index + raw.length;
       }
@@ -1103,7 +1127,7 @@
       <div style="font-size:17px;font-weight:700;">${full.empresa ? escapeHtml(full.empresa) : '(sin completar aún)'}</div>
       <div style="font-family:var(--mono);font-size:11px;color:var(--slate);margin:4px 0 10px;">${escapeHtml(full.feria||'')} · ${escapeHtml(full.stand||'')}</div>
       ${(() => { const cards = full.tarjetaImgs || (full.tarjetaImg ? [full.tarjetaImg] : []);
-          return cards.length ? `<div class="modal-gallery">${cards.map(src=>`<img src="${src}" onclick="window.open('${src}')">`).join('')}</div>` : ''; })()}
+          return cards.length ? `<div class="modal-gallery">${cards.map(src=>`<img class="zoomable" src="${src}">`).join('')}</div>` : ''; })()}
       <table style="width:100%;font-size:13.5px;border-collapse:collapse;margin-top:10px;">
         <tr><td style="color:var(--slate);padding:5px 0;width:38%;">Persona</td><td>${escapeHtml(full.persona||'—')}</td></tr>
         <tr><td style="color:var(--slate);padding:5px 0;">Prioridad</td><td>${escapeHtml(full.prioridad||'—')}</td></tr>
@@ -1122,18 +1146,43 @@
       ${(full.categorias&&full.categorias.length)?`<div class="card-tags" style="margin-top:10px;">${full.categorias.map(c=>`<span class="cat">${escapeHtml(c)}</span>`).join('')}</div>`:''}
       ${(full.tags&&full.tags.length)?`<div class="card-tags" style="margin-top:8px;">${full.tags.map(t=>`<span>${escapeHtml(t)}</span>`).join('')}</div>`:''}
       ${full.notas?`<div style="margin-top:14px;font-size:13.5px;line-height:1.5;"><b>Notas:</b><br>${escapeHtml(full.notas)}</div>`:''}
-      ${(full.productImgs&&full.productImgs.length)?`<div style="margin-top:14px;"><b style="font-size:13px;">Fotos de producto</b><div class="modal-gallery">${full.productImgs.map(src=>`<img src="${src}" onclick="window.open('${src}')">`).join('')}</div></div>`:''}
+      ${(full.productImgs&&full.productImgs.length)?`<div style="margin-top:14px;"><b style="font-size:13px;">Fotos de producto</b><div class="modal-gallery">${full.productImgs.map(src=>`<img class="zoomable" src="${src}">`).join('')}</div></div>`:''}
       <div style="margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--slate);">Cargado: ${new Date(full.fecha).toLocaleString('es-AR')}</div>
     `;
   }
   // Copiar WeChat/QQ desde la ficha (delegado: el contenido del modal se regenera cada vez).
   $('modalContent').addEventListener('click', e=>{
     const el = e.target.closest('.c-copy');
-    if(!el) return;
-    copyToClipboard(el.dataset.copy);
-    const ico = el.querySelector('.c-ico');
-    if(ico){ ico.textContent = '¡copiado!'; setTimeout(()=>{ ico.textContent = 'copiar'; }, 1600); }
+    if(el){
+      copyToClipboard(el.dataset.copy);
+      const ico = el.querySelector('.c-ico');
+      if(ico){ ico.textContent = '¡copiado!'; setTimeout(()=>{ ico.textContent = 'copiar'; }, 1600); }
+      return;
+    }
+    const img = e.target.closest('img.zoomable');
+    if(img) openLightbox(img.src);
   });
+
+  // ---------- visor de fotos ----------
+  function openLightbox(src){
+    $('lightboxImg').src = src;
+    $('lightbox').classList.remove('zoom');
+    $('lbZoom').textContent = 'Ampliar';
+    $('lightbox').classList.add('show');
+  }
+  function closeLightbox(){
+    $('lightbox').classList.remove('show','zoom');
+    $('lightboxImg').src = '';
+  }
+  $('lbClose').addEventListener('click', closeLightbox);
+  $('lbZoom').addEventListener('click', ()=>{
+    const lb = $('lightbox');
+    const zoomed = lb.classList.toggle('zoom');
+    $('lbZoom').textContent = zoomed ? 'Achicar' : 'Ampliar';
+    if(!zoomed) lb.scrollTo(0,0);
+  });
+  // Tocar el fondo (no la imagen) cierra el visor.
+  $('lightbox').addEventListener('click', e=>{ if(e.target === $('lightbox')) closeLightbox(); });
   $('modalClose').addEventListener('click', ()=> $('modalBg').classList.remove('show'));
   $('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) $('modalBg').classList.remove('show'); });
 
