@@ -161,7 +161,11 @@
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(27,42,65,.55);z-index:50;align-items:flex-end;justify-content:center;}
   .modal-bg.show{display:flex;}
   .modal{background:var(--paper);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 18px 30px;}
-  .modal h3{font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--brass-dark);margin:0 0 14px;}
+  .modal h3{font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--brass-dark);margin:0;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .modal-x{background:var(--paper-2);border:1px solid var(--line);color:var(--ink);width:34px;height:34px;border-radius:50%;
+           font-size:15px;line-height:1;cursor:pointer;flex-shrink:0;font-family:var(--sans);}
+  .modal-x:active{background:var(--line);}
   .modal-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
   .modal-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;}
   .modal-card-img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;margin-top:6px;}
@@ -451,7 +455,10 @@
 
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <h3>Ficha completa</h3>
+    <div class="modal-head">
+      <h3>Ficha completa</h3>
+      <button type="button" class="modal-x" id="modalX" aria-label="Cerrar">✕</button>
+    </div>
     <div id="modalContent">Cargando…</div>
     <button class="btn-secondary" id="modalClose">Cerrar</button>
   </div>
@@ -459,7 +466,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v13 · 2026-08-25';
+  const APP_VERSION = 'v14 · 2026-08-25';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -491,6 +498,28 @@
   function setStatus(msg, isErr){ statusBar.textContent = msg; statusBar.className = 'status-bar' + (isErr?' err':''); }
   function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ---------- capas abiertas (ficha, visor de fotos, cámara) ----------
+  // Cada capa agrega una entrada al historial, así el botón "atrás" del celular
+  // cierra lo que esté abierto en vez de salir de la app.
+  const overlays = [];
+  function openOverlay(name, closeFn){
+    overlays.push({name, closeFn});
+    try{ history.pushState({overlay:name}, ''); }catch(e){}
+  }
+  // Cerrar desde un botón de la app: volvemos atrás en el historial y el popstate
+  // hace el cierre real, para que la pila quede siempre consistente.
+  function dismissOverlay(name){
+    const i = overlays.map(o=>o.name).lastIndexOf(name);
+    if(i === -1) return;
+    if(i === overlays.length - 1){ try{ history.back(); }catch(e){ closeTopOverlay(); } }
+    else { overlays.splice(i,1)[0].closeFn(); }
+  }
+  function closeTopOverlay(){
+    const top = overlays.pop();
+    if(top) top.closeFn();
+  }
+  window.addEventListener('popstate', ()=>{ if(overlays.length) closeTopOverlay(); });
 
   // ---------- contacto tocable: mail, web, teléfono y WeChat ----------
   // WeChat no tiene un link que abra un chat directo desde afuera, así que ese ID
@@ -883,6 +912,7 @@
     $('camBg').classList.add('show');
     setCamMsg('');
     updateCamCount();
+    openOverlay('camera', closeCamera);
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       setCamMsg('Este dispositivo no permite abrir la cámara dentro de la app. Usá "elegir de la galería" y sacá la foto con la app de cámara.');
       return;
@@ -914,9 +944,9 @@
   }
   $('btnCardCam').addEventListener('click', ()=> openCamera('card'));
   $('btnProdCam').addEventListener('click', ()=> openCamera('prod'));
-  $('camCancel').addEventListener('click', closeCamera);
+  $('camCancel').addEventListener('click', ()=> dismissOverlay('camera'));
   // Si la app pasa a segundo plano, liberamos la cámara (y no la dejamos prendida gastando batería).
-  document.addEventListener('visibilitychange', ()=>{ if(document.hidden && camStream) closeCamera(); });
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden && camStream) dismissOverlay('camera'); });
   $('camFlip').addEventListener('click', async ()=>{
     camFacing = camFacing === 'environment' ? 'user' : 'environment';
     try{ await startCamStream(); }catch(err){ setCamMsg('No se pudo cambiar de cámara.'); }
@@ -933,7 +963,7 @@
       scheduleDraftSave();
       updateCamCount();
       // Tras el frente seguimos abiertos para el dorso; al completar las dos, cerramos.
-      if(cardImgs.length >= MAX_CARD_IMGS) setTimeout(closeCamera, 350);
+      if(cardImgs.length >= MAX_CARD_IMGS) setTimeout(()=> dismissOverlay('camera'), 350);
     } else {
       const data = grabFrame(700, 0.65);
       if(!data) return;
@@ -943,7 +973,7 @@
       scheduleDraftSave();
       updateCamCount();
       // Seguimos con la cámara abierta para encadenar varias fotos del stand sin volver atrás.
-      if(prodImgs.length >= MAX_PROD_IMGS) setTimeout(closeCamera, 350);
+      if(prodImgs.length >= MAX_PROD_IMGS) setTimeout(()=> dismissOverlay('camera'), 350);
     }
   });
 
@@ -1149,6 +1179,7 @@
     const full = await loadFullSupplier(id);
     if(!full){ $('modalContent').innerHTML = 'No se pudo cargar esta ficha.'; return; }
     viewedFull = full;
+    openOverlay('modal', ()=> $('modalBg').classList.remove('show'));
     $('modalContent').innerHTML = `
       <div style="font-size:17px;font-weight:700;">${full.empresa ? escapeHtml(full.empresa) : '(sin completar aún)'}</div>
       <div style="font-family:var(--mono);font-size:11px;color:var(--slate);margin:4px 0 10px;">${escapeHtml(full.feria||'')} · ${escapeHtml(full.stand||'')}</div>
@@ -1213,12 +1244,13 @@
     $('lightbox').classList.remove('zoom');
     $('lbZoom').textContent = 'Ampliar';
     $('lightbox').classList.add('show');
+    openOverlay('lightbox', closeLightbox);
   }
   function closeLightbox(){
     $('lightbox').classList.remove('show','zoom');
     $('lightboxImg').src = '';
   }
-  $('lbClose').addEventListener('click', closeLightbox);
+  $('lbClose').addEventListener('click', ()=> dismissOverlay('lightbox'));
   // Guardar la foto en el celular: sirve para escanear el QR de la tarjeta desde
   // WeChat (Escanear → elegir imagen de la galería), que es la forma que sí agrega el contacto.
   function saveImageToDevice(src, name){
@@ -1249,9 +1281,10 @@
     if(!zoomed) lb.scrollTo(0,0);
   });
   // Tocar el fondo (no la imagen) cierra el visor.
-  $('lightbox').addEventListener('click', e=>{ if(e.target === $('lightbox')) closeLightbox(); });
-  $('modalClose').addEventListener('click', ()=> $('modalBg').classList.remove('show'));
-  $('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) $('modalBg').classList.remove('show'); });
+  $('lightbox').addEventListener('click', e=>{ if(e.target === $('lightbox')) dismissOverlay('lightbox'); });
+  $('modalClose').addEventListener('click', ()=> dismissOverlay('modal'));
+  $('modalX').addEventListener('click', ()=> dismissOverlay('modal'));
+  $('modalBg').addEventListener('click', e=>{ if(e.target===$('modalBg')) dismissOverlay('modal'); });
 
   async function deleteSupplier(id){
     if(!confirm('¿Eliminar esta ficha?')) return;
