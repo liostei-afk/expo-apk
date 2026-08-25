@@ -1,6 +1,6 @@
 // Service worker: cachea la app para que funcione sin conexión una vez instalada.
 // Subí CACHE_VERSION cada vez que cambies feria-china-tracker.html para forzar la actualización.
-const CACHE_VERSION = 'feria-china-v15';
+const CACHE_VERSION = 'feria-china-v16';
 const APP_SHELL = [
   './feria-china-tracker.html',
   './manifest.webmanifest',
