@@ -174,6 +174,18 @@
   .cam-shot{width:68px;height:68px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.35);cursor:pointer;flex-shrink:0;}
   .cam-shot:active{transform:scale(.94);}
   .cam-msg{color:#fff;text-align:center;padding:20px;font-size:14px;line-height:1.5;}
+  .cam-count{position:absolute;top:calc(12px + env(safe-area-inset-top));left:0;right:0;text-align:center;color:#fff;font-family:var(--mono);font-size:13px;background:rgba(0,0,0,.45);padding:8px;z-index:3;}
+  /* Destello blanco al disparar: confirma la foto sin depender del sonido */
+  .cam-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;}
+  .cam-flash.fire{animation:camflash .32s ease-out;}
+  @keyframes camflash{0%{opacity:.9;}100%{opacity:0;}}
+
+  /* Miniaturas frente/dorso de la tarjeta */
+  .card-shots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .card-shot{position:relative;}
+  .card-shot img{width:100%;height:110px;object-fit:cover;border-radius:8px;border:1.5px solid var(--line);display:block;}
+  .card-shot button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(27,42,65,.85);color:#fff;border:none;font-size:14px;cursor:pointer;line-height:1;}
+  .card-shot span{position:absolute;bottom:4px;left:4px;background:rgba(27,42,65,.8);color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;font-family:var(--mono);}
 </style>
 </head>
 <body>
@@ -213,7 +225,7 @@
     <div class="group-card">
       <div class="group-title">Datos del proveedor</div>
       <div class="field">
-        <label>Tarjeta personal</label>
+        <label>Tarjeta personal (frente y dorso)</label>
         <button type="button" class="btn-photo" id="btnCardCam">📷 Sacar foto de la tarjeta</button>
         <div class="photo-picker">
           <span class="btn-alt">o elegir de la galería</span>
@@ -389,7 +401,9 @@
 </div>
 
 <div class="cam-bg" id="camBg">
+  <div class="cam-count" id="camCount"></div>
   <video class="cam-video" id="camVideo" autoplay playsinline muted></video>
+  <div class="cam-flash" id="camFlash"></div>
   <div class="cam-msg" id="camMsg" style="display:none;"></div>
   <div class="cam-bar">
     <button type="button" class="cam-txt" id="camCancel">Cancelar</button>
@@ -408,7 +422,7 @@
 
 <script>
 (function(){
-  const APP_VERSION = 'v7 · 2026-08-24';
+  const APP_VERSION = 'v8 · 2026-08-24';
   const CATS = ['Sofás','Sofá camas','Mesas y sillas','Muebles de exterior','Decoración','Oficina','Infantiles','Novedad','Otro'];
   const RATING_KEYS = ['stand','precio','calidad','diseno','atencion'];
   const TAGS = ['Fabricante directo','Trader/Intermediario','Buen inglés','MOQ alto','MOQ bajo','Vende en Argentina','Multirubros'];
@@ -429,7 +443,9 @@
     if(hasCard) return 'pending';
     return 'none';
   }
-  let cardImg = null;         // dataURL
+  const MAX_CARD_IMGS = 2;    // frente y dorso de la tarjeta
+  const MAX_PROD_IMGS = 5;
+  let cardImgs = [];          // hasta 2 dataURL (frente / dorso)
   let prodImgs = [];          // array of dataURL
   let aiAnalyzedAt = null;    // timestamp de la última vez que la IA completó esta ficha (al reimportar el JSON procesado)
 
@@ -587,12 +603,12 @@
   }
   async function saveDraftNow(){
     const empresa = $('f_empresa').value.trim();
-    const hasContent = empresa || $('f_persona').value.trim() || $('f_notas').value.trim() || cardImg || prodImgs.length;
+    const hasContent = empresa || $('f_persona').value.trim() || $('f_notas').value.trim() || cardImgs.length || prodImgs.length;
     if(!hasContent){ await clearDraft(); return; }
     const draft = {
       editingId, selFeria, selRatings, selPrio, selTags: Array.from(selTags), selCats: Array.from(selCats),
       empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(),
-      contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(), cardImg, prodImgs,
+      contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(), cardImgs, prodImgs,
       aiAnalyzedAt, savedAt: Date.now()
     };
     try{ await idbSet('draft-form', JSON.stringify(draft)); }catch(e){}
@@ -627,7 +643,7 @@
     document.querySelectorAll('#f_chips .chip').forEach(c=>c.classList.toggle('on', selTags.has(c.dataset.t)));
     selCats = new Set(draft.selCats||[]);
     document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
-    cardImg = draft.cardImg||null; prodImgs = draft.prodImgs||[];
+    cardImgs = draft.cardImgs || (draft.cardImg ? [draft.cardImg] : []); prodImgs = draft.prodImgs||[];
     aiAnalyzedAt = draft.aiAnalyzedAt||null;
     renderCardPreview(); renderProdGrid();
     if(editingId){ $('editingNote').textContent = 'Editando ficha existente (recuperado)'; $('btnSave').textContent = 'Guardar cambios'; }
@@ -719,11 +735,45 @@
     if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
     $('camVideo').srcObject = null;
   }
+  // Aviso de disparo: destello + sonido corto + vibración, para que se note sin mirar la pantalla.
+  let audioCtx = null;
+  function shutterFeedback(){
+    const flash = $('camFlash');
+    flash.classList.remove('fire');
+    void flash.offsetWidth;   // reinicia la animación si se dispara seguido
+    flash.classList.add('fire');
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1100, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.09);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }catch(e){}
+    try{ if(navigator.vibrate) navigator.vibrate(45); }catch(e){}
+  }
+  function updateCamCount(){
+    const el = $('camCount');
+    if(camTarget === 'card'){
+      el.textContent = cardImgs.length === 0 ? 'Frente de la tarjeta'
+        : (cardImgs.length === 1 ? 'Ahora el dorso (o Listo)' : 'Tarjeta completa');
+    } else {
+      el.textContent = `Fotos de producto: ${prodImgs.length} de ${MAX_PROD_IMGS}`;
+    }
+    // "Cancelar" pasa a "Listo" cuando ya sacaste algo: cerrar deja de ser descartar.
+    const taken = camTarget === 'card' ? cardImgs.length : prodImgs.length;
+    $('camCancel').textContent = taken > 0 ? 'Listo' : 'Cancelar';
+  }
   async function openCamera(target){
     camTarget = target;
-    if(target === 'prod' && prodImgs.length >= 5){ alert('Ya tenés 5 fotos de producto en esta ficha.'); return; }
+    if(target === 'prod' && prodImgs.length >= MAX_PROD_IMGS){ alert('Ya tenés '+MAX_PROD_IMGS+' fotos de producto en esta ficha.'); return; }
+    if(target === 'card' && cardImgs.length >= MAX_CARD_IMGS){ alert('Ya tenés las 2 fotos de la tarjeta (frente y dorso). Borrá una si querés repetirla.'); return; }
     $('camBg').classList.add('show');
     setCamMsg('');
+    updateCamCount();
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       setCamMsg('Este dispositivo no permite abrir la cámara dentro de la app. Usá "elegir de la galería" y sacá la foto con la app de cámara.');
       return;
@@ -767,32 +817,46 @@
     if(camTarget === 'card'){
       const data = grabFrame(900, 0.72);
       if(!data) return;
-      cardImg = data;
+      cardImgs.push(data);
+      shutterFeedback();
       renderCardPreview();
-      $('ocrStatus').textContent = 'Foto guardada ✓ — no hace falta cargar nada más ahora. Queda pendiente para completar con IA cuando compartas el backup en un chat.';
-      $('ocrStatus').className = 'ocr-status ok';
+      cardSavedMsg();
       scheduleDraftSave();
-      closeCamera();
+      updateCamCount();
+      // Tras el frente seguimos abiertos para el dorso; al completar las dos, cerramos.
+      if(cardImgs.length >= MAX_CARD_IMGS) setTimeout(closeCamera, 350);
     } else {
       const data = grabFrame(700, 0.65);
       if(!data) return;
       prodImgs.push(data);
+      shutterFeedback();
       renderProdGrid();
       scheduleDraftSave();
+      updateCamCount();
       // Seguimos con la cámara abierta para encadenar varias fotos del stand sin volver atrás.
-      if(prodImgs.length >= 5) closeCamera();
+      if(prodImgs.length >= MAX_PROD_IMGS) setTimeout(closeCamera, 350);
     }
   });
 
   // ---------- business card photo (galería, respaldo de la cámara propia) ----------
+  function cardSavedMsg(){
+    $('ocrStatus').textContent = cardImgs.length >= MAX_CARD_IMGS
+      ? 'Frente y dorso guardados ✓ — no hace falta cargar nada más.'
+      : 'Foto guardada ✓ — si la tarjeta tiene datos del otro lado, sacale el dorso también.';
+    $('ocrStatus').className = 'ocr-status ok';
+  }
   async function handleCardFile(e){
-    const file = e.target.files[0]; if(!file) return;
+    const files = Array.from(e.target.files||[]);
+    if(!files.length) return;
+    const room = MAX_CARD_IMGS - cardImgs.length;
+    if(room <= 0){ alert('Ya tenés las 2 fotos de la tarjeta (frente y dorso).'); e.target.value=''; return; }
     try{
-      cardImg = await resizeFile(file, 900, 0.72);
+      for(const file of files.slice(0, room)){
+        cardImgs.push(await resizeFile(file, 900, 0.72));
+      }
       renderCardPreview();
       scheduleDraftSave();
-      $('ocrStatus').textContent = 'Foto guardada ✓ — no hace falta cargar nada más ahora. Queda pendiente para completar con IA cuando compartas el backup en un chat.';
-      $('ocrStatus').className = 'ocr-status ok';
+      cardSavedMsg();
     }catch(err){
       $('ocrStatus').textContent = 'No se pudo procesar la foto.';
       $('ocrStatus').className = 'ocr-status err';
@@ -802,9 +866,14 @@
   $('cardInputGallery').addEventListener('change', handleCardFile);
   function renderCardPreview(){
     const wrap = $('cardPreviewWrap');
-    if(!cardImg){ wrap.innerHTML=''; return; }
-    wrap.innerHTML = `<div class="card-photo-wrap"><img src="${cardImg}"><button type="button" class="rm-photo" id="rmCard">×</button></div>`;
-    $('rmCard').addEventListener('click', ()=>{ cardImg=null; renderCardPreview(); scheduleDraftSave(); });
+    if(!cardImgs.length){ wrap.innerHTML=''; return; }
+    const labels = ['Frente','Dorso'];
+    wrap.innerHTML = `<div class="card-shots">` + cardImgs.map((src,i)=>
+      `<div class="card-shot"><img src="${src}"><button type="button" data-i="${i}">×</button><span>${labels[i]||''}</span></div>`
+    ).join('') + `</div>`;
+    wrap.querySelectorAll('.card-shot button').forEach(b=>{
+      b.addEventListener('click', ()=>{ cardImgs.splice(parseInt(b.dataset.i),1); renderCardPreview(); scheduleDraftSave(); });
+    });
   }
 
   // ---------- product photos (cámara directa o galería con selección múltiple) ----------
@@ -832,7 +901,7 @@
     // La feria NO se resetea: se mantiene la última elegida, para no tener que
     // volver a tocarla en cada ficha mientras estés varios días seguidos en la misma.
     editingId = null; selRatings={stand:0,precio:0,calidad:0,diseno:0,atencion:0}; selPrio=''; selTags=new Set(); selCats=new Set();
-    cardImg=null; prodImgs=[]; aiAnalyzedAt=null;
+    cardImgs=[]; prodImgs=[]; aiAnalyzedAt=null;
     ['f_empresa','f_persona','f_stand','f_notas'].forEach(id=>$(id).value='');
     $('f_contacto').value='';
     paintRatings();
@@ -848,24 +917,24 @@
   $('btnSave').addEventListener('click', async ()=>{
     const empresa = $('f_empresa').value.trim();
     if(!selFeria){ alert('Elegí a qué feria corresponde (CIFF o Furniture China 2026).'); return; }
-    if(!cardImg && !empresa){ alert('Sacá la foto de la tarjeta, o al menos escribí el nombre de la empresa.'); return; }
+    if(!cardImgs.length && !empresa){ alert('Sacá la foto de la tarjeta, o al menos escribí el nombre de la empresa.'); return; }
     const id = editingId || uid();
     const fecha = editingId ? (index.find(s=>s.id===editingId)||{}).fecha || new Date().toISOString() : new Date().toISOString();
     const categorias = Array.from(selCats);
     const avgRating = computeAvgRating(selRatings);
     const updatedAt = Date.now();
-    const aiStatus = computeAiStatus(!!cardImg, aiAnalyzedAt);
+    const aiStatus = computeAiStatus(cardImgs.length>0, aiAnalyzedAt);
     const full = {
       id, feria: selFeria, empresa, persona: $('f_persona').value.trim(), stand: $('f_stand').value.trim(),
       categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags),
       contacto: $('f_contacto').value.trim(), notas: $('f_notas').value.trim(),
-      fecha, updatedAt, tarjetaImg: cardImg, productImgs: prodImgs, aiAnalyzedAt
+      fecha, updatedAt, tarjetaImgs: cardImgs, tarjetaImg: cardImgs[0]||null, productImgs: prodImgs, aiAnalyzedAt
     };
     setStatus('guardando...');
     await saveFullSupplier(full);
     let thumb = null;
     try{
-      if(cardImg) thumb = await squareThumb(cardImg, 72);
+      if(cardImgs.length) thumb = await squareThumb(cardImgs[0], 72);
       else if(prodImgs.length) thumb = await squareThumb(prodImgs[0], 72);
     }catch(e){}
     const idxEntry = { id, feria: selFeria, empresa, persona: full.persona, stand: full.stand, categorias, ratings: {...selRatings}, rating: avgRating, prioridad: selPrio, tags: Array.from(selTags), fecha, updatedAt, aiStatus, thumb };
@@ -954,7 +1023,7 @@
     document.querySelectorAll('#f_chips .chip').forEach(c=>c.classList.toggle('on', selTags.has(c.dataset.t)));
     selCats = new Set(full.categorias||[]);
     document.querySelectorAll('#f_cats .chip').forEach(c=>c.classList.toggle('on', selCats.has(c.dataset.c)));
-    cardImg = full.tarjetaImg||null; prodImgs = full.productImgs||[];
+    cardImgs = full.tarjetaImgs || (full.tarjetaImg ? [full.tarjetaImg] : []); prodImgs = full.productImgs||[];
     aiAnalyzedAt = full.aiAnalyzedAt||null;
     renderCardPreview(); renderProdGrid();
     $('editingNote').textContent = 'Editando ficha existente';
@@ -971,7 +1040,8 @@
     $('modalContent').innerHTML = `
       <div style="font-size:17px;font-weight:700;">${full.empresa ? escapeHtml(full.empresa) : '(sin completar aún)'}</div>
       <div style="font-family:var(--mono);font-size:11px;color:var(--slate);margin:4px 0 10px;">${escapeHtml(full.feria||'')} · ${escapeHtml(full.stand||'')}</div>
-      ${full.tarjetaImg ? `<img class="modal-card-img" src="${full.tarjetaImg}" onclick="window.open('${full.tarjetaImg}')">` : ''}
+      ${(() => { const cards = full.tarjetaImgs || (full.tarjetaImg ? [full.tarjetaImg] : []);
+          return cards.length ? `<div class="modal-gallery">${cards.map(src=>`<img src="${src}" onclick="window.open('${src}')">`).join('')}</div>` : ''; })()}
       <table style="width:100%;font-size:13.5px;border-collapse:collapse;margin-top:10px;">
         <tr><td style="color:var(--slate);padding:5px 0;width:38%;">Persona</td><td>${escapeHtml(full.persona||'—')}</td></tr>
         <tr><td style="color:var(--slate);padding:5px 0;">Prioridad</td><td>${escapeHtml(full.prioridad||'—')}</td></tr>
@@ -1074,8 +1144,9 @@
       for(const full of decisions){
         await saveFullSupplier(full);
         let thumb = null;
-        try{ if(full.tarjetaImg) thumb = await squareThumb(full.tarjetaImg,72); else if(full.productImgs&&full.productImgs.length) thumb = await squareThumb(full.productImgs[0],72); }catch(err){}
-        const aiStatus = computeAiStatus(!!full.tarjetaImg, full.aiAnalyzedAt);
+        const firstCard = (full.tarjetaImgs&&full.tarjetaImgs[0]) || full.tarjetaImg || null;
+        try{ if(firstCard) thumb = await squareThumb(firstCard,72); else if(full.productImgs&&full.productImgs.length) thumb = await squareThumb(full.productImgs[0],72); }catch(err){}
+        const aiStatus = computeAiStatus(!!firstCard, full.aiAnalyzedAt);
         const idxEntry = { id: full.id, feria: full.feria, empresa: full.empresa, persona: full.persona, stand: full.stand, categorias: full.categorias||[], ratings: full.ratings||{}, rating: full.rating||0, prioridad: full.prioridad||'', tags: full.tags||[], fecha: full.fecha, updatedAt: full.updatedAt||Date.now(), aiStatus, thumb };
         const pos = index.findIndex(s=>s.id===full.id);
         if(pos>=0) index[pos]=idxEntry; else index.push(idxEntry);
