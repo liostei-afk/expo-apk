@@ -82,7 +82,7 @@ python3 <skill>/scripts/render_reel.py "3 Listos/<nombre>/plan.json"
 | `segments[]` foto | `src`, `duration`, `zoom`, `zoom_direction`, `zoom_amount` |
 | `texts[]` | `text`, `start`, `end` (segundos del video **final**), `style`: `titulo` (amarillo gigante, una línea, aparece de izquierda a derecha), `bajada`, `promo` (negro gigante con pop), **`lista`** (beneficios con tilde que entran uno por uno: `items`, `interval`, `x`, `y`), `sub`, `hook`, `label`. Opcional: `y` (0–1, posición vertical: usalo para **no tapar la cara**), `size`, `effect` (`pop`, `revelar`), `upper` |
 | `subtitles` | `"auto"`: usa `<clip>_palabras.json` junto a cada clip (o transcribe si no está) y respeta recortes y velocidad. También acepta un `.json` de palabras o un `.srt` |
-| `subtitle_mode` | `bloque` (2–3 palabras, la que se dice en amarillo; default) o `palabra` (una por vez) |
+| `subtitle_mode` | `bloque` (2–3 palabras, la que se dice en amarillo; default) o `palabra` (una por vez, grande y en mayúsculas; tamaño con `subtitle_size`, default 210) |
 | `keywords` | palabras que van siempre en amarillo y más grandes (producto, beneficio, "Caballito", "WhatsApp"…) |
 | `words_per_line`, `highlight`, `subtitles_upper`, `subtitle_fixes` | ajustes finos de subtítulos |
 | `stickers[]` | imagen con pop: `src`, `start`, `end`, `width`, `x`, `y`. El logo es `assets/logo_circulo.png` |

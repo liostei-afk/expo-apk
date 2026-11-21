@@ -493,7 +493,7 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out, words=No
             ch_end = min(ch[-1]["end"] + 0.25, nxt, limit)
 
             def fmt(w, active):
-                t = ass_escape(w["w"].upper() if upper else w["w"])
+                t = ass_escape(w["w"].upper() if (upper or mode == "palabra") else w["w"])
                 if norm_word(w["w"]) in keys:
                     return f"{{\\c{acc}\\fscx112\\fscy112}}{t}{{\\c{txt}\\fscx100\\fscy100}}"
                 if active and plan.get("highlight", True) and mode != "palabra":
@@ -505,6 +505,8 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out, words=No
                 if en <= st:
                     continue
                 pop = "{\\fscx88\\fscy88\\t(0,90,\\fscx100\\fscy100)}" if k == 0 else ""
+                if mode == "palabra":  # una palabra por vez: grande y en mayúsculas, como en las cuentas de tendencia
+                    pop = f"{{\\fs{int(float(plan.get('subtitle_size', 210)) * s)}\\bord6}}" + pop
                 line = " ".join(fmt(x, j == k) for j, x in enumerate(ch))
                 add("sub", st, en, line, pop, fade=False, raw=True)
 
