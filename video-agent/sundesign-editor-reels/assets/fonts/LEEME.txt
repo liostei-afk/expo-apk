@@ -1,0 +1,2 @@
+Poné acá archivos .ttf/.otf de la tipografía de la marca (por ejemplo Montserrat-Bold.ttf).
+El nombre "font" de references/marca.json tiene que coincidir con el nombre de la familia.

@@ -1,0 +1,19 @@
+{
+  "output": "salida/mesa_extensible_reel.mp4",
+  "format": "9:16",
+  "transition": 0.3,
+  "segments": [
+    {"src": "material/mesa_extensible_1.mp4", "start": 1, "end": 4.5, "fit": "blur"},
+    {"src": "material/mesa_extensible_2.mp4", "start": 0, "end": 3, "speed": 1.5, "mute": true},
+    {"src": "material/mesa_ambiente.jpg", "duration": 2.5, "zoom": true},
+    {"src": "material/mesa_extensible_1.mp4", "start": 5, "end": 7, "fit": "crop", "focus_x": 0.3, "punch_in": 0.1}
+  ],
+  "texts": [
+    {"text": "¿Mesa para 4 que se vuelve para 8?", "start": 0, "end": 3, "position": "top"},
+    {"text": "Mesa extensible Nórdica", "start": 3.5, "end": 6.5, "position": "bottom"}
+  ],
+  "subtitles": "auto",
+  "logo": {"src": "assets/logo.png", "position": "top-right", "width": 200},
+  "music": {"src": "assets/musica.mp3", "volume": 0.2, "duck": true},
+  "end_card": {"duration": 3, "logo": "assets/logo.png", "lines": ["Showroom en Caballito", "Lun a vie 9–13 y 14–18 · Sáb 9–13", "Escribinos por WhatsApp"]}
+}
