@@ -166,7 +166,7 @@ def render(src, spans, out):
     script.write_text(";\n".join(parts))
     cmd = ["ffmpeg", "-hide_banner", "-y", "-i", str(src), "-filter_complex_script", str(script),
            "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "17",
-           "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(out)]
+           "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-map_metadata", "-1", str(out)]
     r = subprocess.run(cmd, capture_output=True, text=True)
     script.unlink(missing_ok=True)
     if r.returncode != 0:
@@ -263,7 +263,10 @@ def main():
     print(f"\n… renderizando {out.name}")
     render(src, spans, out)
     (out.with_name(out.stem + "_palabras.json")).write_text(json.dumps(
-        {"source": str(out.resolve()), "duration": round(new_total, 3), "words": new_words}, ensure_ascii=False, indent=1),
+        {"source": str(out.resolve()), "duration": round(new_total, 3), "words": new_words,
+         # puntos de corte en el video limpio (los usa jump_zoom para alternar plano normal / cerrado)
+         "cuts": [round(sum(b - a for a, b in spans[:k]), 3) for k in range(1, len(spans))
+                  if spans[k][0] - spans[k - 1][1] > 0.05]}, ensure_ascii=False, indent=1),
         encoding="utf-8")
     src.with_name(src.stem + "_cortes.md").write_text(report + "\n", encoding="utf-8")
     print(f"✓ {out}\n✓ {out.with_name(out.stem + '_palabras.json')}\n✓ {src.with_name(src.stem + '_cortes.md')}")

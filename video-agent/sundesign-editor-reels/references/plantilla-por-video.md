@@ -26,7 +26,9 @@ Agregalos en la última línea o pedilos al corregir. Si no decís nada, Claude 
 - **Palabra clave resaltada** en los subtítulos (el producto, el beneficio)
 - **Logo en círculo** con pop
 - **Promo gigante** ("20% OFF")
-- **Acercamiento** en un corte para dar ritmo
+- **Zoom en los cortes** ("cortes rápidos"): plano normal y cerrado alternados
+- **Lista de beneficios con ticks** que entran uno por uno
+- **Más cálido / más oscuro / más vivo** (con antes y después)
 - **Foto con zoom suave** (para fotos de producto)
 - **Fondo desenfocado** para tomas horizontales
 - **Transición de barrido** entre ideas

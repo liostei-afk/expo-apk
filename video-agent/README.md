@@ -5,10 +5,12 @@ Una **skill** para Claude (Cowork) que convierte videos crudos en Reels y TikTok
 ## Qué hace
 1. **Mira y escucha** el material: miniaturas de cada toma y transcripción palabra por palabra (gratis, sin internet).
 2. **Limpia al presentador**: saca silencios, muletillas y frases repetidas (se queda con la última toma buena).
-3. **Te propone un guion** por momentos y espera tu OK.
+3. **Te propone un guion y un storyboard en imagen** (un cuadro por momento, con títulos y subtítulos) y espera tu OK.
 4. **Edita con el estilo de la marca**: vertical 1080×1920, títulos amarillos, subtítulos palabra por palabra con la palabra que se dice en amarillo, barridos entre tomas, logo en círculo, promo gigante, música baja, efectos de sonido, volumen a -14 LUFS, placa de cierre con showroom y WhatsApp.
-5. **Se revisa a sí mismo** (primeros 2 segundos sin sonido, que nada tape la cara, subtítulos sin errores) y guarda cada versión (`_v1`, `_v2`…).
-6. Te da el **texto de la publicación** con la voz de la marca.
+5. **Se revisa a sí mismo** con el video ya exportado: lo vuelve a transcribir para buscar repeticiones, mide pausas, volumen y formato, controla que no tape la cara y guarda cada versión (`_v1`, `_v2`…).
+6. **Protege tu privacidad**: borra la ubicación GPS y el modelo del teléfono que guardan los videos del celular. Convierte solo los videos de iPhone en HDR.
+7. **Aprende**: cada corrección que le hacés queda anotada en tu ficha de estilo para no repetirla.
+8. Te da el **texto de la publicación** con la voz de la marca.
 
 ## Cómo empezar
 Seguí `sundesign-editor-reels/references/instalacion-cowork.md`. En resumen:
@@ -21,6 +23,8 @@ Seguí `sundesign-editor-reels/references/instalacion-cowork.md`. En resumen:
 ```bash
 python3 sundesign-editor-reels/scripts/transcribe.py crudo.mp4
 python3 sundesign-editor-reels/scripts/clean_takes.py crudo.mp4
+python3 sundesign-editor-reels/scripts/storyboard.py plan.json
 python3 sundesign-editor-reels/scripts/render_reel.py plan.json
+python3 sundesign-editor-reels/scripts/verify_reel.py "3 Listos/video_v1.mp4"
 ```
-Requiere `ffmpeg`, `python3` y `pip install faster-whisper`. Tipografías incluidas: Anton y Oswald (licencia OFL).
+Requiere `ffmpeg`, `python3` y `pip install faster-whisper pillow`. Tipografías incluidas: Anton y Oswald (licencia OFL).

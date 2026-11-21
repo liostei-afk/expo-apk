@@ -12,9 +12,11 @@ Convertís material crudo en videos verticales listos para publicar, con el esti
 | `scripts/inspect_media.py` | Mirar el material: duración, orientación, audio, cortes de escena y hoja de contactos (miniaturas con su segundo) |
 | `scripts/transcribe.py` | Transcribir con el tiempo de cada palabra (gratis, sin internet una vez bajado el modelo) |
 | `scripts/clean_takes.py` | Limpiar al presentador: silencios, muletillas ("eh", "mmm") y frases repetidas (se queda con la última toma) |
+| `scripts/storyboard.py plan.json` | Lámina con un cuadro por momento (títulos, subtítulos, segundo) para aprobar **antes** de montar; si hay `color`, también un antes/después |
 | `scripts/render_reel.py plan.json` | Armar el reel final a partir de un plan de edición |
+| `scripts/verify_reel.py video.mp4` | Revisión obligatoria del video exportado: formato, volumen, privacidad, repeticiones, pausas y hoja con un cuadro por segundo |
 
-Requisitos: `ffmpeg`, `python3`, `pip install faster-whisper`. La primera transcripción baja el modelo (~1,5 GB).
+Requisitos: `ffmpeg`, `python3`, `pip install faster-whisper pillow`. La primera transcripción baja el modelo (~1,5 GB).
 
 ## Carpetas de trabajo
 Si el usuario tiene la estructura de `references/instalacion-cowork.md`, usala:
@@ -25,7 +27,7 @@ Si el usuario tiene la estructura de `references/instalacion-cowork.md`, usala:
 ## Flujo de trabajo
 
 ### 0. Leer las reglas
-Leé `references/reglas-de-edicion.md` y `references/estilo_sundesign.md` antes de tocar nada. Si el usuario usó la plantilla de `references/plantilla-por-video.md`, de ahí sacás tema, público, objetivo, duración y cierre.
+Leé `references/reglas-de-edicion.md` y la ficha de estilo (`2 Mi estilo/estilo.md` si existe, si no `references/estilo_sundesign.md`) antes de tocar nada — **incluida su sección "Correcciones aprendidas"**: son cosas que el usuario ya pidió cambiar y no pueden repetirse. Si el usuario usó la plantilla de `references/plantilla-por-video.md`, de ahí sacás tema, público, objetivo, duración y cierre.
 
 Preguntá **como mucho 3 cosas**, en una sola vez, con opciones y la que recomendás marcada. Si alcanza con lo que dijo, no preguntes.
 
@@ -45,8 +47,12 @@ python3 <skill>/scripts/clean_takes.py "1 Brutos/<clip>.mp4" --words "3 Listos/<
 Revisá la lista de cortes. Si el detector se equivocó, corregí con `--keep 12-15` (conservar palabras) o `--drop 40-44` (sacar palabras), usando los números de palabra de la transcripción. Cuando esté bien, corré lo mismo sin `--dry-run`. Genera el video limpio, sus palabras con los tiempos nuevos (`*_limpio_palabras.json`, que se usan solas para los subtítulos) y `*_cortes.md`.
 Opciones: `--max-gap` (silencio que se deja entre frases, 0.30 por defecto; subilo a 0.4 si queda acelerado), `--keep-fillers`, `--no-repeats`.
 
-### 3. Guion, antes de editar
-Escribí en `3 Listos/<nombre>/guion.md` un guion por momentos: **segundo · lo que se dice · lo que se ve · texto o efecto**, más la lista de cortes del paso 2. Mostráselo al usuario y **esperá el OK**, salvo que haya pedido que lo hagas directo.
+### 3. Guion y storyboard, antes de montar
+Escribí en `3 Listos/<nombre>/guion.md` un guion por momentos: **segundo · lo que se dice · lo que se ve · texto o efecto**, más la lista de cortes del paso 2. Después escribí el `plan.json` (paso 4) y generá el storyboard:
+```bash
+python3 <skill>/scripts/storyboard.py "3 Listos/<nombre>/plan.json"
+```
+Poné `"note"` en cada segmento para que la lámina diga qué pasa en ese plano. Mostrale al usuario la lámina (y el antes/después si cambiaste el color) y **no montes nada hasta que diga que sí**, salvo que haya pedido que lo hagas directo.
 
 Estructura de la marca (detalle en `references/estilo_sundesign.md`):
 1. **Gancho (0–2 s):** imagen fuerte + frase que nombre el problema. **Sin sonido, en 2 segundos tiene que entenderse de qué va.**
@@ -67,9 +73,11 @@ python3 <skill>/scripts/render_reel.py "3 Listos/<nombre>/plan.json"
 | `output` | ruta del MP4 (relativa al plan). Se le agrega `_v1`, `_v2`… solo |
 | `format` | `9:16` (default), `4:5`, `1:1` |
 | `transition` / `transition_type` | duración (0 = corte seco; 0.25–0.35) y tipo: `barrido` (el de la marca), `fundido`, `deslizar`, `cortina`, `zoom`. Por toma: `transition_in` |
-| `segments[]` video | `src`, `start`, `end`, `speed`, `mute`, `volume`, `fit` (`crop` / `blur` para tomas horizontales), `focus_x`/`focus_y` (0–1, dónde está lo importante), `punch_in` (0.05–0.15, acercamiento para dar ritmo en cortes del presentador), `subtitles: false` (no subtitular este tramo) |
+| `segments[]` video | `src`, `start`, `end`, `speed`, `mute`, `volume`, `fit` (`crop` / `blur` para tomas horizontales), `focus_x`/`focus_y` (0–1, dónde está lo importante), `punch_in` (0.05–0.15, acercamiento fijo), `jump_zoom`, `color`, `note` (para el storyboard), `subtitles: false` (no subtitular este tramo). Los videos de iPhone en HDR se pasan a SDR solos |
+| `jump_zoom` | (global o por segmento) 0.08–0.15: en cada salto de la toma limpia alterna plano normal y plano cerrado — disimula los cortes y da ritmo ("cortes rápidos"). Usa los cortes que guardó `clean_takes.py` |
+| `color` | (global o por segmento) `calido`, `frio`, `oscuro`, `vivo`, `luminoso`. Pedidos tipo "más cálido". Mostrá el antes/después del storyboard antes de renderizar |
 | `segments[]` foto | `src`, `duration`, `zoom`, `zoom_direction`, `zoom_amount` |
-| `texts[]` | `text`, `start`, `end` (segundos del video **final**), `style`: `titulo` (amarillo gigante, una línea, aparece de izquierda a derecha), `bajada`, `promo` (negro gigante con pop), `sub`, `hook`, `label`. Opcional: `y` (0–1, posición vertical: usalo para **no tapar la cara**), `size`, `effect` (`pop`, `revelar`), `upper` |
+| `texts[]` | `text`, `start`, `end` (segundos del video **final**), `style`: `titulo` (amarillo gigante, una línea, aparece de izquierda a derecha), `bajada`, `promo` (negro gigante con pop), **`lista`** (beneficios con tilde que entran uno por uno: `items`, `interval`, `x`, `y`), `sub`, `hook`, `label`. Opcional: `y` (0–1, posición vertical: usalo para **no tapar la cara**), `size`, `effect` (`pop`, `revelar`), `upper` |
 | `subtitles` | `"auto"`: usa `<clip>_palabras.json` junto a cada clip (o transcribe si no está) y respeta recortes y velocidad. También acepta un `.json` de palabras o un `.srt` |
 | `subtitle_mode` | `bloque` (2–3 palabras, la que se dice en amarillo; default) o `palabra` (una por vez) |
 | `keywords` | palabras que van siempre en amarillo y más grandes (producto, beneficio, "Caballito", "WhatsApp"…) |
@@ -80,10 +88,13 @@ python3 <skill>/scripts/render_reel.py "3 Listos/<nombre>/plan.json"
 | `sfx`, `sfx_volume` | efectos de sonido automáticos: whoosh en transiciones y pop en títulos/stickers (default activado, 0.35) |
 | `end_card` | `duration`, `logo`, `logo_width`, `lines`, `bg` |
 
-Al terminar, el script imprime la duración, el volumen (tiene que dar cerca de -14 LUFS) y dos imágenes de control.
+Al terminar, el script imprime la duración, el volumen y dos imágenes de control. Automáticamente: ajusta el volumen en una segunda pasada hasta -14 ±0,3 LUFS con pico real por debajo de -1,5 dB, y **borra los datos del archivo original** (los videos del celular guardan la ubicación GPS del showroom y el modelo del teléfono).
 
-### 5. Revisar antes de entregar (siempre)
-Abrí `*_preview.jpg`, `*_primeros2s.jpg` y sacá cuadros puntuales donde haya textos (`ffmpeg -ss <seg> -i video.mp4 -frames:v 1 -vf scale=360:-2 cuadro.jpg`). Verificá:
+### 5. Revisar antes de entregar (siempre — es el paso que más errores encuentra, no lo saltees)
+```bash
+python3 <skill>/scripts/verify_reel.py "3 Listos/<nombre>/<video>_v1.mp4"
+```
+Transcribe el video terminado y busca repeticiones, mide pausas de más de 0,4 s con el audio, controla formato, volumen y privacidad, y arma `*_revision.jpg` (un cuadro por segundo). Si marca problemas, corregí y volvé a renderizar hasta que dé **0 errores**. Después abrí `*_revision.jpg`, `*_primeros2s.jpg` y verificá a ojo:
 - [ ] En los primeros 2 segundos, **sin sonido**, se entiende de qué va.
 - [ ] Ningún texto ni sticker tapa la cara ni las manos del presentador, ni el mueble.
 - [ ] Subtítulos sin errores (marcas, nombres de producto, "Sundesign") y a tiempo con la voz.
@@ -92,16 +103,20 @@ Abrí `*_preview.jpg`, `*_primeros2s.jpg` y sacá cuadros puntuales donde haya t
 Si algo falla, corregí el plan y volvé a renderizar (sale `_v2`). No entregues sin mirar.
 
 ### 6. Entregar
-- El video y, en **tres líneas**, qué hiciste y qué ajustarías.
+- El video y, en **tres líneas**, qué hiciste y qué ajustarías. Decí también **lo que no pudiste comprobar** (por ejemplo: no escuchás el audio, así que la música y los efectos los tiene que oír el usuario).
 - **Caption** con las reglas de marca de abajo: 1 línea gancho, 2–3 de valor, CTA a WhatsApp o showroom, 3–6 hashtags (#muebles #mesasysillas #sofacama #deco #caballito #buenosaires…).
 - Portada sugerida (qué segundo) y, si quiere música en tendencia, que la agregue desde la app al subir.
 - Recordale verlo una vez entero **en el celular** antes de publicar.
+
+## Correcciones aprendidas (siempre)
+Cada vez que el usuario corrige algo ("el título me tapa la cara", "la música muy alta", "no me gusta el zoom"), además de arreglarlo, **agregalo en `2 Mi estilo/estilo.md`** bajo un título `## Correcciones aprendidas`, con la fecha y la regla en una línea (por ejemplo: "2026-11-21 · Títulos siempre por debajo del pecho cuando habla el presentador"). Si no hay carpeta `2 Mi estilo`, decíselo y proponé crearla. Así no se repite en el próximo video.
 
 ## Lo que nunca hacés
 - Inventar datos, precios, medidas o promociones que no estén en el material o que no te haya dicho el usuario.
 - Meter logos o material de otras marcas, o música con derechos.
 - Usar algo pago o que pida cuenta/clave sin preguntar.
 - Modificar los archivos de `1 Brutos`.
+- Publicar: entregás el video y el usuario lo sube.
 
 ## Reglas de marca (obligatorias en títulos y caption)
 - Jerarquía de producto: **mesas y sillas** primero, luego mesas ratonas, luego **sofá camas y sillones de fabricación propia**, luego deco.
@@ -120,6 +135,10 @@ Si algo falla, corregí el plan y volvé a renderizar (sale `_v2`). No entregues
 | "Quedó muy acelerado" | `--max-gap 0.4` o `0.5` |
 | "La música no deja oír la voz" | Bajá `music.volume` a 0.06–0.1 |
 | "Muy recargado" | Sacá la mitad de los títulos/stickers; dejá el del principio y el del dato importante. `sfx: false` |
+| "Más cálido" / "más oscuro" / "más vivo" | `color` en el plan; mostrá el antes/después del storyboard antes de renderizar |
+| "Cortes más rápidos" / "más dinámico" | `jump_zoom: 0.12`; "más lento": sacalo o bajalo a 0.06 |
+| "Mostrá los beneficios en lista" | texto con `style: lista` e `items` |
+| "Los colores salen lavados" (iPhone) | Ya se convierte HDR→SDR solo; si persiste, pedí el archivo original sin pasar por WhatsApp |
 | "El texto tapa la cara" | Mové con `y` (más abajo, 0.45–0.55) o pasá el título a una toma sin presentador |
 | "No se parece a nuestro estilo" | Releé `references/estilo_sundesign.md` y decí qué no aplicaste |
 | Falta faster-whisper / ffmpeg | `pip install faster-whisper`; ffmpeg: `brew install ffmpeg` (Mac) o `winget install ffmpeg` (Windows) |

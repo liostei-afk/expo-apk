@@ -119,8 +119,48 @@ def fit_filter(W, H, fit, fx=0.5, fy=0.5, label_in="0:v", label_out="v"):
     )
 
 
+# ---------------------------------------------------------------- color
+HDR_TO_SDR = ("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,"
+              "tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+COLOR_LOOKS = {  # se piden con una frase: "más cálido", "más oscuro"...
+    "calido": "colorbalance=rs=0.06:gs=0.02:bs=-0.06:rm=0.04:gm=0.01:bm=-0.04,eq=saturation=1.08",
+    "frio": "colorbalance=rs=-0.04:bs=0.06:rm=-0.03:bm=0.04,eq=saturation=1.02",
+    "oscuro": "eq=brightness=-0.07:contrast=1.08:saturation=0.95,vignette=angle=PI/4",
+    "vivo": "eq=saturation=1.22:contrast=1.06",
+    "luminoso": "eq=brightness=0.05:contrast=0.97:saturation=1.05",
+}
+
+
+def is_hdr(path):
+    for st in probe(path)["streams"]:
+        if st["codec_type"] == "video" and st.get("color_transfer") in ("arib-std-b67", "smpte2084"):
+            return True
+    return False
+
+
+def color_filter(seg, plan):
+    look = seg.get("color", plan.get("color"))
+    if not look:
+        return ""
+    return COLOR_LOOKS.get(look, look)  # también acepta un filtro de ffmpeg directo
+
+
+def jump_zoom_expr(seg, src, start, end, z):
+    """Zoom alternado en cada salto de la toma limpia (plano normal / plano cerrado)."""
+    wfile = src.with_name(src.stem + "_palabras.json")
+    if not wfile.exists():
+        return None
+    cuts = json.loads(wfile.read_text(encoding="utf-8")).get("cuts", [])
+    bounds = [start] + [c for c in cuts if start < c < end] + [end]
+    zoomed = [(a - start, b - start) for k, (a, b) in enumerate(zip(bounds, bounds[1:])) if k % 2 == 1]
+    if not zoomed:
+        return None
+    cond = "+".join(f"between(it,{a:.3f},{b:.3f})" for a, b in zoomed)
+    return f"if({cond},{1+z},1)"
+
+
 # ---------------------------------------------------------------- segmentos
-def render_video_segment(seg, W, H, out, base):
+def render_video_segment(seg, W, H, out, base, plan=None):
     src = (base / seg["src"]).resolve()
     start = float(seg.get("start", 0))
     end = seg.get("end")
@@ -132,8 +172,22 @@ def render_video_segment(seg, W, H, out, base):
         sys.exit(f"✗ Segmento inválido en {src.name}: start={start} end={end}")
     out_dur = (end - start) / speed
 
-    vf = fit_filter(W, H, seg.get("fit", "crop"), seg.get("focus_x", 0.5), seg.get("focus_y", 0.5), "0:v", "f")
-    vf += f";[f]setpts=(PTS-STARTPTS)/{speed},fps={FPS},format=yuv420p"
+    plan = plan or {}
+    pre, lbl = "", "0:v"
+    if is_hdr(src):  # iPhone en HDR (HLG / Dolby Vision): pasar a SDR o los colores salen lavados/quemados
+        print(f"   (HDR detectado en {src.name}: convirtiendo a SDR)")
+        pre, lbl = f"[0:v]{HDR_TO_SDR}[sdr];", "sdr"
+    vf = pre + fit_filter(W, H, seg.get("fit", "crop"), seg.get("focus_x", 0.5), seg.get("focus_y", 0.5), lbl, "f")
+    jz = seg.get("jump_zoom", plan.get("jump_zoom"))
+    zexpr = jump_zoom_expr(seg, src, start, end, float(jz)) if jz else None
+    if zexpr:  # el zoom va con el tiempo de la fuente, antes de cambiar la velocidad
+        vf += (f";[f]zoompan=z='{zexpr}':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*0.3':d=1:s={W}x{H}:fps={FPS}[fz]")
+        vf += f";[fz]setpts=(PTS-STARTPTS)/{speed},fps={FPS},format=yuv420p"
+    else:
+        vf += f";[f]setpts=(PTS-STARTPTS)/{speed},fps={FPS},format=yuv420p"
+    cf = color_filter(seg, plan)
+    if cf:
+        vf += "," + cf
     if seg.get("punch_in"):  # acercamiento fijo (recorta un poco más, da ritmo entre tomas)
         z = float(seg.get("punch_in"))
         vf += f",scale=iw*{1+z}:-2,crop={W}:{H}:(iw-{W})/2:(ih-{H})/2"
@@ -363,6 +417,8 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out, words=No
         f"Style: bajada,{font},{int(84*s)},{acc},{acc},{black},&H90000000,-1,0,0,0,100,100,0,0,1,2,2,8,60,60,{int(H*0.06)+int(330*s)},1",
         # Promo gigante en negro (20% OFF)
         f"Style: promo,{tfont},{int(400*s)},{dark},{dark},{txt},&H00000000,0,0,0,0,100,100,0,0,1,0,0,5,40,40,0,1",
+        # Lista de beneficios con ticks (píldoras blancas que entran una a una)
+        f"Style: lista,{font},{int(66*s)},{dark},{dark},&H00FFFFFF,&H00FFFFFF,-1,0,0,0,100,100,0,0,3,16,0,7,60,60,0,1",
         f"Style: cta,{font},{int(92*s)},{dark},{dark},{black},{black},-1,0,0,0,100,100,0,0,1,0,0,5,80,80,0,1",
         f"Style: cta_acento,{font},{int(100*s)},{acc},{acc},{dark},{black},-1,0,0,0,100,100,0,0,1,1,0,5,80,80,0,1",
     ]
@@ -376,6 +432,21 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out, words=No
     pos_style = {"top": "hook", "bottom": "label", "center": "center"}
     for t in plan.get("texts", []):
         style = t.get("style") or pos_style.get(t.get("position", "top"), "hook")
+        if style == "lista":
+            st0 = float(t.get("start", 0))
+            en0 = min(float(t.get("end", 99)), card_start if card_start is not None else total)
+            gap = float(t.get("interval", 0.6))
+            x, y0 = int(W * float(t.get("x", 0.07))), int(H * float(t.get("y", 0.30)))
+            step = int(H * float(t.get("line_gap", 0.075)))
+            for k, item in enumerate(t.get("items", [])):
+                a = st0 + k * gap
+                if a >= en0:
+                    break
+                y = y0 + k * step
+                tick = f"{{\\c{acc}}}✓{{\\c{dark}}} "
+                anim = f"{{\\move({x - 80},{y},{x},{y},0,220)\\fad(160,160)}}"
+                add("lista", a, en0, tick + ass_escape(fix_text(item)), anim, fade=False, raw=True)
+            continue
         st = float(t.get("start", 0))
         en = float(t.get("end", st + 2.5))
         extra = ""
@@ -545,14 +616,41 @@ def final_pass(plan, base, W, H, joined, total, card_start, ass_file, out, sfx_e
             idx += 1
         parts.append(f"{alabel}{''.join(mixes)}amix=inputs={len(mixes)+1}:duration=first:normalize=0[asfx]")
         alabel = "[asfx]"
-    parts.append(f"{alabel}loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[aout]")
+    parts.append(f"{alabel}acompressor=threshold=0.0316:ratio=2:attack=5:release=100:knee=4,"
+                 f"loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[aout]")
 
     cmd += [
         "-filter_complex", ";".join(parts), "-map", "[vout]", "-map", "[aout]", "-t", f"{total:.3f}",
         "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-profile:v", "high", "-pix_fmt", "yuv420p",
-        "-r", str(FPS), "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(out),
+        "-r", str(FPS), "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+        # sin datos del archivo original (los videos del celular guardan la ubicación GPS)
+        "-map_metadata", "-1", "-map_chapters", "-1", "-metadata", "title=", str(out),
     ]
     sh(cmd, "pasada final (logo, textos, música)")
+    fix_loudness(out)
+
+
+def measure_loudness(path):
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(path), "-vn", "-af", "ebur128=peak=true",
+                        "-f", "null", "-"], capture_output=True, text=True)
+    i = re.findall(r"I:\s+(-?[\d.]+) LUFS", r.stderr)
+    pk = re.findall(r"Peak:\s+(-?[\d.]+|-inf) dBFS", r.stderr)
+    return (float(i[-1]) if i else None), (float(pk[-1]) if pk and pk[-1] != "-inf" else None)
+
+
+def fix_loudness(out, target=-14.0, tol=0.3):
+    """Segunda pasada: mide y corrige la ganancia hasta -14 ±0,3 LUFS con pico real < -1,5 dB (el video no se recodifica)."""
+    for _ in range(3):
+        lufs, peak = measure_loudness(out)
+        if lufs is None or abs(lufs - target) <= tol:
+            return lufs, peak
+        gain = target - lufs
+        tmp = out.with_name(out.stem + ".tmp" + out.suffix)
+        sh(["ffmpeg", "-hide_banner", "-y", "-i", str(out), "-c:v", "copy", "-af",
+            f"volume={gain:.2f}dB,alimiter=limit=0.84:attack=3:release=50:level=disabled",
+            "-c:a", "aac", "-b:a", "192k", "-map_metadata", "-1", "-movflags", "+faststart", str(tmp)], "ajuste de volumen")
+        tmp.replace(out)
+    return measure_loudness(out)
 
 
 def snapshot(video, total, out_jpg):
@@ -604,7 +702,7 @@ def main():
             elif kind == "card":
                 d = render_card_segment(seg, W, H, p, base, brand)
             else:
-                d = render_video_segment(seg, W, H, p, base)
+                d = render_video_segment(seg, W, H, p, base, plan)
             paths.append(p)
             durs.append(d)
 
@@ -633,6 +731,9 @@ def main():
         for t in plan.get("texts", []):
             if t.get("style") in ("titulo", "promo", "hook"):
                 sfx.append(("pop", float(t.get("start", 0))))
+            elif t.get("style") == "lista":
+                sfx += [("pop", float(t.get("start", 0)) + k * float(t.get("interval", 0.6)))
+                        for k in range(len(t.get("items", [])))]
         sfx += [("pop", float(st["start"])) for st in plan.get("stickers", [])]
         print("… pasada final")
         final_pass(plan, base, W, H, joined, total, card_start, ass_file, out, sfx)
@@ -643,10 +744,9 @@ def main():
         subprocess.run(["ffmpeg", "-hide_banner", "-y", "-i", str(out), "-vf",
                         "select='eq(n\\,3)+eq(n\\,30)+eq(n\\,57)',scale=360:-2,tile=3x1:padding=4",
                         "-vsync", "0", "-frames:v", "1", str(first)], capture_output=True)
-        r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(out), "-af", "ebur128", "-f", "null", "-"],
-                           capture_output=True, text=True)
-        m = re.findall(r"I:\s+(-?[\d.]+) LUFS", r.stderr)
-        print(f"\n✓ Listo: {out}  ({total:.1f}s, {W}x{H}, volumen {m[-1] if m else '?'} LUFS)")
+        lufs, peak = measure_loudness(out)
+        print(f"\n✓ Listo: {out}  ({total:.1f}s, {W}x{H}, volumen {lufs} LUFS, pico {peak} dB)")
+        print(f"  Revisión final: python3 {Path(__file__).parent / 'verify_reel.py'} \"{out}\"")
         print(f"  Vista previa (6 cuadros): {prev}")
         print(f"  Primeros 2 segundos (¿se entiende sin sonido?): {first}")
         if total > 90:

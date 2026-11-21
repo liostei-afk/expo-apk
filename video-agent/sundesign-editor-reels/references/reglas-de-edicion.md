@@ -11,8 +11,9 @@ Estas son mis reglas de edición. Seguilas enteras cada vez que te pida editar u
 - Transcribilo con el tiempo de cada palabra y mirá sus cuadros para saber dónde están mi cara, mis manos y el mueble.
 - Si te falta algo para decidir, haceme como mucho 3 preguntas, con opciones y la que vos elegirías.
 
-**EL GUION, ANTES DE EDITAR**
-- Guardá en `3 Listos/<nombre>/guion.md` un guion por momentos: segundo, lo que digo, lo que se ve y el texto o efecto. Incluí la lista de cortes. No sigas hasta que te diga que sí.
+**EL GUION Y EL STORYBOARD, ANTES DE EDITAR**
+- Guardá en `3 Listos/<nombre>/guion.md` un guion por momentos: segundo, lo que digo, lo que se ve y el texto o efecto. Incluí la lista de cortes.
+- Mostrame el storyboard (una lámina con un cuadro por momento). Si cambiás el color, el antes y después. No montes nada hasta que te diga que sí.
 
 **CÓMO EDITÁS**
 1. Limpieza: sacá silencios y huecos. Buscá las frases que empiezo y vuelvo a decir y quedate con la última toma completa. Sacá muletillas ("eh", "mmm").
@@ -28,6 +29,10 @@ Estas son mis reglas de edición. Seguilas enteras cada vez que te pida editar u
 - Decir "importado" o "taller" (es "fábrica propia").
 
 **ANTES DE DÁRMELO**
+- Corré la revisión automática (verify_reel) hasta que dé 0 errores: repeticiones, pausas, volumen, formato y que no queden datos de ubicación del archivo.
 - Miralo entero ya exportado y comprobá: duración, resolución, subtítulos a tiempo y sin errores, volumen, que nada me tape, y que en los dos primeros segundos se entienda de qué va **incluso sin sonido**.
 - Guardalo en `3 Listos` con el nombre del video y su versión (`_v1`, `_v2`…). Cada corrección, versión nueva sin borrar la anterior.
-- Contame en tres líneas qué hiciste y qué ajustarías vos. Sumá el texto para la publicación.
+- Contame en tres líneas qué hiciste, qué ajustarías vos y qué no pudiste comprobar. Sumá el texto para la publicación.
+
+**CUANDO TE CORRIJO**
+- Arreglalo y anotá la corrección en `2 Mi estilo/estilo.md` (sección "Correcciones aprendidas") para no repetirla en el próximo video.

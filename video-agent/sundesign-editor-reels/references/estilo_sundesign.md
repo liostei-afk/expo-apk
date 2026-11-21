@@ -26,3 +26,7 @@ Analizado de "Tokio Septiembre V2.mp4" (reel de un sofá cama, 52 s, 1080×1920,
 - Los subtítulos del reel de referencia tenían errores: "Sungdesing" en lugar de **Sundesign**. El script corrige automáticamente variantes del nombre.
 - Había frases en tuteo ("¿Quieres saber…?"). La marca habla con **voseo** ("¿Querés saber…?"). Si los subtítulos salen de la voz del presentador, se respeta lo que dice, pero los títulos y el caption van siempre en voseo.
 - Duración: 52 s funciona, pero para alcance conviene probar también una versión de 20–30 s con los 3 beneficios más fuertes.
+
+## Correcciones aprendidas
+<!-- Claude agrega acá cada corrección del usuario: fecha · regla en una línea -->
+- 2026-11-21 · Cuando habla el presentador, el título va a la altura del pecho (y ≈ 0.36–0.40), nunca sobre la cara.

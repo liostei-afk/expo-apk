@@ -21,7 +21,7 @@ Abrí **Cowork**, empezá una tarea nueva, conectá la carpeta **Reels Sundesign
 ```
 Hola, Claude. Quiero que esta carpeta sea el estudio de edición de reels de Sundesign. Usá la skill sundesign-editor-reels. Hacelo en este orden y avisame con una frase cada vez que termines un punto:
 
-1. Fijate qué tengo y qué me falta para trabajar con video: FFmpeg, Python 3 y faster-whisper (para transcribir gratis y sin internet). Instalá lo que falte. Bajá el modelo de transcripción large-v3-turbo.
+1. Fijate qué tengo y qué me falta para trabajar con video: FFmpeg, Python 3 y faster-whisper (para transcribir gratis y sin internet) y Pillow (para el storyboard). Instalá lo que falte. Bajá el modelo de transcripción large-v3-turbo.
 2. Copiá la ficha de estilo de la skill (references/estilo_sundesign.md) a "2 Mi estilo/estilo.md".
 3. Hacé una prueba real: un video vertical de 5 segundos con un título amarillo y un subtítulo, y guardalo en "3 Listos".
 4. Escribí en la carpeta un archivo "COMO-FUNCIONA.md" con lo que instalaste y los pasos para volver a dejar todo listo si algún día falta algo.
