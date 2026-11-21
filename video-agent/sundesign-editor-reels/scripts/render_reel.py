@@ -25,11 +25,20 @@ FPS = 30
 SKILL_DIR = Path(__file__).resolve().parent.parent
 
 DEFAULT_BRAND = {
-    "font": "Montserrat",
+    "font": "Oswald",            # subtítulos y textos comunes
+    "font_titulos": "Anton",     # títulos grandes (ARMADO, 20% OFF)
     "color_texto": "#FFFFFF",
     "color_caja": "#1E1E1C",
-    "color_acento": "#C8A27A",
-    "color_fondo_cierre": "#1E1E1C",
+    "color_acento": "#F9D20A",   # amarillo Sundesign
+    "color_fondo_cierre": "#FFFFFF",
+    "color_texto_cierre": "#1E1E1C",
+}
+TRANSITIONS = {  # nombre en el plan -> transición de ffmpeg xfade
+    "fundido": "fade", "fade": "fade",
+    "barrido": "hblur", "whip": "hblur",
+    "deslizar": "slideleft", "slide": "slideleft",
+    "cortina": "wipeleft", "wipe": "wipeleft",
+    "zoom": "zoomin",
 }
 
 
@@ -71,6 +80,7 @@ def ass_time(t):
 
 
 def ass_escape(text):
+    text = text.replace("\\N", "\n")
     return text.replace("\\", "\\\\").replace("{", "(").replace("}", ")").replace("\n", "\\N")
 
 
@@ -201,7 +211,8 @@ def render_card_segment(seg, W, H, out, base, brand):
 
 
 # ---------------------------------------------------------------- unión
-def join_segments(paths, durs, transition, out):
+def join_segments(paths, durs, transition, out, kinds=None):
+    """kinds[i] = nombre de transición para entrar al segmento i (None = fundido)."""
     n = len(paths)
     cmd = ["ffmpeg", "-hide_banner", "-y"]
     for p in paths:
@@ -210,6 +221,7 @@ def join_segments(paths, durs, transition, out):
         shutil.copy(paths[0], out)
         return durs[0], [0.0]
     starts = [0.0]
+    kinds = kinds or [None] * n
     if transition and transition > 0:
         T = min(transition, min(durs) / 2.5)
         parts = []
@@ -219,7 +231,7 @@ def join_segments(paths, durs, transition, out):
             offset = length - T
             starts.append(offset)
             vo, ao = f"v{i}", f"a{i}"
-            parts.append(f"[{vlast}][{i}:v]xfade=transition=fade:duration={T:.3f}:offset={offset:.3f}[{vo}]")
+            parts.append(f"[{vlast}][{i}:v]xfade=transition={TRANSITIONS.get(kinds[i] or "fundido", "fade")}:duration={T:.3f}:offset={offset:.3f}[{vo}]")
             parts.append(f"[{alast}][{i}:a]acrossfade=d={T:.3f}:c1=tri:c2=tri[{ao}]")
             vlast, alast = vo, ao
             length = length + durs[i] - T
@@ -255,6 +267,20 @@ def auto_subtitles(video, lang="es", words_per_line=3):
     return cues
 
 
+BRAND_FIXES = {
+    r"\bdel taller\b": "de la fábrica",
+    r"\bel taller\b": "la fábrica",
+    r"\bsun?g? ?des[ie]?(?:gn|ng|n)\b": "Sundesign",
+    r"\btaller\b": "fábrica",
+}
+
+
+def fix_text(text, extra=None):
+    for pat, new in {**BRAND_FIXES, **(extra or {})}.items():
+        text = re.sub(pat, new, text, flags=re.IGNORECASE)
+    return text
+
+
 def read_srt(path):
     cues = []
     blocks = re.split(r"\n\s*\n", Path(path).read_text(encoding="utf-8-sig").strip())
@@ -273,6 +299,8 @@ def read_srt(path):
 # ---------------------------------------------------------------- textos (ASS)
 def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
     font = brand["font"]
+    tfont = brand.get("font_titulos", font)
+    dark = ass_color(brand.get("color_texto_cierre", "#1E1E1C"))
     txt = ass_color(brand["color_texto"])
     box = ass_color(brand["color_caja"], 0x30)
     acc = ass_color(brand["color_acento"])
@@ -283,12 +311,17 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
     s = int(W / 1080 * 100) / 100  # escala para otros formatos
     styles = [
         # Name, Font, Size, Primary, Secondary, Outline, Back, Bold, Italic, U, S, ScX, ScY, Sp, Ang, BorderStyle, Outline, Shadow, Align, ML, MR, MV
-        f"Style: hook,{font},{int(78*s)},{txt},{txt},{box},{box},-1,0,0,0,100,100,0,0,3,18,0,8,70,70,{top_m},1",
-        f"Style: label,{font},{int(56*s)},{txt},{txt},{box},{box},-1,0,0,0,100,100,0,0,3,14,0,2,70,70,{bot_m},1",
+        f"Style: hook,{font},{int(96*s)},{txt},{txt},{box},{box},-1,0,0,0,100,100,0,0,3,18,0,8,70,70,{top_m},1",
+        f"Style: label,{font},{int(76*s)},{txt},{txt},{box},{box},-1,0,0,0,100,100,0,0,3,14,0,2,70,70,{bot_m},1",
         f"Style: center,{font},{int(84*s)},{txt},{txt},{black},{black},-1,0,0,0,100,100,0,0,1,4,3,5,70,70,0,1",
-        f"Style: sub,{font},{int(64*s)},{txt},{txt},{black},{black},-1,0,0,0,100,100,0,0,1,5,2,2,80,80,{int(H*0.30)},1",
-        f"Style: cta,{font},{int(60*s)},{txt},{txt},{black},{black},-1,0,0,0,100,100,0,0,1,0,0,5,80,80,0,1",
-        f"Style: cta_acento,{font},{int(48*s)},{acc},{acc},{black},{black},-1,0,0,0,100,100,0,0,1,0,0,5,80,80,0,1",
+        f"Style: sub,{font},{int(140*s)},{txt},{txt},{black},&H80000000,-1,0,0,0,100,100,0,0,1,4,3,2,90,90,{int(H*0.22)},1",
+        # Títulos estilo Sundesign: amarillo, condensado, grande, arriba (ARMADO / COMPACTO Y ELEGANTE)
+        f"Style: titulo,{tfont},{int(360*s)},{acc},{acc},{black},&H90000000,0,0,0,0,100,100,0,0,1,3,4,8,60,60,{int(H*0.06)},1",
+        f"Style: bajada,{font},{int(84*s)},{acc},{acc},{black},&H90000000,-1,0,0,0,100,100,0,0,1,2,2,8,60,60,{int(H*0.06)+int(330*s)},1",
+        # Promo gigante en negro (20% OFF)
+        f"Style: promo,{tfont},{int(400*s)},{dark},{dark},{txt},&H00000000,0,0,0,0,100,100,0,0,1,0,0,5,40,40,0,1",
+        f"Style: cta,{font},{int(92*s)},{dark},{dark},{black},{black},-1,0,0,0,100,100,0,0,1,0,0,5,80,80,0,1",
+        f"Style: cta_acento,{font},{int(100*s)},{acc},{acc},{dark},{black},-1,0,0,0,100,100,0,0,1,1,0,5,80,80,0,1",
     ]
     events = []
 
@@ -304,14 +337,19 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
         extra = ""
         if t.get("size"):
             extra += f"{{\\fs{int(t['size'])}}}"
-        if t.get("pop", style == "hook"):
-            extra += "{\\fscx85\\fscy85\\t(0,150,\\fscx100\\fscy100)}"
-        add(style, st, min(en, total), t["text"], extra)
+        efecto = t.get("effect") or {"titulo": "revelar", "promo": "pop", "hook": "pop"}.get(style)
+        if efecto == "pop":
+            extra += "{\\fscx70\\fscy70\\t(0,180,\\fscx108\\fscy108)\\t(180,260,\\fscx100\\fscy100)}"
+        elif efecto == "revelar":  # aparece de izquierda a derecha, como máquina de escribir
+            extra += f"{{\\clip(0,0,0,{H})\\t(0,{int(t.get('reveal_ms', 450))},\\clip(0,0,{W},{H}))}}"
+        text = t["text"].upper() if t.get("upper", style in ("titulo", "bajada")) else t["text"]
+        add(style, st, min(en, total), fix_text(text), extra)
 
     for c in subtitle_cues:
         if card_start is not None and c["start"] >= card_start:
             continue
-        add("sub", c["start"], c["end"], c["text"].upper() if plan.get("subtitles_upper", True) else c["text"])
+        text = fix_text(c["text"], plan.get("subtitle_fixes"))
+        add("sub", c["start"], c["end"], text.upper() if plan.get("subtitles_upper", False) else text)
 
     card = plan.get("end_card")
     if card and card_start is not None:
@@ -357,6 +395,25 @@ def final_pass(plan, base, W, H, joined, total, card_start, ass_file, out):
         parts.append(f"{vchain}[lg]overlay={pos}:shortest=1{enable}[vl]")
         vchain = "[vl]"
         idx += 1
+    # Stickers: imágenes que aparecen un rato con "pop" (ej. el logo en círculo a mitad del video)
+    for st in plan.get("stickers", []):
+        a, b = float(st["start"]), float(st["end"])
+        sw = int(st.get("width", W * 0.6))
+        cx, cy = float(st.get("x", 0.5)), float(st.get("y", 0.4))
+        cmd += ["-loop", "1", "-t", f"{total:.3f}", "-framerate", str(FPS), "-i", str((base / st["src"]).resolve())]
+        # escala animada: 0 -> 110% -> 100% en 0,25 s (efecto pop), y fundido de salida
+        zexpr = f"if(lt(t-{a},0.18),max(0.05,(t-{a})/0.18*1.1),if(lt(t-{a},0.26),1.1-(t-{a}-0.18)/0.08*0.1,1))"
+        parts.append(
+            f"[{idx}:v]format=rgba,scale=w='{sw}*({zexpr})':h=-1:eval=frame,"
+            f"fade=t=out:st={b-0.2:.3f}:d=0.2:alpha=1[st{idx}]"
+        )
+        parts.append(
+            f"{vchain}[st{idx}]overlay=x='{W}*{cx}-w/2':y='{H}*{cy}-h/2':eval=frame:"
+            f"enable='between(t,{a},{b})'[vs{idx}]"
+        )
+        vchain = f"[vs{idx}]"
+        idx += 1
+
     fontsdir = SKILL_DIR / "assets" / "fonts"
     extra_fonts = plan.get("fonts_dir")
     if extra_fonts:
@@ -442,7 +499,8 @@ def main():
 
         joined = tmp / "joined.mp4"
         print("… uniendo segmentos")
-        total, starts = join_segments(paths, durs, float(plan.get("transition", 0.25)), joined)
+        kinds = [s_.get("transition_in", plan.get("transition_type")) for s_ in segs]
+        total, starts = join_segments(paths, durs, float(plan.get("transition", 0.25)), joined, kinds)
         card_start = starts[-1] if card else None
 
         cues = []

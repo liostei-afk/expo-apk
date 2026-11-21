@@ -27,11 +27,15 @@ ffmpeg -ss 12 -to 18 -i clip.mp4 -vf "fps=2,scale=360:-2,tile=4x3" -frames:v 1 d
 ```
 
 ### 3. Proponer el guion antes de renderizar
-Mostrale al usuario un guion corto, toma por toma, con tiempos. Estructura que funciona para muebles (15–30 s):
-1. **Gancho (0–2 s):** la toma más llamativa + texto arriba que genere curiosidad o nombre un problema ("¿Mesa para 4 que se vuelve para 8?", "Así se abre este sofá cama").
-2. **Demostración (2–15 s):** el mueble en uso: mecanismo, apertura, extensión, la gente sentándose. Tomas de 1,5–3 s, cortes con ritmo.
-3. **Detalles (opcional):** materiales y terminaciones de cerca (madera, tapizado, costuras, patas).
-4. **Cierre (2,5–3 s):** placa con logo + "Showroom en Caballito" + "Escribinos por WhatsApp".
+**Leé `references/estilo_sundesign.md`**: es el estilo con el que la marca ya edita (presentador a cámara + demostración, títulos amarillos, subtítulos blancos, barridos, logo en círculo, promo gigante). Replicalo salvo que pidan otra cosa.
+
+Mostrale al usuario un guion corto, toma por toma, con tiempos. Estructura (20–45 s):
+1. **Gancho (0–2 s):** imagen llamativa o metáfora + frase que nombre el problema ("Si vivís con poco espacio…", "¿Mesa para 4 que se vuelve para 8?").
+2. **Presentador / presentación del producto:** qué es y por qué importa, con un título amarillo ("COMPACTO Y ELEGANTE").
+3. **Demostración:** el mueble en uso (mecanismo, apertura, extensión) con título + bajada ("ARMADO / EN 5 SEGUNDOS").
+4. **Beneficios, uno por toma:** cada uno con su título (TELA ANTIMANCHAS, FÁCIL DE LAVAR…).
+5. **Logo** en círculo con pop (sticker), 2 s.
+6. **Oferta** si la hay ("20% OFF" estilo `promo`) y **cierre**: placa con logo + showroom + WhatsApp.
 
 Esperá el OK (o ajustes) antes de renderizar, salvo que el usuario haya pedido que lo hagas directo.
 
@@ -42,16 +46,18 @@ Partí de `references/plan_ejemplo.json`. Campos:
 |---|---|
 | `output` | ruta del MP4 final (relativa al plan) |
 | `format` | `9:16` (Reels/TikTok, por defecto), `4:5` (feed), `1:1` |
-| `transition` | segundos de fundido entre tomas (0 = corte seco; 0.2–0.3 queda prolijo) |
+| `transition` | duración de la transición en segundos (0 = corte seco; 0.25–0.35 recomendado) |
+| `transition_type` | `barrido` (whip con desenfoque, el estilo de la marca), `fundido`, `deslizar`, `cortina`, `zoom`. Por toma: `transition_in` en el segmento |
 | `segments[]` | las tomas, en orden |
 | ─ video | `src`, `start`, `end` (segundos del original), `speed` (1.5–2 para acelerar armados), `mute`, `volume`, `fit`, `focus_x`/`focus_y` (0–1, dónde está el mueble), `punch_in` (0.05–0.15, acerca la toma para dar ritmo) |
 | ─ foto | `src`, `duration`, `zoom` (Ken Burns, true por defecto), `zoom_direction` `in`/`out`, `zoom_amount` |
 | `fit` | `crop` llena la pantalla recortando (default); `blur` muestra el cuadro entero sobre fondo desenfocado — usalo para tomas horizontales donde el mueble es ancho y no entra recortado |
-| `texts[]` | `text`, `start`, `end` (en segundos **del video final**), `position` `top` (gancho, con caja) / `bottom` (etiqueta) / `center`; opcional `size` |
-| `subtitles` | `"auto"` (transcribe con faster-whisper), ruta a un `.srt`, u omitir |
+| `texts[]` | `text`, `start`, `end` (en segundos **del video final**), `style`: **`titulo`** (amarillo gigante arriba, en mayúsculas, aparece de izquierda a derecha), **`bajada`** (amarillo chico debajo del título), **`sub`** (subtítulo blanco con contorno), **`promo`** (texto gigante negro con pop, p. ej. "20% OFF"), `hook` / `label` (texto con caja). Opcional: `size`, `effect` (`pop`, `revelar`), `upper`. `\N` = salto de línea |
+| `stickers[]` | imágenes que aparecen con pop un rato: `src`, `start`, `end`, `width`, `x`, `y` (centro, 0–1). Ej.: `assets/logo_circulo.png` a mitad del video |
+| `subtitles` | `"auto"` (transcribe con faster-whisper), ruta a un `.srt`, u omitir. Se corrigen solas variantes mal escritas de "Sundesign" y "taller"→"fábrica"; más correcciones con `subtitle_fixes` ({"regex": "reemplazo"}) |
 | `logo` | `src`, `position` (`top-right`…), `width`, `opacity`. Se oculta solo en la placa de cierre |
 | `music` | `src`, `volume` (0.15–0.35), `start` (desde qué segundo de la canción), `duck` (baja la música cuando hay voz) |
-| `end_card` | `duration`, `logo`, `lines` (la última va en color acento), `bg` |
+| `end_card` | `duration`, `logo` (usá `assets/logo_circulo.png`), `logo_width`, `lines` (la última va en amarillo), `bg` (blanco por defecto) |
 | `brand` | pisa colores/fuente de `references/marca.json` para este video |
 
 Cálculo de tiempos: con transición T, cada toma después de la primera empieza T segundos antes de que termine la anterior. Duración final ≈ suma de tomas − T × (cantidad de tomas − 1). El script imprime la duración real.
@@ -90,6 +96,6 @@ Si piden "varias versiones" o "para las dos redes": hacé un plan por versión (
 
 ## Problemas comunes
 - **"falta faster-whisper"**: instalá con `pip install faster-whisper`, o escribí vos un `.srt` si el usuario te pasa lo que se dice, o seguí sin subtítulos.
-- **Fuente distinta a la esperada**: poné los `.ttf` en `assets/fonts/` (o `fonts_dir` en el plan) y que `font` coincida con el nombre de la familia.
+- **Tipografías**: vienen incluidas Anton (títulos) y Oswald (subtítulos) en `assets/fonts/`, licencia libre OFL. Para cambiarlas, poné otros `.ttf` ahí y ajustá `references/marca.json`.
 - **Videos de iPhone (HDR/HEVC)**: funcionan; si los colores salen lavados, avisá y sugerí grabar en "Más compatible" (H.264).
 - **Render lento**: es normal en clips 4K; 30 s de reel tardan 1–3 min.

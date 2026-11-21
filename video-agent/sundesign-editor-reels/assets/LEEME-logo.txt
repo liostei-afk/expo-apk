@@ -1,1 +1,1 @@
-Poné acá el logo de Sundesign en PNG con fondo transparente: logo.png (y si tenés, logo_blanco.png para fondos oscuros).
+logo_circulo.png: logo de Sundesign recortado de un reel (provisorio). Reemplazalo por el PNG original en alta calidad si lo tenés, con el mismo nombre.
