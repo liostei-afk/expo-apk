@@ -12,6 +12,9 @@ Una **skill** para Claude (Cowork) que convierte videos crudos en Reels y TikTok
 7. **Aprende**: cada corrección que le hacés queda anotada en tu ficha de estilo para no repetirla.
 8. Te da el **texto de la publicación** con la voz de la marca.
 
+## App de escritorio (Windows): `estudio-app/`
+Para que un operador trabaje sin escribirle a Claude: carga videos, guion y pedido; aprueba el storyboard; revisa, corrige y descarga el video final con su texto. También maneja una **biblioteca de estilos** con reels de referencia (para seguir las tendencias). Claude trabaja desde Cowork sobre la misma carpeta. Ver `estudio-app/LEEME.md`.
+
 ## Cómo empezar
 Seguí `sundesign-editor-reels/references/instalacion-cowork.md`. En resumen:
 1. Subí `sundesign-editor-reels.zip` en Claude → Configuración → Capacidades → Skills.

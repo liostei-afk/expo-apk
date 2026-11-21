@@ -18,6 +18,9 @@ Convertís material crudo en videos verticales listos para publicar, con el esti
 
 Requisitos: `ffmpeg`, `python3`, `pip install faster-whisper pillow`. La primera transcripción baja el modelo (~1,5 GB).
 
+## Modo app (Estudio de Reels)
+Si la carpeta conectada tiene **`COLA.md`** y `trabajos/` (la arma la app de escritorio "Estudio de Reels"), seguí **`references/protocolo-app.md`**: procesá la cola en orden, trabajá dentro de cada `trabajos/<id>/salida/`, usá el estilo elegido en `estilos/<id>/estilo.md` y comunicate con el operador solo a través de `estado.json`, `caption.md` y `resumen.md`. Ese protocolo manda sobre las carpetas descriptas abajo.
+
 ## Carpetas de trabajo
 Si el usuario tiene la estructura de `references/instalacion-cowork.md`, usala:
 - `1 Brutos/` — lo que se grabó. **Nunca modifiques estos archivos**: todo lo que generes va a otra carpeta.

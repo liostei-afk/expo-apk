@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estudio de Reels · Sundesign</title>
+<link rel="icon" href="/web/icon-192.png">
+<style>
+@font-face { font-family: "Anton"; src: url("/web/fonts/Anton-Regular.ttf"); }
+@font-face { font-family: "Oswald"; src: url("/web/fonts/Oswald-Variable.ttf"); font-weight: 200 700; }
+:root {
+  --ink: #1E1E1C; --ink-2: #4a4a46; --ink-3: #8a8a84;
+  --bg: #F6F4EF; --card: #FFFFFF; --line: #E6E2D8;
+  --yellow: #F9D20A; --yellow-soft: #FFF6C4; --green: #2E8B57; --green-soft: #E3F3EA;
+  --red: #C0392B; --red-soft: #FBE7E4; --gray-soft: #EEECE6;
+  --radius: 14px; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.05);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--ink); background: var(--bg); font-size: 15px; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+/* barra lateral */
+.side { background: var(--ink); color: #fff; padding: 22px 16px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; height: 100vh; }
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.brand img { width: 46px; height: 46px; border-radius: 50%; background: #fff; }
+.brand b { font-family: "Anton"; font-size: 20px; letter-spacing: .5px; display: block; line-height: 1.05; }
+.brand small { color: #bdbdb5; font-size: 12px; }
+.nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #dcdcd4; font-family: "Oswald"; font-size: 16px; letter-spacing: .3px; }
+.nav a:hover { background: #2c2c29; color: #fff; }
+.nav a.on { background: var(--yellow); color: var(--ink); }
+.nav .count { margin-left: auto; background: var(--yellow); color: var(--ink); border-radius: 20px; font-size: 12px; padding: 1px 8px; font-family: "Segoe UI", sans-serif; font-weight: 700; }
+.nav a.on .count { background: var(--ink); color: var(--yellow); }
+.side .foot { margin-top: auto; font-size: 12px; color: #9a9a92; line-height: 1.5; word-break: break-all; }
+/* principal */
+main { padding: 28px 36px 60px; max-width: 1240px; width: 100%; }
+h1 { font-family: "Anton"; font-weight: 400; font-size: 34px; margin: 0; letter-spacing: .3px; }
+h2 { font-family: "Oswald"; font-weight: 600; font-size: 20px; margin: 0 0 12px; }
+h3 { font-family: "Oswald"; font-weight: 600; font-size: 16px; margin: 0 0 8px; }
+.top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.top .sp { flex: 1; }
+.muted { color: var(--ink-3); }
+.small { font-size: 13px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+.stack > * + * { margin-top: 16px; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.btn { border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; font-family: "Oswald"; font-size: 15px; letter-spacing: .3px; background: var(--gray-soft); color: var(--ink); display: inline-flex; gap: 8px; align-items: center; text-decoration: none; }
+.btn:hover { filter: brightness(.96); }
+.btn.pri { background: var(--yellow); }
+.btn.dark { background: var(--ink); color: #fff; }
+.btn.ok { background: var(--green); color: #fff; }
+.btn.ghost { background: transparent; border: 1px solid var(--line); }
+.btn.danger { background: transparent; color: var(--red); border: 1px solid #ecc8c2; }
+.btn.big { padding: 13px 22px; font-size: 17px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 10px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.chip.operador { background: var(--yellow-soft); color: #6b5a00; }
+.chip.claude { background: var(--gray-soft); color: var(--ink-2); }
+.chip.nadie { background: var(--green-soft); color: var(--green); }
+.chip.claude::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+/* banner cowork */
+.banner { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 18px 20px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; margin-bottom: 22px; }
+.banner b { font-family: "Oswald"; font-size: 18px; color: var(--yellow); font-weight: 600; }
+.prompt { background: #2c2c29; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 8px; color: #e8e8e0; }
+/* tarjetas de trabajos */
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.tabs button { border: 0; background: transparent; padding: 7px 12px; border-radius: 9px; cursor: pointer; color: var(--ink-2); font-family: "Oswald"; font-size: 15px; }
+.tabs button.on { background: var(--card); box-shadow: var(--shadow); color: var(--ink); }
+.jobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+.job { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; display: flex; gap: 12px; padding: 12px; text-decoration: none; box-shadow: var(--shadow); transition: transform .12s; }
+.job:hover { transform: translateY(-2px); }
+.thumb { width: 66px; aspect-ratio: 9/16; border-radius: 8px; background: var(--gray-soft) center/cover no-repeat; flex: none; display: grid; place-items: center; color: var(--ink-3); font-size: 22px; }
+.job .t { font-family: "Oswald"; font-weight: 600; font-size: 16px; line-height: 1.2; margin-bottom: 6px; }
+.job .chip { white-space: normal; line-height: 1.3; }
+.job .m { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+.empty { text-align: center; padding: 48px 20px; color: var(--ink-3); }
+.empty b { display: block; font-family: "Oswald"; font-size: 20px; color: var(--ink); margin-bottom: 6px; }
+/* pasos */
+.steps { display: flex; gap: 0; margin: 4px 0 22px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.steps div { flex: 1; padding: 10px 12px; font-family: "Oswald"; font-size: 14px; color: var(--ink-3); border-right: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+.steps div:last-child { border-right: 0; }
+.steps i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--gray-soft); font-size: 12px; }
+.steps .done { color: var(--ink-2); } .steps .done i { background: var(--green); color: #fff; }
+.steps .now { color: var(--ink); background: var(--yellow-soft); } .steps .now i { background: var(--yellow); }
+/* acción actual */
+.action { border: 2px solid var(--yellow); }
+.action.wait { border-color: var(--line); }
+.drop { border: 2px dashed #cfcabd; border-radius: 12px; padding: 22px; text-align: center; cursor: pointer; color: var(--ink-2); background: #fbfaf7; }
+.drop.over { border-color: var(--ink); background: var(--yellow-soft); }
+.drop b { font-family: "Oswald"; font-size: 17px; display: block; color: var(--ink); }
+.files { list-style: none; padding: 0; margin: 12px 0 0; }
+.files li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.files li .n { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files button { border: 0; background: none; cursor: pointer; color: var(--ink-3); font-size: 18px; }
+.files button:hover { color: var(--red); }
+.bar { height: 6px; background: var(--gray-soft); border-radius: 4px; overflow: hidden; flex: 1; max-width: 160px; }
+.bar i { display: block; height: 100%; background: var(--yellow); width: 0; transition: width .2s; }
+label.f { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 5px; }
+.field { margin-bottom: 14px; }
+input[type=text], input[type=number], select, textarea { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; background: #fff; }
+textarea { resize: vertical; min-height: 84px; line-height: 1.45; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--yellow); border-color: transparent; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.checks label { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 20px; padding: 5px 11px; font-size: 13.5px; cursor: pointer; background: #fff; }
+.checks label:has(input:checked) { background: var(--yellow-soft); border-color: #e9d36a; }
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.hint { font-size: 12.5px; color: var(--ink-3); margin-top: 4px; }
+.player { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+.sb { max-width: 900px; }
+video { width: 100%; aspect-ratio: 9/16; background: #000; border-radius: 12px; }
+.sb img { width: 100%; border-radius: 10px; border: 1px solid var(--line); cursor: zoom-in; }
+.vers { display: flex; gap: 6px; flex-wrap: wrap; }
+.vers button { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 4px 10px; cursor: pointer; font-family: "Oswald"; }
+.vers button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.caption { white-space: pre-wrap; background: #fbfaf7; border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 14px; max-height: 260px; overflow: auto; }
+.md { font-size: 14px; line-height: 1.55; }
+.md h1, .md h2, .md h3 { font-family: "Oswald"; font-weight: 600; margin: 14px 0 6px; font-size: 17px; }
+.md h1 { font-size: 20px; }
+.md table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 8px 0; }
+.md td, .md th { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+.md code { background: var(--gray-soft); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+.timeline { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
+.timeline li { padding: 8px 0 8px 16px; border-left: 2px solid var(--line); position: relative; }
+.timeline li::before { content: ""; position: absolute; left: -6px; top: 13px; width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.timeline li.c::before { background: var(--ink); }
+.timeline li.o::before { background: var(--yellow); }
+.timeline .q { color: var(--ink-2); font-style: italic; margin-top: 3px; white-space: pre-wrap; }
+details summary { cursor: pointer; font-family: "Oswald"; font-size: 15px; }
+.styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.style { cursor: pointer; }
+.style .sw { height: 110px; border-radius: 10px; background: var(--ink) center/cover no-repeat; margin-bottom: 12px; display: grid; place-items: center; color: var(--yellow); font-family: "Anton"; font-size: 26px; }
+.star { color: #b99a00; font-weight: 700; font-size: 13px; }
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 14px; z-index: 50; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+.toast.err { background: var(--red); }
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: grid; place-items: center; z-index: 40; cursor: zoom-out; padding: 20px; }
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+.notice { background: var(--yellow-soft); border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+.notice.red { background: var(--red-soft); }
+ol.help li { margin-bottom: 10px; line-height: 1.5; }
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; } .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .brand { margin: 0 12px 0 0; } .side .foot { display: none; } .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  main { padding: 20px 16px 50px; } .grid2, .player, .cols2 { grid-template-columns: 1fr; }
+  .banner { grid-template-columns: 1fr; } .steps { flex-wrap: wrap; } .steps div { flex: 1 1 45%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><img src="/web/logo.png" alt=""><div><b>ESTUDIO<br>DE REELS</b><small>Sundesign Muebles</small></div></div>
+    <nav class="nav">
+      <a href="#/" data-nav="trabajos">🎬 Videos <span class="count" id="navCount" hidden></span></a>
+      <a href="#/estilos" data-nav="estilos">🎨 Estilos</a>
+      <a href="#/musica" data-nav="musica">🎵 Música</a>
+      <a href="#/ayuda" data-nav="ayuda">❓ Ayuda</a>
+    </nav>
+    <div class="foot" id="foot"></div>
+  </aside>
+  <main id="view"></main>
+</div>
+
+<script>
+// ------------------------------------------------------------------ utilidades
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const file = r => "/archivo/" + r.split("/").map(encodeURIComponent).join("/");
+let S = { inicio: null, job: null, jobKey: "", tab: "activos", ver: null };
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts,
+    body: opts.body && typeof opts.body !== "string" ? JSON.stringify(opts.body) : opts.body });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "Algo salió mal");
+  return j;
+}
+function toast(msg, err = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (err ? " err" : ""); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), err ? 5000 : 2600);
+}
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); toast("Copiado ✓"); }
+  catch { prompt("Copiá este texto:", text); }
+}
+function lightbox(src) {
+  const d = document.createElement("div"); d.className = "lightbox";
+  d.innerHTML = `<img src="${src}">`; d.onclick = () => d.remove(); document.body.appendChild(d);
+}
+function size(b) { return b > 1e9 ? (b / 1e9).toFixed(1) + " GB" : b > 1e6 ? (b / 1e6).toFixed(0) + " MB" : Math.max(1, b / 1e3 | 0) + " KB"; }
+function md(src) {   // markdown simple: títulos, negrita, código, listas, tablas
+  const lines = esc(src).split("\n"); let out = "", inList = false, inTable = false;
+  const inline = s => s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>").replace(/_(.+?)_/g, "<i>$1</i>");
+  for (const l of lines) {
+    if (/^\s*\|/.test(l)) {
+      if (/^\s*\|[\s|:-]+\|\s*$/.test(l)) continue;
+      if (!inTable) { out += "<table>"; inTable = true; }
+      out += "<tr>" + l.trim().replace(/^\||\|$/g, "").split("|").map(c => `<td>${inline(c.trim())}</td>`).join("") + "</tr>"; continue;
+    } else if (inTable) { out += "</table>"; inTable = false; }
+    if (/^\s*[-*] /.test(l)) { if (!inList) { out += "<ul>"; inList = true; } out += `<li>${inline(l.replace(/^\s*[-*] /, ""))}</li>`; continue; }
+    else if (inList) { out += "</ul>"; inList = false; }
+    const h = l.match(/^(#{1,3}) (.*)/);
+    if (h) out += `<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`;
+    else if (l.startsWith("&lt;!--")) continue;
+    else if (l.trim()) out += `<p>${inline(l)}</p>`;
+  }
+  return out + (inList ? "</ul>" : "") + (inTable ? "</table>" : "");
+}
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+// subida con progreso (el archivo va directo, sin pasar por la memoria)
+function upload(destino, f, onProgress) {
+  return new Promise((ok, bad) => {
+    const x = new XMLHttpRequest();
+    x.open("PUT", `/api/subir?destino=${encodeURIComponent(destino)}&nombre=${encodeURIComponent(f.name)}`);
+    x.upload.onprogress = e => e.lengthComputable && onProgress && onProgress(e.loaded / e.total);
+    x.onload = () => x.status < 300 ? ok(JSON.parse(x.responseText)) : bad(new Error(JSON.parse(x.responseText || "{}").error || "Error al subir"));
+    x.onerror = () => bad(new Error("Se cortó la subida"));
+    x.send(f);
+  });
+}
+// miniatura 9:16 desde un video o foto, generada en el navegador
+function makeThumb(f) {
+  return new Promise(res => {
+    const url = URL.createObjectURL(f), c = document.createElement("canvas"); c.width = 270; c.height = 480;
+    const draw = (el, w, h) => {
+      const g = c.getContext("2d"), s = Math.max(270 / w, 480 / h);
+      g.drawImage(el, (270 - w * s) / 2, (480 - h * s) / 2, w * s, h * s);
+      c.toBlob(b => { URL.revokeObjectURL(url); res(b); }, "image/jpeg", .82);
+    };
+    if (f.type.startsWith("image/")) { const i = new Image(); i.onload = () => draw(i, i.width, i.height); i.onerror = () => res(null); i.src = url; return; }
+    const v = document.createElement("video"); v.muted = true; v.preload = "metadata"; v.src = url;
+    v.onloadeddata = () => { v.currentTime = Math.min(1, (v.duration || 2) / 3); };
+    v.onseeked = () => draw(v, v.videoWidth, v.videoHeight);
+    v.onerror = () => res(null);
+  });
+}
+function dropzone(el, accept, onFiles) {
+  const inp = document.createElement("input"); inp.type = "file"; inp.multiple = true; inp.accept = accept; inp.hidden = true;
+  el.appendChild(inp);
+  el.onclick = e => { if (e.target === inp) return; inp.click(); };
+  inp.onchange = () => { onFiles([...inp.files]); inp.value = ""; };
+  el.ondragover = e => { e.preventDefault(); el.classList.add("over"); };
+  el.ondragleave = () => el.classList.remove("over");
+  el.ondrop = e => { e.preventDefault(); el.classList.remove("over"); onFiles([...e.dataTransfer.files]); };
+}
+async function uploadMany(destino, files, listEl, after) {
+  for (const f of files) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="n">⬆️ ${esc(f.name)} <span class="muted small">${size(f.size)}</span></span><span class="bar"><i></i></span>`;
+    listEl.prepend(li);
+    try {
+      await upload(destino, f, p => li.querySelector(".bar i").style.width = (p * 100).toFixed(0) + "%");
+      if (after) await after(f);
+    } catch (e) { toast(e.message, true); }
+    li.remove();
+  }
+}
+
+// ------------------------------------------------------------------ datos
+async function loadInicio() {
+  S.inicio = await api("/api/inicio");
+  const n = S.inicio.pendientes, c = $("#navCount");
+  const mine = S.inicio.trabajos.filter(t => t.quien === "operador" && t.estado !== "borrador").length;
+  c.hidden = !mine; c.textContent = mine;
+  $("#foot").innerHTML = `Carpeta de trabajo:<br>${esc(S.inicio.carpeta)}`;
+  return S.inicio;
+}
+function coworkBanner() {
+  const n = S.inicio.pendientes;
+  if (!n) return "";
+  return `<div class="banner"><div><b>Claude tiene ${n} ${n === 1 ? "cosa" : "cosas"} para hacer</b>
+    <div class="small" style="color:#cfcfc6;margin-top:4px">Abrí Claude Cowork con la carpeta de trabajo conectada y pegá este mensaje:</div>
+    <div class="prompt">${esc(S.inicio.cowork)}</div></div>
+    <div class="row"><button class="btn pri" onclick="copy(S.inicio.cowork)">📋 Copiar mensaje</button>
+    <button class="btn ghost" style="color:#fff;border-color:#555" onclick="api('/api/abrir-carpeta',{method:'POST',body:{}})">📂 Carpeta</button></div></div>`;
+}
+
+// ------------------------------------------------------------------ vistas
+const views = {
+  async trabajos() {
+    const d = await loadInicio();
+    const groups = {
+      activos: d.trabajos.filter(t => !["publicado", "archivado"].includes(t.estado)),
+      publicados: d.trabajos.filter(t => t.estado === "publicado"),
+      archivados: d.trabajos.filter(t => t.estado === "archivado"),
+    };
+    const list = groups[S.tab];
+    $("#view").innerHTML = `
+      <div class="top"><h1>Videos</h1><span class="sp"></span><button class="btn pri big" id="nuevo">＋ Nuevo video</button></div>
+      ${coworkBanner()}
+      <div class="tabs">${Object.keys(groups).map(k => `<button class="${k === S.tab ? "on" : ""}" data-tab="${k}">${k[0].toUpperCase() + k.slice(1)} (${groups[k].length})</button>`).join("")}</div>
+      ${list.length ? `<div class="jobs">${list.map(t => `
+        <a class="job" href="#/trabajo/${t.id}">
+          <div class="thumb" style="${t.miniatura ? `background-image:url('${file(t.miniatura)}?${t.actualizado}')` : ""}">${t.miniatura ? "" : "🎞️"}</div>
+          <div style="min-width:0"><div class="t">${esc(t.titulo)}</div>
+            <span class="chip ${t.quien}">${t.quien === "operador" && t.estado !== "borrador" ? "Te toca · " : ""}${esc(t.estado_txt)}</span>
+            <div class="m">${t.versiones ? `${t.versiones} versión${t.versiones > 1 ? "es" : ""} · ` : ""}${esc(t.actualizado)}</div></div>
+        </a>`).join("")}</div>`
+        : `<div class="card empty"><b>${S.tab === "activos" ? "Todavía no hay videos en curso" : "Nada por acá"}</b>${S.tab === "activos" ? "Tocá «Nuevo video» para cargar el primer crudo." : ""}</div>`}`;
+    $("#view").querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; views.trabajos(); });
+    $("#nuevo").onclick = async () => {
+      const titulo = prompt("¿Cómo se llama este video? (por ejemplo: Sofá cama Nórdico – armado)");
+      if (!titulo) return;
+      const r = await api("/api/trabajo", { method: "POST", body: { titulo } });
+      location.hash = "#/trabajo/" + r.id;
+    };
+  },
+
+  async trabajo(id) {
+    await loadInicio();
+    const j = await api("/api/trabajo/" + id);
+    S.job = j; S.jobKey = JSON.stringify(j);
+    const p = j.pedido;
+    const estilos = S.inicio.estilos;
+    const musica = S.inicio.musica;
+    $("#view").innerHTML = `
+      <div class="top"><a href="#/" class="btn ghost">← Videos</a><h1 style="font-size:28px">${esc(p.titulo || j.id)}</h1>
+        <span class="chip ${j.quien}" id="chip">${esc(j.estado_txt)}</span><span class="sp"></span>
+        <button class="btn ghost" onclick="api('/api/abrir-carpeta',{method:'POST',body:{trabajo:'${j.id}'}})">📂 Abrir carpeta</button></div>
+      <div class="steps" id="steps"></div>
+      <div id="banner"></div>
+      <section class="card action" id="action" style="margin-bottom:20px"></section>
+      <div class="grid2">
+        <div class="stack">
+          <section class="card" id="material">
+            <h2>1 · Material</h2>
+            <div class="drop" id="drop"><b>Arrastrá acá los videos crudos y las fotos</b>o hacé clic para elegirlos · pueden pesar lo que sea</div>
+            <ul class="files" id="brutos"></ul>
+            <div class="field" style="margin-top:16px"><label class="f">Guion o lo que se dice en el video</label>
+              <textarea id="guion" rows="6" placeholder="Pegá el guion, o escribí los puntos clave que tiene que decir el video.">${esc(j.guion)}</textarea>
+              <div class="hint">Si el presentador habla, Claude transcribe el audio igual: el guion sirve para saber qué se quiso decir y detectar errores.</div></div>
+          </section>
+          <section class="card" id="pedido">
+            <h2>2 · Pedido</h2>
+            <div class="cols2">
+              <div class="field"><label class="f">Producto</label><input type="text" data-k="producto" value="${esc(p.producto || "")}" placeholder="Ej: Mesa extensible Nórdica"></div>
+              <div class="field"><label class="f">Categoría</label><select data-k="categoria">${["", "Mesas y sillas", "Mesas ratonas", "Sofá camas y sillones", "Deco", "Showroom / marca"].map(o => `<option ${p.categoria === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
+              <div class="field"><label class="f">¿Para quién es?</label><input type="text" data-k="publico" value="${esc(p.publico || "")}" placeholder="Ej: parejas que se mudan a un depto chico"></div>
+              <div class="field"><label class="f">Objetivo</label><select data-k="objetivo">${["Que escriban por WhatsApp", "Que vengan al showroom", "Mostrar una promo", "Mostrar el producto / marca"].map(o => `<option ${p.objetivo === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
+              <div class="field"><label class="f">Duración máxima</label><select data-k="duracion">${[15, 30, 45, 60, 90].map(o => `<option value="${o}" ${+p.duracion === o ? "selected" : ""}>${o} segundos</option>`).join("")}</select></div>
+              <div class="field"><label class="f">Cierre</label><select data-k="cierre">${["Escribinos por WhatsApp", "Vení al showroom en Caballito", "WhatsApp + showroom", "Que lo elija Claude"].map(o => `<option ${p.cierre === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
+            </div>
+            <div class="field"><label class="f">Plataformas</label><div class="checks">${[["instagram", "Instagram Reels"], ["tiktok", "TikTok"], ["feed", "Feed 4:5"], ["corta", "Versión corta 15 s"]].map(([k, l]) => `<label><input type="checkbox" data-arr="plataformas" value="${k}" ${(p.plataformas || []).includes(k) ? "checked" : ""}> ${l}</label>`).join("")}</div></div>
+            <div class="field"><label class="f">Promo u oferta (solo si existe de verdad)</label><input type="text" data-k="promo" value="${esc(p.promo || "")}" placeholder="Ej: 20% OFF pagando en efectivo · 3 cuotas sin interés"></div>
+            <div class="cols2">
+              <div class="field"><label class="f">Estilo de edición</label><select data-k="estilo">${estilos.map(e => `<option value="${e.id}" ${p.estilo === e.id ? "selected" : ""} ${e.estado !== "listo" ? "disabled" : ""}>${esc(e.nombre)}${e.predeterminado ? " ★" : ""}${e.estado !== "listo" ? " (sin analizar)" : ""}</option>`).join("")}</select>
+                <div class="hint"><a href="#/estilos">Ver o crear estilos</a></div></div>
+              <div class="field"><label class="f">Música</label><select data-k="musica"><option value="">Que elija Claude (de la carpeta Música)</option><option value="sin" ${p.musica === "sin" ? "selected" : ""}>Sin música (la agrego al publicar)</option>${musica.map(m => `<option value="${esc(m.ruta)}" ${p.musica === m.ruta ? "selected" : ""}>${esc(m.nombre)}</option>`).join("")}</select></div>
+            </div>
+            <div class="field"><label class="f">Efectos (si no marcás nada, Claude elige según el estilo)</label><div class="checks">${[["titulos", "Títulos amarillos"], ["subtitulos", "Subtítulos palabra por palabra"], ["lista", "Lista de beneficios ✓"], ["zoom_cortes", "Zoom en los cortes"], ["logo", "Logo en círculo"], ["promo_gigante", "Promo gigante"], ["sonidos", "Efectos de sonido"]].map(([k, l]) => `<label><input type="checkbox" data-arr="efectos" value="${k}" ${(p.efectos || []).includes(k) ? "checked" : ""}> ${l}</label>`).join("")}</div></div>
+            <div class="cols2">
+              <div class="field"><label class="f">Color</label><select data-k="color">${[["", "Natural (sin cambios)"], ["calido", "Más cálido"], ["luminoso", "Más luminoso"], ["vivo", "Más vivo"], ["frio", "Más frío"], ["oscuro", "Más oscuro"]].map(([v, l]) => `<option value="${v}" ${(p.color || "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+              <div class="field"><label class="f">Aprobación</label><div class="checks"><label><input type="checkbox" data-bool="directo" ${p.directo ? "checked" : ""}> Editar directo, sin aprobar storyboard</label></div></div>
+            </div>
+            <div class="field"><label class="f">Notas para Claude</label><textarea data-k="notas" rows="3" placeholder="Ej: en el segundo 20 me equivoqué con el precio, no lo uses. Que se vea bien la tela.">${esc(p.notas || "")}</textarea></div>
+            <div class="hint" id="saved">Los cambios se guardan solos.</div>
+          </section>
+        </div>
+        <div class="stack">
+          <section class="card"><h2>Historial</h2><ul class="timeline" id="hist"></ul></section>
+        </div>
+      </div>`;
+    // pedido: autoguardado
+    const save = debounce(async () => {
+      const body = {};
+      $("#pedido").querySelectorAll("[data-k]").forEach(e => body[e.dataset.k] = e.value);
+      $("#pedido").querySelectorAll("[data-bool]").forEach(e => body[e.dataset.bool] = e.checked);
+      const arrs = {};
+      $("#pedido").querySelectorAll("[data-arr]").forEach(e => { arrs[e.dataset.arr] ??= []; if (e.checked) arrs[e.dataset.arr].push(e.value); });
+      Object.assign(body, arrs);
+      body.guion = $("#guion").value;
+      try { await api(`/api/trabajo/${id}/pedido`, { method: "POST", body }); $("#saved").textContent = "Guardado ✓ " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+      catch (e) { toast(e.message, true); }
+    }, 600);
+    $("#pedido").addEventListener("input", save); $("#pedido").addEventListener("change", save); $("#guion").addEventListener("input", save);
+    dropzone($("#drop"), "video/*,image/*", files => uploadMany(`trabajo/${id}/brutos`, files, $("#brutos"), async f => {
+      if (!S.job.miniatura) { const b = await makeThumb(f); if (b) { await upload(`trabajo/${id}/miniatura`, new File([b], "miniatura.jpg")); S.job.miniatura = 1; } }
+      await refreshJob(true);
+    }));
+    renderJobDynamic();
+  },
+
+  async estilos(id) {
+    const d = await loadInicio();
+    if (id) return renderStyle(d.estilos.find(e => e.id === id));
+    $("#view").innerHTML = `
+      <div class="top"><h1>Estilos de edición</h1><span class="sp"></span><button class="btn pri big" id="nuevoEstilo">＋ Nuevo estilo</button></div>
+      ${coworkBanner()}
+      <div class="notice" style="margin-bottom:18px">Las tendencias cambian: cargá reels que te gusten <b>de hoy</b> (tuyos o de otras cuentas) y creá un estilo nuevo.
+        Claude estudia cómo están editados —ritmo, subtítulos, títulos, colores, música— y arma una ficha. Cada video puede usar el estilo que elijas; el ★ es el que se usa por defecto.</div>
+      <div class="styles">${d.estilos.map(e => `
+        <a class="card style" href="#/estilos/${e.id}" style="text-decoration:none">
+          <div class="sw" style="${e.muestras[0] ? `background-image:url('${file(e.muestras[0].ruta)}')` : ""}">${e.muestras[0] ? "" : esc(e.nombre.toUpperCase())}</div>
+          <div class="row" style="justify-content:space-between"><h3 style="margin:0">${esc(e.nombre)}</h3>${e.predeterminado ? '<span class="star">★ Predeterminado</span>' : ""}</div>
+          <div class="row small muted" style="margin-top:6px">${styleChip(e)} · ${e.referencias.length} referencia${e.referencias.length === 1 ? "" : "s"}</div>
+        </a>`).join("")}</div>`;
+    $("#nuevoEstilo").onclick = async () => {
+      const nombre = prompt("Nombre del estilo nuevo (ej: Tendencia 2027 · cortes rápidos)");
+      if (!nombre) return;
+      const r = await api("/api/estilo", { method: "POST", body: { nombre } });
+      location.hash = "#/estilos/" + r.id;
+    };
+  },
+
+  async musica() {
+    const d = await loadInicio();
+    $("#view").innerHTML = `<div class="top"><h1>Música</h1></div>
+      <div class="card stack"><div class="notice">Solo música <b>libre de derechos</b> (por ejemplo, de la biblioteca de audio de YouTube o Pixabay Music).
+      Si querés una canción en tendencia, publicá el video sin música y agregala desde la app de Instagram o TikTok.</div>
+      <div class="drop" id="dropM"><b>Arrastrá acá archivos de música</b>mp3, m4a o wav</div>
+      <ul class="files" id="mus">${d.musica.map(m => `<li><span class="n">🎵 ${esc(m.nombre)} <span class="muted small">${size(m.tam)}</span></span>
+        <audio controls preload="none" src="${file(m.ruta)}" style="height:32px"></audio><button title="Borrar" data-del="${esc(m.ruta)}">🗑</button></li>`).join("")}</ul></div>`;
+    dropzone($("#dropM"), "audio/*", files => uploadMany("musica", files, $("#mus"), () => {}).then(views.musica));
+    bindDeletes(views.musica);
+  },
+
+  async ayuda() {
+    const d = await loadInicio();
+    $("#view").innerHTML = `<div class="top"><h1>Cómo funciona</h1></div>
+      <div class="grid2"><div class="card"><ol class="help">
+        <li><b>Cargá el video</b>: «Nuevo video» → arrastrá los crudos, pegá el guion y completá el pedido.</li>
+        <li><b>Enviá a Claude</b> con el botón amarillo. Arriba aparece un aviso negro: copiá el mensaje y pegalo en <b>Claude Cowork</b> (con la carpeta de trabajo conectada).</li>
+        <li><b>Aprobá el storyboard</b>: Claude te muestra un cuadro por momento del video. Aprobalo o pedí cambios.</li>
+        <li><b>Revisá el video</b>: miralo en la app (y una vez en el celular). Si algo no va, pausá en ese momento, tocá «Marcar este segundo» y escribí la corrección. Cada corrección es una versión nueva.</li>
+        <li><b>Publicá</b>: descargá el video, copiá el texto de la publicación y subilo a Instagram o TikTok. Después marcalo como publicado.</li>
+      </ol>
+      <h3 style="margin-top:20px">Instalación (una sola vez)</h3>
+      <ol class="help small">
+        <li>Tener Claude (plan pago) con la app de escritorio y <b>Cowork</b>.</li>
+        <li>Subir la skill <code>sundesign-editor-reels.zip</code> en Claude → Configuración → Capacidades → Skills.</li>
+        <li>En Cowork, conectar la carpeta de trabajo (la de abajo) y pegar el texto de instalación de la skill (references/instalacion-cowork.md).</li>
+        <li>Opcional: en Cowork, crear una <b>tarea programada</b> cada 30 minutos con el mismo mensaje del aviso, así Claude revisa la cola solo.</li>
+      </ol></div>
+      <div class="stack"><div class="card"><h3>Carpeta de trabajo</h3><p class="small">Es la carpeta que hay que conectar en Cowork. Ahí se guardan los videos, los estilos y lo que hace Claude.</p>
+        <input type="text" id="carp" value="${esc(d.carpeta)}"><div class="row" style="margin-top:10px">
+        <button class="btn" onclick="copy($('#carp').value)">📋 Copiar ruta</button>
+        <button class="btn" onclick="api('/api/abrir-carpeta',{method:'POST',body:{}})">📂 Abrir</button>
+        <button class="btn ghost" id="cambiar">Cambiar carpeta</button></div></div>
+        <div class="card"><h3>Mensaje para Cowork</h3><div class="prompt" style="background:var(--gray-soft);color:var(--ink)">${esc(d.cowork)}</div>
+        <button class="btn pri" style="margin-top:10px" onclick="copy(S.inicio.cowork)">📋 Copiar</button></div>
+        <div class="card small"><h3>Si algo no anda</h3>
+        <p>¿Claude no hace nada? Fijate que en Cowork esté conectada <b>esta</b> carpeta y la skill instalada.</p>
+        <p>¿La app no abre? Cerrá la ventana y volvé a tocar el ícono del escritorio.</p></div></div></div>`;
+    $("#cambiar").onclick = async () => {
+      if (!confirm("¿Usar esta carpeta como carpeta de trabajo? Lo que esté en la anterior no se mueve.")) return;
+      try { await api("/api/carpeta", { method: "POST", body: { carpeta: $("#carp").value } }); toast("Carpeta cambiada"); views.ayuda(); }
+      catch (e) { toast(e.message, true); }
+    };
+  },
+};
+
+function styleChip(e) {
+  return { listo: '<span class="chip nadie">Listo</span>', por_analizar: '<span class="chip claude">Esperando a Claude</span>', borrador: '<span class="chip operador">Faltan referencias</span>' }[e.estado] || esc(e.estado);
+}
+function bindDeletes(after) {
+  $("#view").querySelectorAll("[data-del]").forEach(b => b.onclick = async e => {
+    e.stopPropagation();
+    if (!confirm("¿Borrar " + b.dataset.del.split("/").pop() + "?")) return;
+    try { await api("/api/borrar-archivo", { method: "POST", body: { ruta: b.dataset.del } }); after(); } catch (er) { toast(er.message, true); }
+  });
+}
+
+function renderStyle(e) {
+  if (!e) { location.hash = "#/estilos"; return; }
+  $("#view").innerHTML = `
+    <div class="top"><a href="#/estilos" class="btn ghost">← Estilos</a><h1 style="font-size:28px">${esc(e.nombre)}</h1>${styleChip(e)}
+      ${e.predeterminado ? '<span class="star">★ Predeterminado</span>' : ""}<span class="sp"></span>
+      ${e.predeterminado ? "" : `<button class="btn" id="pred">★ Usar por defecto</button><button class="btn danger" id="borrarE">Borrar</button>`}</div>
+    ${coworkBanner()}
+    <div class="grid2"><div class="stack">
+      <div class="card"><h2>Reels de referencia</h2>
+        <p class="small muted">Cargá entre 3 y 6 reels que te gusten cómo están editados. Pueden ser de otras cuentas: Claude toma <b>cómo se ven</b>, nunca lo que dicen ni su marca.
+        Lo que aparece en un solo video no cuenta como estilo.</p>
+        <div class="drop" id="dropE"><b>Arrastrá acá los reels de referencia</b>o capturas de pantalla</div>
+        <ul class="files" id="refs">${e.referencias.map(r => `<li><span class="n">🎞️ ${esc(r.nombre)} <span class="muted small">${size(r.tam)}</span></span>
+          <a class="btn ghost" style="padding:4px 10px" href="${file(r.ruta)}" target="_blank">Ver</a><button title="Borrar" data-del="${esc(r.ruta)}">🗑</button></li>`).join("")}</ul>
+      </div>
+      <div class="card"><h2>¿Qué te gusta de estas referencias?</h2>
+        <textarea id="notasE" rows="4" placeholder="Ej: los subtítulos grandes de a una palabra, los cortes rápidos, los colores cálidos. No me gusta la música muy fuerte.">${esc(e.notas)}</textarea>
+        <div class="row" style="margin-top:12px"><button class="btn pri big" id="analizar" ${e.referencias.length ? "" : "disabled"}>✨ ${e.estado === "listo" ? "Volver a analizar" : "Analizar con Claude"}</button>
+        <span class="small muted">Después pegá el mensaje del aviso en Cowork.</span></div>
+      </div></div>
+      <div class="stack">
+        ${e.muestras.map(m => `<div class="card sb"><img src="${file(m.ruta)}?${Date.now()}" onclick="lightbox(this.src)"></div>`).join("")}
+        <div class="card"><h2>Ficha de estilo</h2><div class="md">${e.ficha ? md(e.ficha) : '<p class="muted">Todavía no hay ficha: Claude la escribe cuando analiza las referencias.</p>'}</div></div>
+      </div></div>`;
+  dropzone($("#dropE"), "video/*,image/*", files => uploadMany(`estilo/${e.id}/referencias`, files, $("#refs")).then(() => views.estilos(e.id)));
+  bindDeletes(() => views.estilos(e.id));
+  const saveN = debounce(() => api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "notas", texto: $("#notasE").value } }), 600);
+  $("#notasE").oninput = saveN;
+  $("#analizar").onclick = async () => {
+    try { await api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "notas", texto: $("#notasE").value } });
+      await api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "analizar", texto: $("#notasE").value } });
+      toast("Listo: ahora pegá el mensaje en Cowork"); views.estilos(e.id); } catch (er) { toast(er.message, true); }
+  };
+  if ($("#pred")) $("#pred").onclick = async () => { await api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "predeterminado" } }); views.estilos(e.id); };
+  if ($("#borrarE")) $("#borrarE").onclick = async () => {
+    if (!confirm("¿Borrar este estilo y sus referencias?")) return;
+    try { await api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "borrar" } }); location.hash = "#/estilos"; } catch (er) { toast(er.message, true); }
+  };
+}
+
+// ------------------------------------------------------------------ partes dinámicas del trabajo
+const STEP_OF = { borrador: 0, bloqueado: 0, pendiente: 2, cambios_storyboard: 2, storyboard_listo: 2, aprobado: 3, editando: 3, correccion: 3, listo: 3, publicado: 4, archivado: 4 };
+function renderJobDynamic() {
+  const j = S.job, id = j.id, cur = STEP_OF[j.estado] ?? 0;
+  $("#chip").className = "chip " + j.quien; $("#chip").textContent = j.estado_txt;
+  $("#steps").innerHTML = ["Material", "Pedido", "Storyboard", "Edición", "Publicar"].map((n, i) =>
+    `<div class="${i < cur || (cur === 0 && i < 2 && j.brutos.length && i === 0) ? "done" : i === cur || (cur === 0 && i === 1) ? "now" : ""}"><i>${i < cur ? "✓" : i + 1}</i>${n}</div>`).join("");
+  $("#banner").innerHTML = j.quien === "claude" ? coworkBanner() : "";
+  $("#brutos").innerHTML = j.brutos.map(b => `<li><span class="n">${/\.(jpe?g|png|webp)$/i.test(b.nombre) ? "🖼️" : "🎞️"} ${esc(b.nombre)} <span class="muted small">${size(b.tam)}</span></span>
+    <a class="btn ghost" style="padding:4px 10px" href="${file(b.ruta)}" target="_blank">Ver</a>${["borrador", "bloqueado"].includes(j.estado) ? `<button title="Borrar" data-del="${esc(b.ruta)}">🗑</button>` : ""}</li>`).join("")
+    || `<li class="muted small" style="border:0">Todavía no hay material cargado.</li>`;
+  bindDeletes(() => refreshJob(true));
+  const H = j.estado_json.historial || [];
+  $("#hist").innerHTML = H.slice().reverse().map(h => `<li class="${h.quien === "claude" ? "c" : "o"}"><b>${esc(h.evento)}</b> <span class="muted small">· ${esc(h.fecha)} · ${h.quien === "claude" ? "Claude" : "Operador"}</span>${h.texto ? `<div class="q">${esc(h.texto)}</div>` : ""}</li>`).join("");
+  $("#action").className = "card action" + (j.quien === "claude" ? " wait" : "");
+  $("#action").innerHTML = actionHTML(j);
+  bindAction(j);
+}
+
+function actionHTML(j) {
+  const sb = j.storyboards, vids = j.videos, T = j.textos;
+  const send = `<div class="row" style="margin-top:12px"><button class="btn pri big" id="enviar" ${j.brutos.length ? "" : "disabled"}>🚀 Enviar a Claude</button>
+    <span class="small muted">${j.brutos.length ? "Revisá el pedido y envialo." : "Primero cargá al menos un video o foto."}</span></div>`;
+  switch (j.estado) {
+    case "borrador":
+      return `<h2>Cargá el material y completá el pedido</h2><p class="small muted">Cuando esté todo, enviáselo a Claude. Después vas a poder aprobar un storyboard antes de que edite.</p>${send}`;
+    case "bloqueado":
+      return `<h2>Claude necesita una respuesta</h2><div class="notice">${esc(j.estado_json.mensaje || "")}</div>
+        <div class="field" style="margin-top:12px"><textarea id="resp" placeholder="Tu respuesta…"></textarea></div>
+        <button class="btn pri" id="responder">Responder y volver a enviar</button>`;
+    case "pendiente": case "cambios_storyboard": case "aprobado": case "editando": case "correccion":
+      return `<h2>${esc(j.estado_txt)}</h2><p class="small">${j.estado === "editando" ? "Claude está trabajando ahora. Esta pantalla se actualiza sola." :
+        "Pegá el mensaje del aviso negro en Claude Cowork. Esta pantalla se actualiza sola cuando Claude termine."}</p>
+        <div class="row"><button class="btn" onclick="copy(S.inicio.cowork)">📋 Copiar mensaje para Cowork</button>
+        ${j.estado !== "editando" ? `<button class="btn ghost" id="cancelar">Volver a borrador</button>` : ""}</div>
+        ${vids.length ? `<details style="margin-top:14px"><summary>Ver última versión mientras tanto</summary>${playerHTML(j)}</details>` : ""}`;
+    case "storyboard_listo":
+      return `<h2>Storyboard para aprobar</h2><p class="small muted">Así va a quedar el video, momento a momento. Tocá la imagen para verla grande.</p>
+        <div class="sb stack">${sb.map(s => `<img src="${file(s.ruta)}?${s.fecha}" onclick="lightbox(this.src)">`).join("")}
+        ${j.imagenes.filter(i => i.nombre.includes("antes_despues")).map(s => `<img src="${file(s.ruta)}?${s.fecha}" onclick="lightbox(this.src)">`).join("")}</div>
+        ${T["guion_propuesto.md"] ? `<details style="margin-top:12px"><summary>Guion propuesto por Claude</summary><div class="md">${md(T["guion_propuesto.md"])}</div></details>` : ""}
+        <div class="row" style="margin-top:14px"><button class="btn ok big" id="aprobar">✓ Aprobar y editar</button></div>
+        <div class="field" style="margin-top:14px"><label class="f">¿Querés cambiar algo?</label><textarea id="cambiosTxt" placeholder="Ej: el título del principio más corto; en el plano 3 usá la toma de la tela."></textarea></div>
+        <button class="btn" id="cambios">Pedir cambios</button>`;
+    case "listo": case "publicado": case "archivado":
+      return `<h2>${j.estado === "listo" ? "Video listo para revisar" : esc(j.estado_txt)}</h2>${playerHTML(j)}`;
+  }
+  return "";
+}
+
+function playerHTML(j) {
+  const vids = j.videos; if (!vids.length) return `<p class="muted">Todavía no hay videos.</p>`;
+  const v = vids.find(x => x.nombre === S.ver) || vids[vids.length - 1];
+  const rev = Object.entries(j.textos).filter(([k]) => k.endsWith("_revision.md")).find(([k]) => k.startsWith(v.nombre.replace(/\.mp4$/, "")));
+  const T = j.textos;
+  return `<div class="player" style="margin-top:8px"><div><video id="vid" controls playsinline src="${file(v.ruta)}?${v.fecha}"></video>
+      <div class="vers" style="margin-top:10px">${vids.map(x => `<button data-ver="${esc(x.nombre)}" class="${x === v ? "on" : ""}">${x.nombre.match(/_v(\d+)\.mp4$/)[0].slice(1, -4).toUpperCase()}</button>`).join("")}</div></div>
+    <div class="stack">
+      <div class="row"><a class="btn pri" href="${file(v.ruta)}?descargar=1">⬇ Descargar ${esc(v.nombre.match(/_v\d+/)[0].slice(1).toUpperCase())}</a>
+        <button class="btn ghost" onclick="api('/api/abrir-carpeta',{method:'POST',body:{trabajo:'${j.id}',salida:1}})">📂 Carpeta</button></div>
+      ${T["caption.md"] ? `<div><h3>Texto para la publicación</h3><div class="caption" id="cap">${esc(T["caption.md"])}</div>
+        <button class="btn" style="margin-top:8px" onclick="copy($('#cap').textContent)">📋 Copiar texto</button></div>` : ""}
+      ${T["resumen.md"] ? `<details open><summary>Qué hizo Claude</summary><div class="md">${md(T["resumen.md"])}</div></details>` : ""}
+      ${rev ? `<details><summary>Revisión automática</summary><div class="md">${md(rev[1])}</div></details>` : ""}
+      ${j.estado === "listo" ? `<div><h3>¿Hay que corregir algo?</h3>
+        <textarea id="corr" placeholder="Pausá el video donde está el problema, tocá «Marcar este segundo» y escribí qué cambiar."></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="marcar">⏱ Marcar este segundo</button><button class="btn dark" id="corregir">Pedir corrección (nueva versión)</button></div>
+        <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><button class="btn ok" id="publicado">✓ Ya lo publiqué</button><button class="btn ghost" id="archivar">Archivar</button></div></div>`
+      : `<div class="row"><button class="btn ghost" id="reabrir">Reabrir</button></div>`}
+    </div></div>`;
+}
+
+function bindAction(j) {
+  const act = (accion, extra = {}) => api(`/api/trabajo/${j.id}/accion`, { method: "POST", body: { accion, ...extra } })
+    .then(() => refreshJob(true)).catch(e => toast(e.message, true));
+  const on = (sel, fn) => { const el = $(sel); if (el) el.onclick = fn; };
+  on("#enviar", () => act("enviar").then(() => toast("Enviado. Ahora pegá el mensaje en Cowork.")));
+  on("#cancelar", () => confirm("¿Volver a borrador? Claude no va a procesar este video hasta que lo envíes de nuevo.") && act("cancelar"));
+  on("#aprobar", () => act("aprobar", { texto: ($("#cambiosTxt") || {}).value || "" }));
+  on("#cambios", () => act("cambios", { texto: $("#cambiosTxt").value }));
+  on("#responder", () => act("responder", { texto: $("#resp").value }));
+  on("#publicado", () => act("publicado"));
+  on("#archivar", () => act("archivar"));
+  on("#reabrir", () => act("reabrir"));
+  on("#marcar", () => {
+    const t = $("#vid").currentTime, s = `[${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}] `;
+    const c = $("#corr"); c.value = (c.value ? c.value.trimEnd() + "\n" : "") + s; c.focus();
+  });
+  on("#corregir", () => act("correccion", { texto: $("#corr").value, version: (S.job.videos.find(x => x.nombre === S.ver) || S.job.videos.at(-1)).nombre }));
+  document.querySelectorAll("[data-ver]").forEach(b => b.onclick = () => { S.ver = b.dataset.ver; renderJobDynamic(); });
+}
+
+async function refreshJob(force = false) {
+  if (!S.job) return;
+  const busy = document.activeElement && ["TEXTAREA", "INPUT"].includes(document.activeElement.tagName) && $("#action").contains(document.activeElement);
+  const vid = $("#vid"); const playing = vid && !vid.paused;
+  await loadInicio();
+  const j = await api("/api/trabajo/" + S.job.id);
+  const key = JSON.stringify(j);
+  if (!force && (key === S.jobKey || busy || playing)) return;
+  S.job = j; S.jobKey = key; renderJobDynamic();
+}
+
+// ------------------------------------------------------------------ navegación
+async function route() {
+  const h = location.hash.replace(/^#\/?/, "").split("/");
+  document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === (h[0] === "trabajo" ? "trabajos" : h[0] || "trabajos")));
+  S.job = h[0] === "trabajo" ? S.job : null; S.ver = null;
+  try {
+    if (h[0] === "trabajo") await views.trabajo(h[1]);
+    else if (h[0] === "estilos") await views.estilos(h[1]);
+    else if (views[h[0]]) await views[h[0]]();
+    else await views.trabajos();
+  } catch (e) { $("#view").innerHTML = `<div class="card empty"><b>No se pudo abrir</b>${esc(e.message)}<br><br><a class="btn" href="#/">Volver</a></div>`; }
+}
+window.addEventListener("hashchange", route);
+route();
+// actualización automática (para ver cuando Claude termina)
+setInterval(async () => {
+  try {
+    const h = location.hash;
+    if (h.startsWith("#/trabajo/")) return refreshJob();
+    if (h === "" || h === "#/" ) {
+      const prev = JSON.stringify(S.inicio?.trabajos) + S.inicio?.pendientes;
+      await loadInicio();
+      if (JSON.stringify(S.inicio.trabajos) + S.inicio.pendientes !== prev) views.trabajos();
+    } else if (h.startsWith("#/estilos")) {
+      const prev = JSON.stringify(S.inicio?.estilos);
+      await loadInicio();
+      if (JSON.stringify(S.inicio.estilos) !== prev && !document.activeElement?.matches("textarea")) route();
+    }
+  } catch { /* la app puede estar cerrándose */ }
+}, 4000);
+</script>
+</body>
+</html>

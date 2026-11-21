@@ -304,11 +304,13 @@ def join_segments(paths, durs, transition, out, kinds=None):
 
 
 # ---------------------------------------------------------------- subtítulos
-def words_for_source(src, plan):
-    """Palabras con tiempos de un clip: usa <clip>_palabras.json si existe; si no, lo transcribe y lo guarda."""
-    cache = src.with_name(src.stem + "_palabras.json")
-    if cache.exists():
-        return json.loads(cache.read_text(encoding="utf-8"))["words"]
+def words_for_source(src, plan, base=None):
+    """Palabras con tiempos de un clip: usa <clip>_palabras.json (junto al clip o junto al plan) si existe;
+    si no, lo transcribe y lo guarda junto al PLAN (nunca en la carpeta de los originales)."""
+    for cand in (src.with_name(src.stem + "_palabras.json"), (base or src.parent) / (src.stem + "_palabras.json")):
+        if cand.exists():
+            return json.loads(cand.read_text(encoding="utf-8"))["words"]
+    cache = (base or src.parent) / (src.stem + "_palabras.json")
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         import transcribe as tr  # noqa
@@ -336,7 +338,7 @@ def map_words(segs, starts, base, plan):
         a = float(seg.get("start", 0))
         b = float(seg["end"]) if seg.get("end") is not None else 1e9
         sp = float(seg.get("speed", 1.0))
-        for w in words_for_source(src, plan):
+        for w in words_for_source(src, plan, base):
             if w["end"] > a and w["start"] < b:
                 st = t0 + (max(w["start"], a) - a) / sp
                 en = t0 + (min(w["end"], b) - a) / sp

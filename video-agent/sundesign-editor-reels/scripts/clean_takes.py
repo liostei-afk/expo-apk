@@ -12,7 +12,7 @@ Uso:
 Genera:
   - <video>_limpio.mp4            el video limpio (mismo formato que el original)
   - <video>_limpio_palabras.json  las palabras con los tiempos NUEVOS (para subtítulos)
-  - <video>_cortes.md             la lista de cortes en lenguaje claro, para mostrarle al usuario
+  - <video>_cortes.md             la lista de cortes en lenguaje claro (junto al video limpio)
 Con --dry-run solo muestra la lista de cortes, sin renderizar.
 """
 import argparse
@@ -268,8 +268,9 @@ def main():
          "cuts": [round(sum(b - a for a, b in spans[:k]), 3) for k in range(1, len(spans))
                   if spans[k][0] - spans[k - 1][1] > 0.05]}, ensure_ascii=False, indent=1),
         encoding="utf-8")
-    src.with_name(src.stem + "_cortes.md").write_text(report + "\n", encoding="utf-8")
-    print(f"✓ {out}\n✓ {out.with_name(out.stem + '_palabras.json')}\n✓ {src.with_name(src.stem + '_cortes.md')}")
+    cortes = out.with_name(src.stem + "_cortes.md")  # junto al video limpio: nunca se escribe en la carpeta del original
+    cortes.write_text(report + "\n", encoding="utf-8")
+    print(f"✓ {out}\n✓ {out.with_name(out.stem + '_palabras.json')}\n✓ {cortes}")
 
 
 if __name__ == "__main__":
