@@ -250,21 +250,64 @@ def join_segments(paths, durs, transition, out, kinds=None):
 
 
 # ---------------------------------------------------------------- subtítulos
-def auto_subtitles(video, lang="es", words_per_line=3):
+def words_for_source(src, plan):
+    """Palabras con tiempos de un clip: usa <clip>_palabras.json si existe; si no, lo transcribe y lo guarda."""
+    cache = src.with_name(src.stem + "_palabras.json")
+    if cache.exists():
+        return json.loads(cache.read_text(encoding="utf-8"))["words"]
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
-        from faster_whisper import WhisperModel  # type: ignore
+        import transcribe as tr  # noqa
+        import faster_whisper  # noqa: F401
     except ImportError:
-        print("⚠ Subtítulos automáticos omitidos: falta faster-whisper (pip install faster-whisper).")
+        print("⚠ Subtítulos omitidos: falta faster-whisper (pip install faster-whisper).")
         return []
-    print("… transcribiendo audio para subtítulos (faster-whisper)")
-    model = WhisperModel("small", device="cpu", compute_type="int8")
-    segments, _ = model.transcribe(str(video), language=lang, word_timestamps=True, vad_filter=True)
-    words = [w for s in segments for w in (s.words or [])]
-    cues = []
-    for i in range(0, len(words), words_per_line):
-        chunk = words[i:i + words_per_line]
-        cues.append({"start": chunk[0].start, "end": chunk[-1].end, "text": " ".join(w.word.strip() for w in chunk)})
-    return cues
+    print(f"… transcribiendo {src.name} para subtítulos")
+    words, sentences = tr.transcribe(src, plan.get("whisper_model", "large-v3-turbo"), plan.get("language", "es"))
+    cache.write_text(json.dumps({"source": str(src), "duration": duration(src), "words": words,
+                                 "sentences": sentences}, ensure_ascii=False, indent=1), encoding="utf-8")
+    return words
+
+
+def map_words(segs, starts, base, plan):
+    """Lleva las palabras de cada clip al tiempo del video final (respeta recortes y velocidad)."""
+    out = []
+    for seg, t0 in zip(segs, starts):
+        kind = seg.get("type") or "video"
+        if kind != "video" or "src" not in seg or seg.get("mute") or seg.get("subtitles") is False:
+            continue
+        if Path(seg["src"]).suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
+            continue
+        src = (base / seg["src"]).resolve()
+        a = float(seg.get("start", 0))
+        b = float(seg["end"]) if seg.get("end") is not None else 1e9
+        sp = float(seg.get("speed", 1.0))
+        for w in words_for_source(src, plan):
+            if w["end"] > a and w["start"] < b:
+                st = t0 + (max(w["start"], a) - a) / sp
+                en = t0 + (min(w["end"], b) - a) / sp
+                out.append({"w": w["w"], "start": st, "end": max(en, st + 0.08)})
+    out.sort(key=lambda x: x["start"])
+    return out
+
+
+def group_words(words, max_words=3, max_gap=0.45):
+    chunks, cur = [], []
+    for w in words:
+        if cur and (len(cur) >= max_words or w["start"] - cur[-1]["end"] > max_gap
+                    or re.search(r"[.,;:!?…]$", cur[-1]["w"])):
+            chunks.append(cur)
+            cur = []
+        cur.append(w)
+    if cur:
+        chunks.append(cur)
+    return chunks
+
+
+def norm_word(w):
+    import unicodedata
+    w = unicodedata.normalize("NFD", w.lower())
+    return re.sub(r"[^\w%]", "", "".join(c for c in w if unicodedata.category(c) != "Mn"))
 
 
 BRAND_FIXES = {
@@ -297,7 +340,7 @@ def read_srt(path):
 
 
 # ---------------------------------------------------------------- textos (ASS)
-def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
+def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out, words=None):
     font = brand["font"]
     tfont = brand.get("font_titulos", font)
     dark = ass_color(brand.get("color_texto_cierre", "#1E1E1C"))
@@ -325,9 +368,10 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
     ]
     events = []
 
-    def add(style, st, en, text, extra=""):
-        fade = "{\\fad(180,180)}"
-        events.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},{style},,0,0,0,,{fade}{extra}{ass_escape(text)}")
+    def add(style, st, en, text, extra="", fade=True, raw=False):
+        fd = "{\\fad(180,180)}" if fade else ""
+        body = text if raw else ass_escape(text)
+        events.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},{style},,0,0,0,,{fd}{extra}{body}")
 
     pos_style = {"top": "hook", "bottom": "label", "center": "center"}
     for t in plan.get("texts", []):
@@ -343,6 +387,15 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
         elif efecto == "revelar":  # aparece de izquierda a derecha, como máquina de escribir
             extra += f"{{\\clip(0,0,0,{H})\\t(0,{int(t.get('reveal_ms', 450))},\\clip(0,0,{W},{H}))}}"
         text = t["text"].upper() if t.get("upper", style in ("titulo", "bajada")) else t["text"]
+        # Títulos y promos en UNA línea: si no entran, se achican solos (Anton ≈ 0,27 em por letra en mayúsculas)
+        base_size = {"titulo": 360, "promo": 400, "bajada": 84}.get(style)
+        if base_size and not t.get("size") and "\\N" not in text:
+            fit = int((W * 0.88) / max(1, len(text) * (0.27 if style != "bajada" else 0.36)))
+            if fit < base_size * s:
+                extra = f"{{\\fs{fit}}}" + extra
+            extra = "{\\q2}" + extra
+        if t.get("y") is not None:  # posición vertical manual (0 = arriba, 1 = abajo), p. ej. para no tapar la cara
+            extra = f"{{\\an8\\pos({W // 2},{int(H * float(t['y']))})}}" + extra
         add(style, st, min(en, total), fix_text(text), extra)
 
     for c in subtitle_cues:
@@ -350,6 +403,37 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
             continue
         text = fix_text(c["text"], plan.get("subtitle_fixes"))
         add("sub", c["start"], c["end"], text.upper() if plan.get("subtitles_upper", False) else text)
+
+    # Subtítulos palabra por palabra (karaoke): la palabra que se está diciendo va en amarillo,
+    # las palabras clave del plan siempre en amarillo y un poco más grandes.
+    if words:
+        mode = plan.get("subtitle_mode", "bloque")
+        keys = {norm_word(k) for k in plan.get("keywords", [])}
+        upper = plan.get("subtitles_upper", False)
+        limit = card_start if card_start is not None else total
+        fixes = plan.get("subtitle_fixes")
+        clean = [{**w, "w": fix_text(re.sub(r"[.,;:]+$", "", w["w"]), fixes)} for w in words if w["start"] < limit]
+        n_words = 1 if mode == "palabra" else int(plan.get("words_per_line", 3))
+        chunks = group_words(clean, n_words)
+        for ci, ch in enumerate(chunks):
+            nxt = chunks[ci + 1][0]["start"] if ci + 1 < len(chunks) else limit
+            ch_end = min(ch[-1]["end"] + 0.25, nxt, limit)
+
+            def fmt(w, active):
+                t = ass_escape(w["w"].upper() if upper else w["w"])
+                if norm_word(w["w"]) in keys:
+                    return f"{{\\c{acc}\\fscx112\\fscy112}}{t}{{\\c{txt}\\fscx100\\fscy100}}"
+                if active and plan.get("highlight", True) and mode != "palabra":
+                    return f"{{\\c{acc}}}{t}{{\\c{txt}}}"
+                return t
+            for k, w in enumerate(ch):
+                st = ch[0]["start"] if k == 0 else w["start"]
+                en = ch[k + 1]["start"] if k + 1 < len(ch) else ch_end
+                if en <= st:
+                    continue
+                pop = "{\\fscx88\\fscy88\\t(0,90,\\fscx100\\fscy100)}" if k == 0 else ""
+                line = " ".join(fmt(x, j == k) for j, x in enumerate(ch))
+                add("sub", st, en, line, pop, fade=False, raw=True)
 
     card = plan.get("end_card")
     if card and card_start is not None:
@@ -373,7 +457,7 @@ def build_ass(plan, W, H, brand, total, card_start, subtitle_cues, out):
 
 
 # ---------------------------------------------------------------- pasada final
-def final_pass(plan, base, W, H, joined, total, card_start, ass_file, out):
+def final_pass(plan, base, W, H, joined, total, card_start, ass_file, out, sfx_events=()):
     cmd = ["ffmpeg", "-hide_banner", "-y", "-i", str(joined)]
     idx = 1
     vchain = "[0:v]"
@@ -440,6 +524,27 @@ def final_pass(plan, base, W, H, joined, total, card_start, ass_file, out):
         alabel = "[amix]"
     else:
         alabel = "[0:a]"
+
+    # Efectos de sonido discretos: "whoosh" en cada transición, "pop" cuando entra un título/promo/sticker
+    sfx_events = [e for e in sfx_events if 0 <= e[1] < total - 0.05]
+    if sfx_events and plan.get("sfx", True):
+        vol = float(plan.get("sfx_volume", 0.35))
+        mixes = []
+        for kind in ("whoosh", "pop"):
+            times = [t for k, t in sfx_events if k == kind]
+            if not times:
+                continue
+            cmd += ["-i", str(SKILL_DIR / "assets" / "sfx" / f"{kind}.wav")]
+            labels = "".join(f"[{kind}{n}]" for n in range(len(times)))
+            parts.append(f"[{idx}:a]volume={vol},asplit={len(times)}{labels}" if len(times) > 1
+                         else f"[{idx}:a]volume={vol}[{kind}0]")
+            for n, t in enumerate(times):
+                ms = int(max(0, t) * 1000)
+                parts.append(f"[{kind}{n}]adelay={ms}|{ms}[{kind}d{n}]")
+                mixes.append(f"[{kind}d{n}]")
+            idx += 1
+        parts.append(f"{alabel}{''.join(mixes)}amix=inputs={len(mixes)+1}:duration=first:normalize=0[asfx]")
+        alabel = "[asfx]"
     parts.append(f"{alabel}loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[aout]")
 
     cmd += [
@@ -474,6 +579,12 @@ def main():
     W, H = FORMATS[plan.get("format", "9:16")]
     out = (base / plan.get("output", "salida/reel.mp4")).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
+    # Versiones: nunca pisa un render anterior; guarda nombre_v1, nombre_v2...
+    if plan.get("versioning", True) and not re.search(r"_v\d+$", out.stem):
+        n = 1
+        while out.with_name(f"{out.stem}_v{n}{out.suffix}").exists():
+            n += 1
+        out = out.with_name(f"{out.stem}_v{n}{out.suffix}")
 
     segs = list(plan["segments"])
     card = plan.get("end_card")
@@ -503,22 +614,41 @@ def main():
         total, starts = join_segments(paths, durs, float(plan.get("transition", 0.25)), joined, kinds)
         card_start = starts[-1] if card else None
 
-        cues = []
+        cues, words = [], None
         subs = plan.get("subtitles")
         if subs == "auto":
-            cues = auto_subtitles(joined, plan.get("language", "es"), int(plan.get("words_per_line", 3)))
+            words = map_words(segs, starts, base, plan)
+        elif subs and str(subs).endswith(".json"):
+            words = [{"w": w["w"], "start": w["start"], "end": w["end"]}
+                     for w in json.loads((base / subs).read_text(encoding="utf-8"))["words"]]
         elif subs:
             cues = read_srt(base / subs)
 
         ass_file = tmp / "textos.ass"
-        build_ass(plan, W, H, brand, total, card_start, cues, ass_file)
+        build_ass(plan, W, H, brand, total, card_start, cues, ass_file, words)
+        sfx = []
+        T = float(plan.get("transition", 0.25))
+        if T > 0:
+            sfx += [("whoosh", t - 0.12) for t in starts[1:]]
+        for t in plan.get("texts", []):
+            if t.get("style") in ("titulo", "promo", "hook"):
+                sfx.append(("pop", float(t.get("start", 0))))
+        sfx += [("pop", float(st["start"])) for st in plan.get("stickers", [])]
         print("… pasada final")
-        final_pass(plan, base, W, H, joined, total, card_start, ass_file, out)
+        final_pass(plan, base, W, H, joined, total, card_start, ass_file, out, sfx)
 
         prev = out.with_name(out.stem + "_preview.jpg")
         snapshot(out, total, prev)
-        print(f"\n✓ Listo: {out}  ({total:.1f}s, {W}x{H})")
+        first = out.with_name(out.stem + "_primeros2s.jpg")
+        subprocess.run(["ffmpeg", "-hide_banner", "-y", "-i", str(out), "-vf",
+                        "select='eq(n\\,3)+eq(n\\,30)+eq(n\\,57)',scale=360:-2,tile=3x1:padding=4",
+                        "-vsync", "0", "-frames:v", "1", str(first)], capture_output=True)
+        r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(out), "-af", "ebur128", "-f", "null", "-"],
+                           capture_output=True, text=True)
+        m = re.findall(r"I:\s+(-?[\d.]+) LUFS", r.stderr)
+        print(f"\n✓ Listo: {out}  ({total:.1f}s, {W}x{H}, volumen {m[-1] if m else '?'} LUFS)")
         print(f"  Vista previa (6 cuadros): {prev}")
+        print(f"  Primeros 2 segundos (¿se entiende sin sonido?): {first}")
         if total > 90:
             print("  ⚠ Dura más de 90 s: Instagram lo publica como reel igual, pero lo ideal son 15–45 s.")
     finally:

@@ -1,22 +1,26 @@
 # Agente editor de Reels / TikToks — Sundesign Muebles
 
-Una **skill** para Claude (Cowork, Claude Code o claude.ai) que convierte videos y fotos crudas de muebles en Reels y TikToks verticales listos para publicar, con la voz de marca de Sundesign.
+Una **skill** para Claude (Cowork) que convierte videos crudos en Reels y TikToks verticales listos para publicar, con el estilo y la voz de marca de Sundesign.
 
 ## Qué hace
-1. Mira tu material (hojas de contactos con miniaturas) y elige las mejores tomas.
-2. Te propone un guion: gancho → demostración → detalles → cierre con WhatsApp/showroom.
-3. Renderiza con ffmpeg: 1080×1920, recorte inteligente o fondo desenfocado, cámara lenta/rápida, zoom sobre fotos, textos con caja, subtítulos, logo, música que baja cuando hay voz, volumen normalizado para redes, placa final.
-4. Revisa el resultado y te entrega el MP4 + caption + hashtags + sugerencia de portada.
+1. **Mira y escucha** el material: miniaturas de cada toma y transcripción palabra por palabra (gratis, sin internet).
+2. **Limpia al presentador**: saca silencios, muletillas y frases repetidas (se queda con la última toma buena).
+3. **Te propone un guion** por momentos y espera tu OK.
+4. **Edita con el estilo de la marca**: vertical 1080×1920, títulos amarillos, subtítulos palabra por palabra con la palabra que se dice en amarillo, barridos entre tomas, logo en círculo, promo gigante, música baja, efectos de sonido, volumen a -14 LUFS, placa de cierre con showroom y WhatsApp.
+5. **Se revisa a sí mismo** (primeros 2 segundos sin sonido, que nada tape la cara, subtítulos sin errores) y guarda cada versión (`_v1`, `_v2`…).
+6. Te da el **texto de la publicación** con la voz de la marca.
 
-## Instalación en Claude (Cowork / claude.ai)
-1. Descargá `sundesign-editor-reels.zip`.
-2. **Antes de subirlo**, agregá tu logo PNG transparente en `assets/` (y si querés, la tipografía en `assets/fonts/` y colores reales en `references/marca.json`), y volvé a comprimir la carpeta.
-3. En Claude: **Configuración → Capacidades → Skills → Subir skill** y elegí el zip.
-4. En Cowork, dale acceso a la carpeta donde tenés los videos y pedile: *"Armame un reel de la mesa extensible con los videos de esta carpeta"*.
+## Cómo empezar
+Seguí `sundesign-editor-reels/references/instalacion-cowork.md`. En resumen:
+1. Subí `sundesign-editor-reels.zip` en Claude → Configuración → Capacidades → Skills.
+2. Creá la carpeta `Reels Sundesign` con `1 Brutos`, `2 Mi estilo` y `3 Listos`, y conectala en Cowork.
+3. Pegá el texto de instalación (una vez) y las reglas de `references/reglas-de-edicion.md` en las instrucciones de la carpeta.
+4. Para cada video: 4 líneas, según `references/plantilla-por-video.md`.
 
 ## Uso manual (sin Claude)
 ```bash
-python3 sundesign-editor-reels/scripts/inspect_media.py carpeta_videos --out inspeccion
+python3 sundesign-editor-reels/scripts/transcribe.py crudo.mp4
+python3 sundesign-editor-reels/scripts/clean_takes.py crudo.mp4
 python3 sundesign-editor-reels/scripts/render_reel.py plan.json
 ```
-Ver `references/plan_ejemplo.json`. Subtítulos automáticos: `pip install faster-whisper`.
+Requiere `ffmpeg`, `python3` y `pip install faster-whisper`. Tipografías incluidas: Anton y Oswald (licencia OFL).
