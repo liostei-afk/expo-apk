@@ -8,6 +8,12 @@ App de escritorio (Windows) para que un operador cargue videos crudos, guion y r
 3. Queda el ícono **Estudio de Reels** en el Escritorio. La primera vez crea la carpeta de trabajo `Documentos\Reels Sundesign`.
 4. En Claude (app de escritorio): subí la skill `sundesign-editor-reels.zip` (Configuración → Capacidades → Skills) y, en **Cowork**, conectá la carpeta `Documentos\Reels Sundesign`. La primera vez pegá el texto de instalación de `sundesign-editor-reels/references/instalacion-cowork.md` para que instale ffmpeg y la transcripción.
 
+## Antes que nada: cargá los productos
+En **📦 Productos**, una ficha por producto (una sola vez): características con su beneficio y cómo se muestran en video, medidas, materiales, dudas frecuentes de clientes y fotos. Claude usa esa ficha para todo y no inventa lo que no está.
+
+## 🧠 Sugerencias
+Una vez por semana tocá **Pedir sugerencias**: Claude mira el catálogo, los videos ya hechos y las fechas comerciales, y propone qué reels hacer y por qué. **Crear este video** arranca directo en el guion.
+
 ## Usar — crear un video desde cero (recomendado)
 1. **Nuevo video** → completá el pedido → **💡 Pedir ideas a Claude** (o escribí tu propia idea).
 2. **Elegí una idea** de las 5 que propone Claude.

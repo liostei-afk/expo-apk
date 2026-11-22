@@ -21,6 +21,12 @@ lo que escribís en `salida/` y en `estado.json` aparece en la pantalla del oper
 │   ├── estilo.md                 ← la ficha de estilo (la escribís vos)
 │   └── muestra.jpg               ← muestra visual del estilo (la generás vos)
 ├── estilos/estilos.json          ← {"predeterminado": "<id>"}
+├── productos/<id>/
+│   ├── producto.json             ← ficha del producto (la carga el operador)
+│   └── fotos/                    ← fotos y videos del producto
+├── sugerencias/
+│   ├── estado.json               ← {"estado": "pendiente"|"listo", "pedido": "..."}
+│   └── sugerencias.json          ← lo escribís vos (ver references/agente-marketing.md)
 └── musica/                       ← música libre de derechos
 ```
 
@@ -43,6 +49,17 @@ Escribilo completo de una vez (no lo dejes a medio escribir). Estados que podés
 | `bloqueado` | Te falta algo imprescindible. Poné la pregunta en `"mensaje"` (corta, en lenguaje simple, con opciones). El operador responde y vuelve a la cola |
 
 ## Qué hacer según el estado (en COLA.md)
+
+### Ficha del producto (siempre que el pedido tenga `producto_id`)
+Antes de ideas, guion, plan o edición, leé `productos/<producto_id>/producto.json` y **mirá las fotos** de `productos/<producto_id>/fotos/`. Campos: `nombre`, `categoria`, `nuevo`, `fabrica_propia`, `descripcion`, `caracteristicas` (lista de `{c, beneficio, mostrar}`: cada característica con su beneficio para el cliente y cómo se muestra en video), `medidas`, `materiales`, `colores`, `precio` (solo se muestra si está cargado), `publico`, `diferenciales`, `objeciones` (dudas frecuentes de los clientes: son excelentes ganchos), `notas`.
+- Las ideas y el guion se construyen sobre las **características y beneficios reales** de la ficha: cada beneficio fuerte puede ser un video entero.
+- Las `objeciones` se responden mostrando, no diciendo ("¿entra por la puerta?" → se muestra entrando).
+- En el plan de rodaje agregá `"foto_producto": "productos/<id>/fotos/<la mejor foto>"` (ruta relativa a la carpeta de trabajo) para que quienes filman vean el producto.
+- Las fotos del producto pueden usarse como segmentos de foto en la edición.
+- Si la ficha tiene un dato vacío que el guion necesita, usá `[COMPLETAR: …]` y no lo inventes.
+
+### Sugerencias de contenido (`sugerencias/estado.json` en `pendiente`)
+Seguí **`references/agente-marketing.md`**: mirá el catálogo, los trabajos hechos, la fecha y el pedido del operador; escribí `sugerencias/sugerencias.json` y dejá `estado.json` en `listo`. Cuando el operador elige una, la app crea un trabajo nuevo en `guion_pendiente` con la sugerencia en `pedido.json → idea_elegida`.
 
 ### Preproducción (crear el video desde cero)
 Leé primero **`references/guionista-viral.md`** (sos el especialista en reels virales de Sundesign) y, para el plan, **`references/plan-de-rodaje.md`**. Leé el pedido completo (`producto`, `categoria`, `publico`, `objetivo`, `duracion`, `cierre`, `promo`, `quien_aparece`, `locacion`, `notas`), el historial y la ficha del estilo elegido.

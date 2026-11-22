@@ -24,6 +24,9 @@ Cuando el pedido es crear un video **desde cero** ("ideas para reels", "escribim
 - Para el plan de rodaje seguí `references/plan-de-rodaje.md` y generá la hoja imprimible con dibujos: `python3 <skill>/scripts/shotlist.py plan_rodaje.json` (ejemplo completo en `references/ejemplo_plan_rodaje.json`).
 - Después del rodaje, controlá el material contra el plan antes de editar (ver `references/protocolo-app.md`, "control del material").
 
+## Agente de marketing: qué conviene publicar
+Si piden sugerencias ("qué reels hacemos", "qué publicamos este mes"), seguí `references/agente-marketing.md` (catálogo, productos nuevos, lo ya hecho, jerarquía de la marca y calendario comercial argentino).
+
 ## Modo app (Estudio de Reels)
 Si la carpeta conectada tiene **`COLA.md`** y `trabajos/` (la arma la app de escritorio "Estudio de Reels"), seguí **`references/protocolo-app.md`**: procesá la cola en orden, trabajá dentro de cada `trabajos/<id>/salida/`, usá el estilo elegido en `estilos/<id>/estilo.md` y comunicate con el operador solo a través de `estado.json`, `caption.md` y `resumen.md`. Ese protocolo manda sobre las carpetas descriptas abajo.
 

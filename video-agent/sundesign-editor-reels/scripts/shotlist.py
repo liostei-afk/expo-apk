@@ -142,7 +142,18 @@ MOV_TXT = {"fija": "Cámara fija", "acercarse": "Acercarse despacio", "alejarse"
            "paneo": "Paneo (girar de costado)", "seguimiento": "Seguir la acción", "giro": "Girar alrededor"}
 
 
-def build(plan):
+def product_photo(plan, base):
+    rel = plan.get("foto_producto")
+    if not rel:
+        return ""
+    for cand in (base / rel, base.parent.parent.parent / rel, Path(rel)):
+        if cand.is_file() and cand.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+            mime = "image/png" if cand.suffix.lower() == ".png" else "image/webp" if cand.suffix.lower() == ".webp" else "image/jpeg"
+            return f'<img class="pf" src="data:{mime};base64,{base64.b64encode(cand.read_bytes()).decode()}" alt="Producto">'
+    return ""
+
+
+def build(plan, base=Path(".")):
     font = ""
     if ANTON.exists():
         font = ("@font-face{font-family:Anton;src:url(data:font/ttf;base64,"
@@ -182,7 +193,8 @@ def build(plan):
 .top small{{letter-spacing:2px;font-weight:700;font-size:11px}} h1{{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:34px;margin:2px 0 0;line-height:1.1}}
 .meta{{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}}
 .meta div{{background:#F6F4EF;border-radius:8px;padding:8px 10px}} .meta b{{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b6b66}}
-.cols{{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}}
+.pf{{float:right;width:150px;height:150px;object-fit:cover;border-radius:10px;margin:0 0 10px 12px;border:1px solid #e3ded2}}
+.cols{{clear:both;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}}
 .box{{border:1px solid #e3ded2;border-radius:10px;padding:10px 14px}} .box h3{{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:17px;margin:0 0 6px}}
 .box ul{{margin:0;padding-left:16px}} .box li{{margin:3px 0}} .box.prep ul{{list-style:none;padding:0}}
 .tomas{{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
@@ -199,7 +211,7 @@ dl{{margin:0}} dt{{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px
 </style></head><body><div class="page">
 <div class="top"><div><small>SUNDESIGN MUEBLES · PLAN DE RODAJE</small><h1>{esc(plan.get("titulo", ""))}</h1></div>
 <div style="text-align:right"><b>{len(tomas)} tomas</b><br><small style="letter-spacing:0">≈ {plan.get("duracion") or round(total)} s de video</small></div></div>
-<div class="meta"><div><b>Producto</b>{esc(plan.get("producto", ""))}</div><div><b>Dónde</b>{esc(plan.get("locacion", ""))}</div>
+{product_photo(plan, base)}<div class="meta"><div><b>Producto</b>{esc(plan.get("producto", ""))}</div><div><b>Dónde</b>{esc(plan.get("locacion", ""))}</div>
 <div><b>Quién aparece</b>{esc(plan.get("quien_aparece", ""))}</div><div><b>Duración final</b>{esc(plan.get("duracion", round(total)))} s</div></div>
 <div class="cols"><div class="box prep"><h3>Antes de filmar, preparar</h3><ul>{prep or "<li>—</li>"}</ul></div>
 <div class="box"><h3>Cómo filmar (siempre)</h3><ul>{reglas}</ul></div></div>
@@ -213,7 +225,7 @@ def main():
     src = Path(sys.argv[1])
     plan = json.loads(src.read_text(encoding="utf-8"))
     out = src.with_suffix(".html")
-    out.write_text(build(plan), encoding="utf-8")
+    out.write_text(build(plan, src.parent), encoding="utf-8")
     print(f"✓ Plan de rodaje: {out}  ({len(plan.get('tomas', []))} tomas)")
 
 

@@ -127,7 +127,7 @@ def write_json(p, data):
 
 
 def ensure_workspace():
-    for d in ("trabajos", "estilos", "musica"):
+    for d in ("trabajos", "estilos", "musica", "productos", "sugerencias"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
     seed_style()
     write_readme()
@@ -236,6 +236,8 @@ def job_full(jid):
         if m:
             tomas.setdefault(m.group(1), []).append(f)
     s["tomas_cargadas"] = tomas
+    pid = s["pedido"].get("producto_id")
+    s["producto"] = product_summary(ROOT / "productos" / pid, True) if pid and (ROOT / "productos" / pid).is_dir() else None
     return s
 
 
@@ -248,6 +250,34 @@ def style_summary(d):
             "ficha": (d / "estilo.md").read_text(encoding="utf-8") if (d / "estilo.md").exists() else "",
             "muestras": [f for f in list_files(d) if f["nombre"].endswith((".jpg", ".png"))],
             "historial": meta.get("historial", [])[-8:]}
+
+
+def prod_dir(pid):
+    d = ROOT / "productos" / pid
+    if not re.fullmatch(r"[a-z0-9-]+", pid) or not d.is_dir():
+        raise KeyError(pid)
+    return d
+
+
+def product_summary(d, full=False):
+    f = read_json(d / "producto.json", {})
+    fotos = list_files(d / "fotos", IMG_EXT | VIDEO_EXT)
+    usos = sum(1 for j in (ROOT / "trabajos").glob("*")
+               if j.is_dir() and read_json(j / "pedido.json", {}).get("producto_id") == d.name)
+    out = {"id": d.name, "nombre": f.get("nombre", d.name), "categoria": f.get("categoria", ""),
+           "nuevo": bool(f.get("nuevo")), "fotos": fotos, "videos_hechos": usos,
+           "actualizado": f.get("actualizado", "")}
+    if full:
+        out["ficha"] = f
+    return out
+
+
+def sugerencias_data():
+    sd = ROOT / "sugerencias"
+    return {"estado": read_json(sd / "estado.json", {}).get("estado", "vacio"),
+            "pedido": read_json(sd / "estado.json", {}).get("pedido", ""),
+            "actualizado": read_json(sd / "estado.json", {}).get("actualizado", ""),
+            "items": read_json(sd / "sugerencias.json", {}).get("sugerencias", [])}
 
 
 def set_job_state(d, code, evento, texto="", extra=None):
@@ -299,6 +329,9 @@ def write_cola():
         lines += [f"## {n}. Trabajo `trabajos/{d.name}` — {ped.get('titulo', d.name)}",
                   f"- Estado: `{code}` → {accion}",
                   f"- Estilo: `estilos/{ped.get('estilo') or 'predeterminado'}`"]
+        if ped.get("producto_id"):
+            lines.append(f"- Producto: ficha en `productos/{ped['producto_id']}/producto.json` y fotos en "
+                         f"`productos/{ped['producto_id']}/fotos/` (leela y mirá las fotos antes de empezar)")
         if ultimo.get("texto"):
             lines.append(f"- Último mensaje del operador ({ultimo.get('fecha')}): «{ultimo['texto']}»")
         lines.append("")
@@ -307,6 +340,15 @@ def write_cola():
             n += 1
             lines += [f"## {n}. Estilo `estilos/{d.name}` — analizar referencias",
                       "- Estudiar los videos de `referencias/` y escribir `estilo.md` + `muestra.jpg`. Dejar en `listo`.", ""]
+    sg = read_json(ROOT / "sugerencias" / "estado.json", {})
+    if sg.get("estado") == "pendiente":
+        n += 1
+        lines += [f"## {n}. Sugerencias de contenido — `sugerencias/`",
+                  "- Proponer qué reels conviene hacer ahora (sugerencias.json) según `references/agente-marketing.md`. "
+                  "Dejar `sugerencias/estado.json` en `listo`."]
+        if sg.get("pedido"):
+            lines.append(f"- Pedido del operador: «{sg['pedido']}»")
+        lines.append("")
     if n == 0:
         lines.append("**No hay nada pendiente.**")
     (ROOT / "COLA.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -322,6 +364,8 @@ def cola_count():
     for d in (ROOT / "estilos").glob("*"):
         if d.is_dir() and read_json(d / "estilo.json", {}).get("estado") == "por_analizar":
             n += 1
+    if read_json(ROOT / "sugerencias" / "estado.json", {}).get("estado") == "pendiente":
+        n += 1
     return n
 
 
@@ -410,11 +454,15 @@ class Handler(BaseHTTPRequestHandler):
                 trabajos = [job_summary(d) for d in sorted((ROOT / "trabajos").glob("*"), reverse=True) if d.is_dir()]
                 estilos = [style_summary(d) for d in sorted((ROOT / "estilos").glob("*")) if d.is_dir()]
                 musica = list_files(ROOT / "musica", AUDIO_EXT)
+                productos = [product_summary(d) for d in sorted((ROOT / "productos").glob("*")) if d.is_dir()]
                 return self.send_json({"carpeta": str(ROOT), "trabajos": trabajos, "estilos": estilos,
+                                       "productos": productos, "sugerencias": sugerencias_data(),
                                        "musica": musica, "pendientes": cola_count(), "cowork": COWORK_PROMPT,
                                        "estados": {k: v[0] for k, v in ESTADOS.items()}})
             if m := re.fullmatch(r"/api/trabajo/([a-z0-9-]+)", p):
                 return self.send_json(job_full(m.group(1)))
+            if m := re.fullmatch(r"/api/producto/([a-z0-9-]+)", p):
+                return self.send_json(product_summary(prod_dir(m.group(1)), True))
             if p == "/api/cola":
                 write_cola()
                 return self.send_json({"texto": (ROOT / "COLA.md").read_text(encoding="utf-8")})
@@ -438,6 +486,8 @@ class Handler(BaseHTTPRequestHandler):
                 target = d / "miniatura.jpg" if m.group(2) == "miniatura" else d / "brutos" / nombre
             elif m := re.fullmatch(r"estilo/([a-z0-9-]+)/referencias", destino):
                 target = style_dir(m.group(1)) / "referencias" / nombre
+            elif m := re.fullmatch(r"producto/([a-z0-9-]+)/fotos", destino):
+                target = prod_dir(m.group(1)) / "fotos" / nombre
             elif destino == "musica":
                 target = ROOT / "musica" / nombre
             else:
@@ -580,11 +630,103 @@ class Handler(BaseHTTPRequestHandler):
 
         if p == "/api/borrar-archivo":
             f = (ROOT / data.get("ruta", "")).resolve()
-            ok = inside(f, ROOT) and f.is_file() and (f.parent.name in ("brutos", "referencias", "musica"))
+            ok = inside(f, ROOT) and f.is_file() and (f.parent.name in ("brutos", "referencias", "musica", "fotos"))
             if not ok:
                 return self.fail("Solo se pueden borrar archivos cargados por el operador.", 403)
             f.unlink()
             write_cola()
+            return self.send_json({"ok": True})
+
+        if p == "/api/producto":  # crear producto
+            nombre = (data.get("nombre") or "Producto nuevo").strip()
+            pid = slug(nombre, 40)
+            d = ROOT / "productos" / pid
+            k = 2
+            while d.exists():
+                d = ROOT / "productos" / f"{pid}-{k}"
+                k += 1
+            (d / "fotos").mkdir(parents=True)
+            write_json(d / "producto.json", {"nombre": nombre, "nuevo": True, "creado": now(), "actualizado": now(),
+                                             "caracteristicas": []})
+            return self.send_json({"id": d.name})
+
+        if m := re.fullmatch(r"/api/producto/([a-z0-9-]+)/guardar", p):
+            d = prod_dir(m.group(1))
+            f = read_json(d / "producto.json", {})
+            f.update({k: v for k, v in data.items() if k not in ("creado",)})
+            f["actualizado"] = now()
+            write_json(d / "producto.json", f)
+            return self.send_json({"ok": True})
+
+        if m := re.fullmatch(r"/api/producto/([a-z0-9-]+)/borrar", p):
+            shutil.rmtree(prod_dir(m.group(1)))
+            return self.send_json({"ok": True})
+
+        if m := re.fullmatch(r"/api/producto/([a-z0-9-]+)/video", p):  # crear un video de este producto
+            d = prod_dir(m.group(1))
+            f = read_json(d / "producto.json", {})
+            jid = f"{datetime.now():%Y%m%d-%H%M}-{slug(f.get('nombre', 'video'), 30)}"
+            jd = ROOT / "trabajos" / jid
+            k = 2
+            while jd.exists():
+                jd = ROOT / "trabajos" / f"{jid}-{k}"
+                k += 1
+            (jd / "brutos").mkdir(parents=True)
+            (jd / "salida").mkdir()
+            default = read_json(ROOT / "estilos" / "estilos.json", {}).get("predeterminado", "")
+            write_json(jd / "pedido.json", {"titulo": f.get("nombre", "Video"), "producto": f.get("nombre", ""),
+                                            "producto_id": d.name, "categoria": f.get("categoria", ""),
+                                            "publico": f.get("publico", ""), "estilo": default,
+                                            "plataformas": ["instagram", "tiktok"], "duracion": 30, "creado": now()})
+            write_json(jd / "estado.json", {"estado": "borrador", "actualizado": now(),
+                                            "historial": [{"fecha": now(), "quien": "operador", "evento": "Creado desde el catálogo"}]})
+            return self.send_json({"id": jd.name})
+
+        if p == "/api/sugerencias/pedir":
+            sd = ROOT / "sugerencias"
+            sd.mkdir(exist_ok=True)
+            write_json(sd / "estado.json", {"estado": "pendiente", "pedido": (data.get("texto") or "").strip(),
+                                            "actualizado": now()})
+            write_cola()
+            return self.send_json({"ok": True})
+
+        if p == "/api/sugerencias/usar":  # convertir una sugerencia en un video (arranca en el guion)
+            sd = ROOT / "sugerencias"
+            sg = read_json(sd / "sugerencias.json", {"sugerencias": []})
+            items = sg.get("sugerencias", [])
+            i = int(data.get("i", -1))
+            if not 0 <= i < len(items):
+                return self.fail("No existe esa sugerencia")
+            it = items[i]
+            jid = f"{datetime.now():%Y%m%d-%H%M}-{slug(it.get('titulo', 'video'), 30)}"
+            jd = ROOT / "trabajos" / jid
+            k = 2
+            while jd.exists():
+                jd = ROOT / "trabajos" / f"{jid}-{k}"
+                k += 1
+            (jd / "brutos").mkdir(parents=True)
+            (jd / "salida").mkdir()
+            pf = read_json(ROOT / "productos" / str(it.get("producto_id", "")) / "producto.json", {}) if it.get("producto_id") else {}
+            default = read_json(ROOT / "estilos" / "estilos.json", {}).get("predeterminado", "")
+            write_json(jd / "pedido.json", {"titulo": it.get("titulo", "Video"), "producto": it.get("producto") or pf.get("nombre", ""),
+                                            "producto_id": it.get("producto_id", ""), "categoria": pf.get("categoria", ""),
+                                            "objetivo": it.get("objetivo", "Que escriban por WhatsApp"), "estilo": default,
+                                            "duracion": it.get("duracion", 30), "plataformas": ["instagram", "tiktok"],
+                                            "flujo": "completo", "idea_elegida": it, "creado": now()})
+            write_json(jd / "estado.json", {"estado": "guion_pendiente", "actualizado": now(), "historial": [
+                {"fecha": now(), "quien": "operador", "evento": f"Creado desde una sugerencia: «{it.get('titulo', '')}»"}]})
+            it["usada"] = jd.name
+            write_json(sd / "sugerencias.json", sg)
+            write_cola()
+            return self.send_json({"id": jd.name})
+
+        if p == "/api/sugerencias/descartar":
+            sd = ROOT / "sugerencias"
+            sg = read_json(sd / "sugerencias.json", {"sugerencias": []})
+            i = int(data.get("i", -1))
+            if 0 <= i < len(sg.get("sugerencias", [])):
+                sg["sugerencias"][i]["descartada"] = True
+                write_json(sd / "sugerencias.json", sg)
             return self.send_json({"ok": True})
 
         if p == "/api/estilo":  # crear estilo

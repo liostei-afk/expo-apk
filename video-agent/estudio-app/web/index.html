@@ -97,6 +97,18 @@ kbd { display: inline-block; border: 1px solid #cfcabd; border-bottom-width: 3px
 .shots li.done .num { background: var(--green); color: #fff; }
 .shots .d { font-size: 14px; } .shots .d b { font-family: "Oswald"; font-size: 16px; font-weight: 600; }
 .shots .d i { color: var(--ink-2); }
+/* productos */
+.prods { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.prod { text-decoration: none; padding: 0; overflow: hidden; }
+.prod .ph { height: 160px; background: var(--gray-soft) center/cover no-repeat; display: grid; place-items: center; font-size: 40px; }
+.prod .bd { padding: 12px 14px; } .prod h3 { margin: 0 0 4px; }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
+.gal div { position: relative; aspect-ratio: 1; border-radius: 10px; background: var(--gray-soft) center/cover no-repeat; cursor: zoom-in; }
+.gal button { position: absolute; top: 4px; right: 4px; border: 0; border-radius: 6px; background: rgba(255,255,255,.9); cursor: pointer; }
+.feat { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: #fbfaf7; }
+.feat .fi { display: grid; gap: 6px; } .feat .fi input[data-fk=c] { font-weight: 700; }
+.feat button { border: 0; background: none; cursor: pointer; color: var(--ink-3); font-size: 18px; }
+.prodpick { background: var(--yellow-soft); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
 /* banner cowork */
 .banner { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 18px 20px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; margin-bottom: 22px; }
 .banner b { font-family: "Oswald"; font-size: 18px; color: var(--yellow); font-weight: 600; }
@@ -190,6 +202,8 @@ ol.help li { margin-bottom: 10px; line-height: 1.5; }
     <div class="brand"><img src="/web/logo.png" alt=""><div><b>ESTUDIO<br>DE REELS</b><small>Sundesign Muebles</small></div></div>
     <nav class="nav">
       <a href="#/" data-nav="trabajos">🎬 Videos <span class="count" id="navCount" hidden></span></a>
+      <a href="#/sugerencias" data-nav="sugerencias">🧠 Sugerencias <span class="count" id="navSug" hidden></span></a>
+      <a href="#/productos" data-nav="productos">📦 Productos</a>
       <a href="#/estilos" data-nav="estilos">🎨 Estilos</a>
       <a href="#/musica" data-nav="musica">🎵 Música</a>
       <a href="#/ayuda" data-nav="ayuda">❓ Ayuda</a>
@@ -302,6 +316,8 @@ async function loadInicio() {
   const n = S.inicio.pendientes, c = $("#navCount");
   const mine = S.inicio.trabajos.filter(t => t.quien === "operador" && t.estado !== "borrador").length;
   c.hidden = !mine; c.textContent = mine;
+  const ns = $("#navSug"), nsug = (S.inicio.sugerencias.items || []).filter(x => !x.usada && !x.descartada).length;
+  ns.hidden = !nsug || S.inicio.sugerencias.estado === "pendiente"; ns.textContent = nsug;
   $("#foot").innerHTML = `Carpeta de trabajo:<br>${esc(S.inicio.carpeta)}`;
   return S.inicio;
 }
@@ -392,6 +408,10 @@ const views = {
           </section>
           <section class="card" id="pedido">
             <h2>2 · Pedido</h2>
+            <div class="prodpick"><label class="f">📦 Producto del catálogo</label>
+              <div class="row" style="flex-wrap:nowrap"><select id="prodSel"><option value="">— Ninguno / otro (escribilo abajo) —</option>${(S.inicio.productos || []).map(x => `<option value="${x.id}" ${p.producto_id === x.id ? "selected" : ""}>${esc(x.nombre)}${x.nuevo ? " · NUEVO" : ""}</option>`).join("")}</select>
+              ${p.producto_id ? `<a class="btn ghost" style="white-space:nowrap" href="#/productos/${p.producto_id}">Ver ficha</a>` : ""}</div>
+              <div class="hint">Claude lee la ficha y mira las fotos del producto. ¿No está? <a href="#/productos">Cargalo en Productos</a>.</div></div>
             <div class="cols2">
               <div class="field"><label class="f">Producto</label><input type="text" data-k="producto" value="${esc(p.producto || "")}" placeholder="Ej: Mesa extensible Nórdica"></div>
               <div class="field"><label class="f">Categoría</label><select data-k="categoria">${["", "Mesas y sillas", "Mesas ratonas", "Sofá camas y sillones", "Deco", "Showroom / marca"].map(o => `<option ${p.categoria === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
@@ -437,6 +457,12 @@ const views = {
       catch (e) { toast(e.message, true); }
     }, 600);
     $("#pedido").addEventListener("input", save); $("#pedido").addEventListener("change", save); $("#guion").addEventListener("input", save);
+    $("#prodSel").onchange = async e => {
+      e.stopPropagation();
+      const pr = (S.inicio.productos || []).find(x => x.id === e.target.value);
+      await api(`/api/trabajo/${id}/pedido`, { method: "POST", body: { producto_id: pr ? pr.id : "", ...(pr ? { producto: pr.nombre, categoria: pr.categoria } : {}) } });
+      views.trabajo(id);
+    };
     dropzone($("#drop"), "video/*,image/*", files => uploadMany(`trabajo/${id}/brutos`, files, $("#brutos"), async f => {
       if (!S.job.miniatura) { const b = await makeThumb(f); if (b) { await upload(`trabajo/${id}/miniatura`, new File([b], "miniatura.jpg")); S.job.miniatura = 1; } }
       await refreshJob(true);
@@ -464,6 +490,56 @@ const views = {
       const r = await api("/api/estilo", { method: "POST", body: { nombre } });
       location.hash = "#/estilos/" + r.id;
     };
+  },
+
+  async productos(pid) {
+    const d = await loadInicio();
+    if (pid) return renderProducto(pid);
+    $("#view").innerHTML = `<div class="top"><h1>Productos</h1><span class="sp"></span><button class="btn pri big" id="nuevoProd">＋ Nuevo producto</button></div>
+      <div class="notice" style="margin-bottom:18px">Cargá cada producto <b>una sola vez</b>: características, medidas, materiales y fotos. Claude usa esta ficha para proponer ideas, escribir guiones y armar el plan de rodaje, y no inventa nada que no esté acá.</div>
+      ${d.productos.length ? `<div class="prods">${d.productos.map(x => `<a class="card prod" href="#/productos/${x.id}">
+        <div class="ph" style="${x.fotos[0] && /\.(jpe?g|png|webp)$/i.test(x.fotos[0].nombre) ? `background-image:url('${file(x.fotos[0].ruta)}')` : ""}">${x.fotos[0] ? "" : "🛋️"}</div>
+        <div class="bd"><h3>${esc(x.nombre)}</h3><div class="row small muted" style="gap:6px">${x.nuevo ? '<span class="badge">NUEVO</span>' : ""}${esc(x.categoria || "Sin categoría")} · ${x.videos_hechos} video${x.videos_hechos === 1 ? "" : "s"}</div></div></a>`).join("")}</div>`
+        : `<div class="card empty"><b>Todavía no hay productos</b>Tocá «Nuevo producto» y cargá el primero: por ejemplo, el sofá cama nuevo.</div>`}`;
+    $("#nuevoProd").onclick = async () => {
+      const nombre = prompt("Nombre del producto (ej: Sofá cama Milán con baulera)");
+      if (!nombre) return;
+      const r = await api("/api/producto", { method: "POST", body: { nombre } });
+      location.hash = "#/productos/" + r.id;
+    };
+  },
+
+  async sugerencias() {
+    const d = await loadInicio(), sg = d.sugerencias;
+    const items = sg.items.map((x, i) => ({ ...x, i })).filter(x => !x.descartada);
+    $("#view").innerHTML = `<div class="top"><h1>Sugerencias de Claude</h1></div>
+      <div class="card" style="margin-bottom:18px"><h2>🧠 ¿Qué conviene publicar ahora?</h2>
+        <p class="small muted" style="margin-top:-4px">Claude mira el catálogo (productos nuevos, productos sin videos), los videos ya hechos y las fechas comerciales que vienen, y te propone qué reels hacer y por qué.</p>
+        <textarea id="sugTxt" rows="2" placeholder="Opcional: ¿en qué querés que se enfoque? Ej: el sofá cama nuevo; se viene el Hot Sale; queremos más consultas por mesas.">${esc(sg.estado === "pendiente" ? sg.pedido : "")}</textarea>
+        <div class="row" style="margin-top:10px"><button class="btn pri big" id="pedirSug">🧠 Pedir sugerencias</button>
+        ${sg.actualizado ? `<span class="small muted">Últimas: ${esc(sg.actualizado)}</span>` : ""}</div></div>
+      ${sg.estado === "pendiente" ? `<div class="card" style="margin-bottom:18px"><h2>⏳ Esperando a Claude</h2><p>Si todavía no le avisaste:</p><button class="btn pri huge" onclick="avisarClaude()">📨 Avisar a Claude</button></div>` : ""}
+      ${items.length ? `<div class="ideas">${items.map(x => `<div class="idea ${x.prioridad === "alta" ? "rec" : ""}">
+        <div class="row" style="gap:6px">${x.prioridad ? `<span class="badge ${x.prioridad === "alta" ? "" : "g"}">Prioridad ${esc(x.prioridad)}</span>` : ""}${x.formato ? `<span class="badge g">${esc(x.formato)}</span>` : ""}${x.duracion ? `<span class="badge g">${esc(x.duracion)} s</span>` : ""}</div>
+        <h3>${esc(x.titulo)}</h3>
+        ${x.producto ? `<div class="small"><b>📦 ${esc(x.producto)}</b></div>` : ""}
+        <div><div class="k">Por qué ahora</div><div class="v">${esc(x.por_que_ahora || "")}</div></div>
+        <div><div class="k">El gancho</div><div class="v">${esc(x.gancho || "")}</div></div>
+        ${x.objetivo ? `<div class="small muted">Objetivo: ${esc(x.objetivo)}</div>` : ""}
+        ${x.usada ? `<a class="btn" href="#/trabajo/${esc(x.usada)}">Ver el video ›</a>` :
+          `<div class="row"><button class="btn pri" data-usar="${x.i}">🎬 Crear este video</button><button class="btn ghost" data-desc="${x.i}">Descartar</button></div>`}
+        </div>`).join("")}</div>` : (sg.estado !== "pendiente" ? `<div class="card empty"><b>Todavía no hay sugerencias</b>Tocá «Pedir sugerencias». Conviene hacerlo una vez por semana.</div>` : "")}`;
+    $("#pedirSug").onclick = async () => {
+      await api("/api/sugerencias/pedir", { method: "POST", body: { texto: $("#sugTxt").value } });
+      await views.sugerencias(); avisarClaude("Listo. Avisale a Claude para que proponga");
+    };
+    document.querySelectorAll("[data-usar]").forEach(b => b.onclick = async () => {
+      const r = await api("/api/sugerencias/usar", { method: "POST", body: { i: +b.dataset.usar } });
+      location.hash = "#/trabajo/" + r.id; setTimeout(() => avisarClaude("¡Video creado! Avisale a Claude para que escriba el guion"), 700);
+    });
+    document.querySelectorAll("[data-desc]").forEach(b => b.onclick = async () => {
+      await api("/api/sugerencias/descartar", { method: "POST", body: { i: +b.dataset.desc } }); views.sugerencias();
+    });
   },
 
   async musica() {
@@ -515,6 +591,75 @@ const views = {
     };
   },
 };
+
+async function renderProducto(pid) {
+  let pr;
+  try { pr = await api("/api/producto/" + pid); } catch { location.hash = "#/productos"; return; }
+  const f = pr.ficha, feats = f.caracteristicas && f.caracteristicas.length ? f.caracteristicas : [{ c: "", beneficio: "", mostrar: "" }];
+  const field = (k, label, ph, area = false, rows = 3) => `<div class="field"><label class="f">${label}</label>${area
+    ? `<textarea data-pk="${k}" rows="${rows}" placeholder="${esc(ph)}">${esc(f[k] || "")}</textarea>`
+    : `<input type="text" data-pk="${k}" value="${esc(f[k] || "")}" placeholder="${esc(ph)}">`}</div>`;
+  $("#view").innerHTML = `
+    <div class="top"><a href="#/productos" class="btn ghost">← Productos</a><h1 style="font-size:28px">${esc(f.nombre || pid)}</h1>${f.nuevo ? '<span class="badge">NUEVO</span>' : ""}
+      <span class="sp"></span><button class="btn pri big" id="hacerReel">🎬 Crear un reel de este producto</button></div>
+    <div class="grid2"><div class="stack">
+      <div class="card" id="ficha"><h2>Ficha del producto</h2>
+        <div class="cols2">${field("nombre", "Nombre", "Sofá cama Milán")}
+          <div class="field"><label class="f">Categoría</label><select data-pk="categoria">${["", "Mesas y sillas", "Mesas ratonas", "Sofá camas y sillones", "Deco"].map(o => `<option ${f.categoria === o ? "selected" : ""}>${o}</option>`).join("")}</select></div></div>
+        <div class="checks" style="margin-bottom:14px"><label><input type="checkbox" data-pkb="nuevo" ${f.nuevo ? "checked" : ""}> Es un lanzamiento / producto nuevo</label>
+          <label><input type="checkbox" data-pkb="fabrica_propia" ${f.fabrica_propia ? "checked" : ""}> Fabricación propia</label></div>
+        ${field("descripcion", "Descripción corta", "En una o dos frases: qué es y para quién.", true, 2)}
+        <label class="f">Características (cada una con su beneficio y cómo se ve en video)</label>
+        <div id="feats">${feats.map((x, k) => `<div class="feat" data-feat="${k}"><div class="fi">
+          <input type="text" data-fk="c" value="${esc(x.c)}" placeholder="Característica (ej: brazos desmontables)">
+          <input type="text" data-fk="beneficio" value="${esc(x.beneficio)}" placeholder="✓ Beneficio para el cliente (ej: entra por cualquier puerta y el flete sale más barato)">
+          <input type="text" data-fk="mostrar" value="${esc(x.mostrar)}" placeholder="🎥 Cómo se muestra en video (ej: sacar un brazo en 10 segundos)"></div>
+          <button title="Quitar" data-delfeat="${k}">✕</button></div>`).join("")}</div>
+        <button class="btn" id="addFeat" style="margin-bottom:14px">＋ Agregar característica</button>
+        <div class="cols2">${field("medidas", "Medidas", "Cerrado 200×90×85 cm · Abierto 200×140 cm", true, 2)}${field("materiales", "Materiales y terminaciones", "Estructura de…, tela…, espuma de… kg/m³", true, 2)}</div>
+        <div class="cols2">${field("colores", "Colores / variantes", "Gris, beige, verde")}${field("precio", "Precio o promo (solo si se puede mostrar)", "Dejar vacío si no se muestra")}</div>
+        ${field("publico", "¿Para quién es ideal?", "Departamentos chicos, quien recibe visitas, mudanzas", false)}
+        ${field("diferenciales", "¿Qué lo hace distinto de otros?", "Lo que no tiene la competencia", true, 2)}
+        ${field("objeciones", "Dudas frecuentes de los clientes", "¿Es cómodo para dormir todos los días? ¿Se mancha? ¿Entra por la puerta?", true, 2)}
+        ${field("notas", "Otras notas para Claude", "Ej: el modelo de exhibición está en el showroom, sector living", true, 2)}
+        <div class="hint" id="psaved">Los cambios se guardan solos.</div>
+      </div></div>
+      <div class="stack">
+        <div class="card"><h2>Fotos y videos del producto</h2><p class="small muted">Fotos de catálogo, detalles (tela, baulera, mecanismo), o un video corto mostrándolo. Claude las mira para entender el producto y pueden usarse en la edición.</p>
+          <div class="drop" id="dropP"><b>Arrastrá acá fotos o videos</b>o hacé clic para elegirlos</div>
+          <ul class="files" id="pupl"></ul>
+          <div class="gal">${pr.fotos.map(x => /\.(jpe?g|png|webp)$/i.test(x.nombre)
+            ? `<div style="background-image:url('${file(x.ruta)}')" onclick="lightbox('${file(x.ruta)}')"><button data-del="${esc(x.ruta)}">🗑</button></div>`
+            : `<div style="display:grid;place-items:center;font-size:30px" onclick="window.open('${file(x.ruta)}')">🎞️<button data-del="${esc(x.ruta)}">🗑</button></div>`).join("")}</div>
+        </div>
+        <div class="card small"><h3>Videos hechos de este producto: ${pr.videos_hechos}</h3><p class="muted">Usá «Crear un reel de este producto» y elegí «Crear desde cero con Claude».</p>
+          <button class="btn danger" id="borrarProd">Borrar producto</button></div>
+      </div></div>`;
+  const collect = () => {
+    const body = {};
+    $("#ficha").querySelectorAll("[data-pk]").forEach(e => body[e.dataset.pk] = e.value);
+    $("#ficha").querySelectorAll("[data-pkb]").forEach(e => body[e.dataset.pkb] = e.checked);
+    body.caracteristicas = [...$("#feats").querySelectorAll("[data-feat]")].map(r => ({
+      c: $('[data-fk=c]', r).value, beneficio: $('[data-fk=beneficio]', r).value, mostrar: $('[data-fk=mostrar]', r).value })).filter(x => x.c || x.beneficio || x.mostrar);
+    return body;
+  };
+  const save = debounce(async () => {
+    try { await api(`/api/producto/${pid}/guardar`, { method: "POST", body: collect() }); $("#psaved").textContent = "Guardado ✓ " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
+    catch (e) { toast(e.message, true); }
+  }, 600);
+  $("#ficha").addEventListener("input", save); $("#ficha").addEventListener("change", save);
+  $("#addFeat").onclick = async () => { const b = collect(); b.caracteristicas.push({ c: "", beneficio: "", mostrar: "" }); await api(`/api/producto/${pid}/guardar`, { method: "POST", body: b }); renderProducto(pid); };
+  $("#feats").querySelectorAll("[data-delfeat]").forEach(btn => btn.onclick = async () => {
+    btn.closest("[data-feat]").remove(); await api(`/api/producto/${pid}/guardar`, { method: "POST", body: collect() });
+  });
+  dropzone($("#dropP"), "image/*,video/*", files => uploadMany(`producto/${pid}/fotos`, files, $("#pupl")).then(() => renderProducto(pid)));
+  bindDeletes(() => renderProducto(pid));
+  $("#hacerReel").onclick = async () => {
+    await api(`/api/producto/${pid}/guardar`, { method: "POST", body: collect() });
+    const r = await api(`/api/producto/${pid}/video`, { method: "POST", body: {} }); location.hash = "#/trabajo/" + r.id;
+  };
+  $("#borrarProd").onclick = async () => { if (confirm("¿Borrar este producto y sus fotos?")) { await api(`/api/producto/${pid}/borrar`, { method: "POST", body: {} }); location.hash = "#/productos"; } };
+}
 
 function styleChip(e) {
   return { listo: '<span class="chip nadie">Listo</span>', por_analizar: '<span class="chip claude">Esperando a Claude</span>', borrador: '<span class="chip operador">Faltan referencias</span>' }[e.estado] || esc(e.estado);
@@ -811,6 +956,7 @@ async function route() {
   try {
     if (h[0] === "trabajo") await views.trabajo(h[1]);
     else if (h[0] === "estilos") await views.estilos(h[1]);
+    else if (h[0] === "productos") await views.productos(h[1]);
     else if (views[h[0]]) await views[h[0]]();
     else await views.trabajos();
   } catch (e) { $("#view").innerHTML = `<div class="card empty"><b>No se pudo abrir</b>${esc(e.message)}<br><br><a class="btn" href="#/">Volver</a></div>`; }
