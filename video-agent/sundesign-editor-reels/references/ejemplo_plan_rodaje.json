@@ -1,0 +1,38 @@
+{
+  "titulo": "La mesa que crece en 5 segundos",
+  "producto": "Mesa extensible Nórdica + 8 sillas",
+  "duracion": 24,
+  "locacion": "Showroom Caballito, sector comedor",
+  "quien_aparece": "Presentador + 3 personas del equipo (como amigos)",
+  "orden_rodaje": [1, 2, 6, 3, 4, 5, 7],
+  "preparar": [
+    "Mesa cerrada y limpia, 4 sillas puestas y 4 apiladas fuera de cuadro",
+    "Vajilla y copas para 8 (4 servidas, 4 a mano)",
+    "Luz: abrir cortinas y prender todas las luces del sector; nada de ventanas detrás de la mesa",
+    "Celular en trípode a la altura de los ojos para las tomas fijas"
+  ],
+  "tomas": [
+    {"n": 1, "momento": "Gancho", "duracion": 3, "plano": "general", "angulo": "altura de ojos", "movimiento": "fija", "sujeto": "producto",
+     "que_se_ve": "Mesa para 4 servida, tocan el timbre y entran 4 personas más por la izquierda",
+     "accion": "El presentador tira de un extremo y la mesa se estira en un solo movimiento", "dice": "",
+     "texto_pantalla": "¿Mesa para 4… o para 8?", "zona_texto": "arriba",
+     "extra": "Hacerla 4 veces. Grabar también la extensión sola, sin gente", "notas": "La mesa tiene que entrar completa en el cuadro"},
+    {"n": 2, "momento": "Identificación", "duracion": 3, "plano": "medio", "angulo": "altura de ojos", "movimiento": "fija", "sujeto": "presentador",
+     "que_se_ve": "Presentador al lado de la mesa ya extendida", "accion": "Mira a cámara",
+     "dice": "Si recibís gente los domingos, esto es para vos.", "texto_pantalla": "", "zona_texto": "abajo", "extra": "", "notas": ""},
+    {"n": 3, "momento": "Demostración", "duracion": 3, "plano": "detalle", "angulo": "bajo", "movimiento": "acercarse", "sujeto": "manos",
+     "que_se_ve": "El mecanismo de la extensión de cerca", "accion": "Las manos sacan la tabla central y la encastran",
+     "dice": "Sale la tabla del medio y queda pareja.", "texto_pantalla": "Sin herramientas", "zona_texto": "arriba", "extra": "Sonido real del encastre (sin hablar encima)", "notas": ""},
+    {"n": 4, "momento": "Calidad", "duracion": 2.5, "plano": "detalle", "angulo": "alto", "movimiento": "paneo", "sujeto": "producto",
+     "que_se_ve": "La superficie y el canto de la mesa", "accion": "Paneo lento de un extremo al otro", "dice": "",
+     "texto_pantalla": "[COMPLETAR: material de la tapa]", "zona_texto": "abajo", "extra": "", "notas": "No inventar el material: confirmarlo antes"},
+    {"n": 5, "momento": "Calidad", "duracion": 2.5, "plano": "detalle", "angulo": "altura de ojos", "movimiento": "fija", "sujeto": "producto",
+     "que_se_ve": "Una silla tapizada, costura y patas", "accion": "Mano que pasa por el tapizado", "dice": "", "texto_pantalla": "", "zona_texto": "ninguna", "extra": "", "notas": ""},
+    {"n": 6, "momento": "Payoff", "duracion": 4, "plano": "general", "angulo": "alto", "movimiento": "alejarse", "sujeto": "ambiente",
+     "que_se_ve": "Los 8 sentados, comiendo y riendo", "accion": "La cámara se aleja despacio", "dice": "Y entran los 8 cómodos.",
+     "texto_pantalla": "8 personas ✓", "zona_texto": "arriba", "extra": "Toma sin gente del ambiente completo", "notas": ""},
+    {"n": 7, "momento": "Cierre", "duracion": 3, "plano": "medio", "angulo": "altura de ojos", "movimiento": "fija", "sujeto": "presentador",
+     "que_se_ve": "Presentador en el showroom", "accion": "Mira a cámara",
+     "dice": "Vení a probarla al showroom de Caballito o escribinos por WhatsApp.", "texto_pantalla": "", "zona_texto": "abajo", "extra": "", "notas": ""}
+  ]
+}

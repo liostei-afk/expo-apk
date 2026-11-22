@@ -1,6 +1,6 @@
 ---
 name: sundesign-editor-reels
-description: Edita videos crudos de muebles (presentador a cámara, tomas del producto, fotos) en Reels de Instagram y TikToks listos para publicar para Sundesign Muebles, con el estilo de la marca — limpia silencios, muletillas y tomas repetidas, arma el vertical 9:16, títulos amarillos, subtítulos palabra por palabra, logo, música, efectos de sonido y cierre a WhatsApp o showroom — y escribe el texto de la publicación con la voz de la marca. Usar cuando el usuario comparta clips o fotos o diga "editá este video", "armame un reel", "hacé un TikTok", "cortá los silencios", "poné subtítulos", "hacé otra versión", o hable de contenido en video para redes de Sundesign.
+description: Especialista en reels virales de Sundesign Muebles de punta a punta. Propone ideas virales, escribe el guion (ganchos, retención, cierre a WhatsApp o showroom), arma el plan de rodaje con dibujos toma por toma para los que filman, controla el material filmado y edita los videos en Reels de Instagram y TikToks listos para publicar con el estilo de la marca (limpia silencios y tomas repetidas, vertical 9:16, títulos amarillos, subtítulos palabra por palabra, logo, música, efectos de sonido) y escribe el texto de la publicación con la voz de la marca. Usar cuando el usuario pida ideas o guiones para reels/TikToks, un plan de rodaje o storyboard, comparta clips o fotos, o diga "editá este video", "armame un reel", "qué filmamos", "escribime un guion viral", "cortá los silencios", "poné subtítulos", "hacé otra versión", o hable de contenido en video para redes de Sundesign.
 ---
 
 # Editor de Reels y TikToks — Sundesign Muebles
@@ -17,6 +17,12 @@ Convertís material crudo en videos verticales listos para publicar, con el esti
 | `scripts/verify_reel.py video.mp4` | Revisión obligatoria del video exportado: formato, volumen, privacidad, repeticiones, pausas y hoja con un cuadro por segundo |
 
 Requisitos: `ffmpeg`, `python3`, `pip install faster-whisper pillow`. La primera transcripción baja el modelo (~1,5 GB).
+
+## Preproducción: ideas, guion viral y plan de rodaje
+Cuando el pedido es crear un video **desde cero** ("ideas para reels", "escribime un guion", "qué filmamos", "armá el plan de rodaje"):
+- Sos el **especialista en reels virales de Sundesign**: seguí `references/guionista-viral.md` (ganchos, formatos para muebles, retención, envíos, checklist de viralidad, reglas de marca, formatos de salida).
+- Para el plan de rodaje seguí `references/plan-de-rodaje.md` y generá la hoja imprimible con dibujos: `python3 <skill>/scripts/shotlist.py plan_rodaje.json` (ejemplo completo en `references/ejemplo_plan_rodaje.json`).
+- Después del rodaje, controlá el material contra el plan antes de editar (ver `references/protocolo-app.md`, "control del material").
 
 ## Modo app (Estudio de Reels)
 Si la carpeta conectada tiene **`COLA.md`** y `trabajos/` (la arma la app de escritorio "Estudio de Reels"), seguí **`references/protocolo-app.md`**: procesá la cola en orden, trabajá dentro de cada `trabajos/<id>/salida/`, usá el estilo elegido en `estilos/<id>/estilo.md` y comunicate con el operador solo a través de `estado.json`, `caption.md` y `resumen.md`. Ese protocolo manda sobre las carpetas descriptas abajo.

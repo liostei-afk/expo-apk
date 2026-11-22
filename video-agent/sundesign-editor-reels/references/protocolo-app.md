@@ -11,7 +11,8 @@ lo que escribís en `salida/` y en `estado.json` aparece en la pantalla del oper
 ├── trabajos/<id>/
 │   ├── pedido.json               ← lo que pidió el operador (ver campos abajo)
 │   ├── guion.md                  ← guion o puntos clave (puede estar vacío)
-│   ├── brutos/                   ← videos y fotos crudos. NUNCA los modifiques
+│   ├── preproduccion/            ← ideas, guion viral, plan de rodaje, control (lo escribís vos)
+│   ├── brutos/                   ← videos y fotos crudos (las tomas vienen como toma-03-xxx.mp4). NUNCA los modifiques
 │   ├── salida/                   ← todo lo que generás vos
 │   └── estado.json               ← estado + historial (lo leen la app y vos)
 ├── estilos/<id>/
@@ -32,12 +33,38 @@ Escribilo completo de una vez (no lo dejes a medio escribir). Estados que podés
 
 | Estado | Cuándo |
 |---|---|
+| `ideas_listas` | Escribiste `preproduccion/ideas.json` + `ideas.md` |
+| `guion_listo` | Escribiste `preproduccion/guion_viral.md` |
+| `plan_listo` | Escribiste `preproduccion/plan_rodaje.json` y generaste `plan_rodaje.html` |
+| `control_listo` | Escribiste `preproduccion/control_material.md` |
 | `editando` | Al empezar un render largo (aprobado o corrección), para que el operador vea que estás trabajando |
 | `storyboard_listo` | Terminaste guion propuesto + storyboard y esperás aprobación |
 | `listo` | Video exportado, revisado (0 errores), con caption y resumen |
 | `bloqueado` | Te falta algo imprescindible. Poné la pregunta en `"mensaje"` (corta, en lenguaje simple, con opciones). El operador responde y vuelve a la cola |
 
 ## Qué hacer según el estado (en COLA.md)
+
+### Preproducción (crear el video desde cero)
+Leé primero **`references/guionista-viral.md`** (sos el especialista en reels virales de Sundesign) y, para el plan, **`references/plan-de-rodaje.md`**. Leé el pedido completo (`producto`, `categoria`, `publico`, `objetivo`, `duracion`, `cierre`, `promo`, `quien_aparece`, `locacion`, `notas`), el historial y la ficha del estilo elegido.
+
+- **`ideas_pendiente` → ideas:** 5 ideas con formatos distintos, aptas para filmar con lo que hay (`quien_aparece`, `locacion`). Si el operador pidió "otras ideas", leé su último mensaje y no repitas las anteriores. Escribí `preproduccion/ideas.json` (formato en guionista-viral.md) e `ideas.md` → `ideas_listas`.
+- **`guion_pendiente` → guion:** la idea está en `pedido.json → idea_elegida` o, si el operador propuso la suya o pidió cambios, en el último mensaje del historial. Escribí `preproduccion/guion_viral.md` con 3 ganchos, la tabla del guion, la versión muda, el checklist de viralidad, la portada y el caption sugerido. Datos que no sepas: `[COMPLETAR: …]`, nunca inventados → `guion_listo`.
+- **`plan_pendiente` → plan de rodaje:** a partir del guion aprobado, `preproduccion/plan_rodaje.json` (una toma por momento, más tomas de detalle y de ambiente, tomas extra del gancho, `orden_rodaje` agrupado por lugar) y corré `shotlist.py preproduccion/plan_rodaje.json` → `plan_listo`.
+- **`control_pendiente` → control del material:** las tomas llegan a `brutos/` como `toma-NN-<nombre>`. Para cada toma del plan: `inspect_media.py` (duración, orientación, audio, hoja de contactos — miralas), transcribí las que tienen texto dicho y comparalo con `dice`. Revisá: ¿falta alguna toma? ¿es vertical? ¿dura lo suficiente? ¿se ve lo que pide el plan (encuadre, acción)? ¿luz (ventana detrás, oscuro)? ¿audio entendible? ¿quedó libre la zona de texto? Escribí `preproduccion/control_material.md`:
+  ```
+  # Control del material
+  **Resultado:** ✅ Se puede editar  /  ⚠️ Se puede editar, pero conviene repetir 2 tomas  /  ❌ Hay que volver a filmar
+  | Toma | Archivo(s) | Estado | Comentario |
+  |---|---|---|---|
+  | 1 · Gancho | toma-01-… | ✅ OK | La mejor es la 2.ª versión |
+  | 3 · Demostración | — | ❌ Falta | … |
+  ## Para la próxima vez
+  - (1–3 consejos concretos de rodaje)
+  ```
+  Usá lenguaje simple: lo lee el operador → `control_listo`.
+- Después del control, el operador aprueba y el trabajo pasa a **`aprobado`** (edición). En este flujo el operador ya aprobó guion y plan, así que **no hay storyboard de edición**: armá el `salida/plan.json` siguiendo el guion aprobado y el orden de las tomas (limpiando con `clean_takes.py` las tomas donde se habla y eligiendo la mejor versión de cada toma), renderizá, verificá y entregá como en `aprobado`.
+
+### Edición
 
 ### `pendiente` → storyboard
 1. Leé `pedido.json`, `guion.md`, el historial y el estilo elegido (`estilos/<pedido.estilo>/estilo.md`, incluida su sección **Correcciones aprendidas**). Si `pedido.estilo` está vacío, usá el predeterminado.

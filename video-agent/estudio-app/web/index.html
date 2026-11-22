@@ -78,6 +78,25 @@ h3 { font-family: "Oswald"; font-weight: 600; font-size: 16px; margin: 0 0 8px; 
 .paso p { margin: 3px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.45; }
 kbd { display: inline-block; border: 1px solid #cfcabd; border-bottom-width: 3px; border-radius: 6px; padding: 1px 8px; font-family: "Segoe UI", sans-serif; font-size: 14px; background: #fbfaf7; font-weight: 600; }
 .orange { display: inline-block; width: 18px; height: 18px; border-radius: 5px; background: #D97757; vertical-align: -3px; }
+/* preproducción */
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+.choice { border: 2px solid var(--line); border-radius: 14px; padding: 18px; background: #fff; }
+.choice.main { border-color: var(--yellow); background: #fffdf2; }
+.choice h3 { font-size: 19px; } .choice p { color: var(--ink-2); font-size: 14px; margin: 4px 0 12px; }
+.ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 10px; }
+.idea { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: #fff; display: flex; flex-direction: column; gap: 8px; }
+.idea.rec { border: 2px solid var(--yellow); }
+.idea h3 { margin: 0; font-size: 18px; } .idea .k { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--ink-3); }
+.idea .v { font-size: 14px; } .idea .btn { margin-top: auto; align-self: flex-start; }
+.badge { display: inline-block; background: var(--yellow); border-radius: 20px; padding: 2px 9px; font-size: 12px; font-weight: 700; }
+.badge.g { background: var(--gray-soft); font-weight: 600; }
+.plan-frame { width: 100%; height: 720px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.shots { list-style: none; padding: 0; margin: 12px 0 0; }
+.shots li { display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.shots .num { width: 42px; height: 42px; border-radius: 50%; background: var(--ink); color: var(--yellow); display: grid; place-items: center; font-family: "Anton"; font-size: 20px; }
+.shots li.done .num { background: var(--green); color: #fff; }
+.shots .d { font-size: 14px; } .shots .d b { font-family: "Oswald"; font-size: 16px; font-weight: 600; }
+.shots .d i { color: var(--ink-2); }
 /* banner cowork */
 .banner { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 18px 20px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; margin-bottom: 22px; }
 .banner b { font-family: "Oswald"; font-size: 18px; color: var(--yellow); font-weight: 600; }
@@ -393,6 +412,10 @@ const views = {
               <div class="field"><label class="f">Color</label><select data-k="color">${[["", "Natural (sin cambios)"], ["calido", "Más cálido"], ["luminoso", "Más luminoso"], ["vivo", "Más vivo"], ["frio", "Más frío"], ["oscuro", "Más oscuro"]].map(([v, l]) => `<option value="${v}" ${(p.color || "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
               <div class="field"><label class="f">Aprobación</label><div class="checks"><label><input type="checkbox" data-bool="directo" ${p.directo ? "checked" : ""}> Editar directo, sin aprobar storyboard</label></div></div>
             </div>
+            <div class="cols2">
+              <div class="field"><label class="f">¿Quién aparece?</label><select data-k="quien_aparece">${["Presentador a cámara", "Solo producto (sin persona)", "Presentador + otras personas", "Voz en off sobre el producto", "Que lo elija Claude"].map(o => `<option ${p.quien_aparece === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
+              <div class="field"><label class="f">¿Dónde se filma?</label><select data-k="locacion">${["Showroom Caballito", "Fábrica", "Casa de un cliente", "Otro lugar"].map(o => `<option ${p.locacion === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
+            </div>
             <div class="field"><label class="f">Notas para Claude</label><textarea data-k="notas" rows="3" placeholder="Ej: en el segundo 20 me equivoqué con el precio, no lo uses. Que se vea bien la tela.">${esc(p.notas || "")}</textarea></div>
             <div class="hint" id="saved">Los cambios se guardan solos.</div>
           </section>
@@ -546,11 +569,26 @@ function renderStyle(e) {
 
 // ------------------------------------------------------------------ partes dinámicas del trabajo
 const STEP_OF = { borrador: 0, bloqueado: 0, pendiente: 2, cambios_storyboard: 2, storyboard_listo: 2, aprobado: 3, editando: 3, correccion: 3, listo: 3, publicado: 4, archivado: 4 };
+const PRE_STATES = ["ideas_pendiente", "ideas_listas", "guion_pendiente", "guion_listo", "plan_pendiente", "plan_listo", "rodaje", "control_pendiente", "control_listo"];
+const STEP_C = { borrador: 0, bloqueado: 0, ideas_pendiente: 0, ideas_listas: 0, guion_pendiente: 1, guion_listo: 1, plan_pendiente: 2, plan_listo: 2,
+  rodaje: 3, control_pendiente: 3, control_listo: 3, pendiente: 4, cambios_storyboard: 4, storyboard_listo: 4, aprobado: 4, editando: 4, correccion: 4, listo: 4, publicado: 5, archivado: 5 };
+const completo = j => j.pedido.flujo === "completo" || PRE_STATES.includes(j.estado)
+  || (j.estado === "borrador" && j.pedido.flujo !== "material" && !j.brutos.length);
 function renderJobDynamic() {
-  const j = S.job, id = j.id, cur = STEP_OF[j.estado] ?? 0;
+  const j = S.job, id = j.id, C = completo(j);
   $("#chip").className = "chip " + j.quien; $("#chip").textContent = j.estado_txt;
-  $("#steps").innerHTML = ["Material", "Pedido", "Storyboard", "Edición", "Publicar"].map((n, i) =>
-    `<div class="${i < cur || (cur === 0 && i < 2 && j.brutos.length && i === 0) ? "done" : i === cur || (cur === 0 && i === 1) ? "now" : ""}"><i>${i < cur ? "✓" : i + 1}</i>${n}</div>`).join("");
+  if (C) {
+    const cur = STEP_C[j.estado] ?? 0;
+    $("#steps").innerHTML = ["💡 Idea", "✍️ Guion", "🎥 Plan de rodaje", "📱 Rodaje", "🎬 Edición", "📤 Publicar"].map((n, i) =>
+      `<div class="${i < cur ? "done" : i === cur ? "now" : ""}"><i>${i < cur ? "✓" : i + 1}</i>${n}</div>`).join("");
+  } else {
+    const cur = STEP_OF[j.estado] ?? 0;
+    $("#steps").innerHTML = ["Material", "Pedido", "Storyboard", "Edición", "Publicar"].map((n, i) =>
+      `<div class="${i < cur || (cur === 0 && i < 2 && j.brutos.length && i === 0) ? "done" : i === cur || (cur === 0 && i === 1) ? "now" : ""}"><i>${i < cur ? "✓" : i + 1}</i>${n}</div>`).join("");
+  }
+  // el material suelto solo se muestra cuando corresponde (no mientras se arma la idea, el guion y el plan)
+  $("#material").hidden = (j.estado === "borrador" && j.pedido.flujo !== "material" && !j.brutos.length)
+    || ["ideas_pendiente", "ideas_listas", "guion_pendiente", "guion_listo", "plan_pendiente", "plan_listo"].includes(j.estado);
   $("#banner").innerHTML = "";
   $("#brutos").innerHTML = j.brutos.map(b => `<li><span class="n">${/\.(jpe?g|png|webp)$/i.test(b.nombre) ? "🖼️" : "🎞️"} ${esc(b.nombre)} <span class="muted small">${size(b.tam)}</span></span>
     <a class="btn ghost" style="padding:4px 10px" href="${file(b.ruta)}" target="_blank">Ver</a>${["borrador", "bloqueado"].includes(j.estado) ? `<button title="Borrar" data-del="${esc(b.ruta)}">🗑</button>` : ""}</li>`).join("")
@@ -569,11 +607,27 @@ function actionHTML(j) {
     <span class="small muted">${j.brutos.length ? "Revisá el pedido y envialo." : "Primero cargá al menos un video o foto."}</span></div>`;
   switch (j.estado) {
     case "borrador":
-      return `<h2>Cargá el material y completá el pedido</h2><p class="small muted">Cuando esté todo, enviáselo a Claude. Después vas a poder aprobar un storyboard antes de que edite.</p>${send}`;
+      if (j.pedido.flujo === "material" || j.brutos.length)
+        return `<h2>Cargá el material y completá el pedido</h2><p class="small muted">Cuando esté todo, enviáselo a Claude. Después vas a poder aprobar un storyboard antes de que edite.</p>${send}
+          <p class="small" style="margin-top:12px"><a href="#" id="irCompleto">← Mejor crear el video desde cero con Claude</a></p>`;
+      return `<h2>¿Cómo arrancamos este video?</h2><p class="small muted">Completá el pedido de abajo (producto, objetivo, para quién) y elegí:</p>
+        <div class="choices">
+          <div class="choice main"><h3>✨ Crear desde cero con Claude</h3><p>Claude propone ideas virales, escribe el guion y arma el plan de rodaje con dibujos para los que filman. <b>Recomendado.</b></p>
+            <textarea id="ideaTxt" rows="2" placeholder="¿Ya tenés una idea? Escribila acá (opcional). Si no, Claude te propone 5."></textarea>
+            <button class="btn pri big" id="pedirIdeas" style="margin-top:10px">💡 Pedir ideas a Claude</button></div>
+          <div class="choice"><h3>🎞️ Ya tengo el material filmado</h3><p>Cargá los videos que ya tenés y Claude los edita.</p>
+            <button class="btn big" id="tengoMaterial">Cargar videos</button></div>
+        </div>`;
     case "bloqueado":
       return `<h2>Claude necesita una respuesta</h2><div class="notice">${esc(j.estado_json.mensaje || "")}</div>
         <div class="field" style="margin-top:12px"><textarea id="resp" placeholder="Tu respuesta…"></textarea></div>
         <button class="btn pri" id="responder">Responder y volver a enviar</button>`;
+    case "ideas_listas": return ideasHTML(j);
+    case "guion_listo": return guionHTML(j);
+    case "plan_listo": return planHTML(j);
+    case "rodaje": return rodajeHTML(j);
+    case "control_listo": return controlHTML(j);
+    case "ideas_pendiente": case "guion_pendiente": case "plan_pendiente": case "control_pendiente":
     case "pendiente": case "cambios_storyboard": case "aprobado": case "editando": case "correccion":
       return j.estado === "editando"
         ? `<h2>⏳ Claude está editando</h2><p>Ya está trabajando. No tenés que hacer nada: esta pantalla se actualiza sola cuando termine.</p>`
@@ -594,6 +648,64 @@ function actionHTML(j) {
       return `<h2>${j.estado === "listo" ? "Video listo para revisar" : esc(j.estado_txt)}</h2>${playerHTML(j)}`;
   }
   return "";
+}
+
+function ideasHTML(j) {
+  const ideas = j.pre.ideas || [];
+  return `<h2>💡 Elegí la idea para este video</h2><p class="small muted">Claude propone ideas pensadas para que el video se vea, se guarde y se comparta. La ⭐ es su recomendada.</p>
+    <div class="ideas">${ideas.map((x, k) => `<div class="idea ${x.recomendada ? "rec" : ""}">
+      <div class="row" style="gap:6px">${x.recomendada ? '<span class="badge">⭐ Recomendada</span>' : ""}<span class="badge g">${esc(x.formato || "")}</span>${x.duracion ? `<span class="badge g">${esc(x.duracion)} s</span>` : ""}</div>
+      <h3>${esc(x.titulo)}</h3>
+      <div><div class="k">El gancho</div><div class="v">${esc(x.gancho)}</div></div>
+      <div><div class="k">Por qué funciona</div><div class="v">${esc(x.por_que_funciona)}</div></div>
+      ${x.necesita ? `<div><div class="k">Para filmarla hace falta</div><div class="v">${esc(x.necesita)}</div></div>` : ""}
+      ${x.dificultad_rodaje ? `<div class="small muted">Dificultad de rodaje: ${esc(x.dificultad_rodaje)}</div>` : ""}
+      <button class="btn pri" data-idea="${k}">Elegir esta idea</button></div>`).join("")}</div>
+    <div class="cols2" style="margin-top:18px">
+      <div><label class="f">¿Ninguna te convence?</label><textarea id="otrasTxt" rows="2" placeholder="Ej: quiero algo más divertido, con gente real, sobre las sillas."></textarea>
+        <button class="btn" id="otras" style="margin-top:8px">🔄 Pedir otras ideas</button></div>
+      <div><label class="f">¿Tenés tu propia idea?</label><textarea id="propiaTxt" rows="2" placeholder="Contala con tus palabras y Claude la convierte en guion."></textarea>
+        <button class="btn" id="propia" style="margin-top:8px">✍️ Usar mi idea</button></div>
+    </div>`;
+}
+function guionHTML(j) {
+  return `<h2>✍️ Guion para aprobar</h2><p class="small muted">Leelo como si fueras quien mira el video. Si algo no te suena natural, pedí cambios.</p>
+    <div class="card md" style="box-shadow:none;max-height:620px;overflow:auto">${j.pre.guion ? md(j.pre.guion) : '<p class="muted">No se encontró el guion.</p>'}</div>
+    <div class="row" style="margin-top:14px"><button class="btn ok big" id="aprobarGuion">✓ Aprobar guion</button></div>
+    <div class="field" style="margin-top:14px"><label class="f">¿Querés cambiar algo?</label><textarea id="guionTxt" placeholder="Ej: usá el gancho 2; la frase del final es muy larga; que aparezca el precio."></textarea></div>
+    <button class="btn" id="cambiosGuion">Pedir cambios al guion</button>`;
+}
+function planHTML(j) {
+  const h = j.pre.plan_html;
+  return `<h2>🎥 Plan de rodaje para aprobar</h2><p class="small muted">Esto es lo que va a recibir la gente que filma: cada toma con su dibujo, qué hacer y qué decir.</p>
+    ${h ? `<iframe class="plan-frame" src="${file(h)}?${j.actualizado}"></iframe>
+      <div class="row" style="margin-top:10px"><a class="btn" href="${file(h)}" target="_blank">🖨 Abrir para imprimir o guardar en PDF</a></div>` : '<p class="muted">No se encontró el plan.</p>'}
+    <div class="row" style="margin-top:14px"><button class="btn ok big" id="aprobarPlan">✓ Aprobar: ¡a filmar!</button></div>
+    <div class="field" style="margin-top:14px"><label class="f">¿Querés cambiar algo?</label><textarea id="planTxt" placeholder="Ej: la toma 3 no se puede filmar así; no tenemos 8 sillas, solo 6."></textarea></div>
+    <button class="btn" id="cambiosPlan">Pedir cambios al plan</button>`;
+}
+function rodajeHTML(j) {
+  const tomas = (j.pre.plan.tomas || []), car = j.tomas_cargadas || {}, h = j.pre.plan_html;
+  const faltan = tomas.filter(t => !car[String(t.n)]).length;
+  return `<h2>📱 A filmar</h2><p class="small muted">Filmen siguiendo el plan y suban cada video en el casillero de <b>su toma</b>. Pueden subir varias versiones de la misma toma.</p>
+    ${h ? `<a class="btn" href="${file(h)}" target="_blank">🖨 Ver / imprimir el plan de rodaje</a>` : ""}
+    <ul class="shots">${tomas.map(t => { const f = car[String(t.n)] || [];
+      return `<li class="${f.length ? "done" : ""}"><div class="num">${f.length ? "✓" : esc(t.n)}</div>
+        <div class="d"><b>Toma ${esc(t.n)} · ${esc(t.momento || "")}</b> <span class="muted small">· ${esc(t.duracion || "")} s</span><br>${esc(t.que_se_ve || "")}${t.dice ? `<br><i>Dice: «${esc(t.dice)}»</i>` : ""}
+        ${f.length ? `<div class="small" style="margin-top:4px;color:var(--green)">✓ ${f.length} video${f.length > 1 ? "s" : ""} cargado${f.length > 1 ? "s" : ""}: ${f.map(x => esc(x.nombre)).join(", ")}</div>` : ""}
+        <div class="bar" style="margin-top:6px;display:none" id="bar${esc(t.n)}"><i></i></div></div>
+        <button class="btn ${f.length ? "ghost" : "pri"}" data-toma="${esc(t.n)}">${f.length ? "＋ Otra versión" : "⬆ Subir video"}</button></li>`; }).join("")}</ul>
+    <p class="small muted" style="margin-top:10px">¿Filmaron algo extra que sirve (tomas de recurso, ambiente)? Subilo abajo en «Material».</p>
+    <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <button class="btn ok big" id="materialListo" ${Object.keys(car).length || j.brutos.length ? "" : "disabled"}>✅ Terminamos de filmar</button>
+      <span class="small ${faltan ? "" : "muted"}" style="${faltan ? "color:var(--red)" : ""}">${faltan ? `Faltan ${faltan} toma${faltan > 1 ? "s" : ""}.` : "Están todas las tomas."} Claude va a revisar que todo sirva antes de editar.</span></div>`;
+}
+function controlHTML(j) {
+  return `<h2>🔍 Control del material</h2><p class="small muted">Claude revisó lo filmado contra el plan. Si alguna toma hay que repetirla, lo dice acá.</p>
+    <div class="card md" style="box-shadow:none;max-height:560px;overflow:auto">${j.pre.control ? md(j.pre.control) : '<p class="muted">No se encontró el informe.</p>'}</div>
+    <div class="row" style="margin-top:14px"><button class="btn ok big" id="controlOk">✓ Está bien: ¡a editar!</button>
+      <button class="btn" id="refilmar">🎥 Volver a filmar algunas tomas</button></div>
+    <div class="field" style="margin-top:12px"><label class="f">Comentario (opcional)</label><textarea id="controlTxt" rows="2" placeholder="Ej: la toma 3 la volvemos a filmar el lunes."></textarea></div>`;
 }
 
 function playerHTML(j) {
@@ -631,6 +743,47 @@ function bindAction(j) {
   on("#publicado", () => act("publicado"));
   on("#archivar", () => act("archivar"));
   on("#reabrir", () => act("reabrir"));
+  // preproducción
+  const savePedido = body => api(`/api/trabajo/${j.id}/pedido`, { method: "POST", body });
+  on("#pedirIdeas", async () => {
+    const idea = $("#ideaTxt").value.trim();
+    await savePedido({ flujo: "completo" });
+    if (idea) act("idea_propia", { texto: idea }).then(thenNotify("¡Listo! Avisale a Claude para que escriba el guion"));
+    else act("pedir_ideas").then(thenNotify("¡Listo! Avisale a Claude para que proponga ideas"));
+  });
+  on("#tengoMaterial", async () => { await savePedido({ flujo: "material" }); refreshJob(true); });
+  on("#irCompleto", async e => { e.preventDefault(); await savePedido({ flujo: "" }); refreshJob(true); });
+  document.querySelectorAll("[data-idea]").forEach(b => b.onclick = () => {
+    const idea = (j.pre.ideas || [])[+b.dataset.idea];
+    act("elegir_idea", { idea, texto: idea.titulo }).then(thenNotify("¡Idea elegida! Avisale a Claude para que escriba el guion"));
+  });
+  on("#otras", () => act("otras_ideas", { texto: $("#otrasTxt").value }).then(thenNotify("Avisale a Claude para que proponga otras ideas")));
+  on("#propia", () => act("idea_propia", { texto: $("#propiaTxt").value }).then(thenNotify("Avisale a Claude para que escriba el guion")));
+  on("#aprobarGuion", () => act("aprobar_guion").then(thenNotify("¡Guion aprobado! Avisale a Claude para que arme el plan de rodaje")));
+  on("#cambiosGuion", () => act("cambios_guion", { texto: $("#guionTxt").value }).then(thenNotify("Avisale a Claude para que corrija el guion")));
+  on("#aprobarPlan", () => act("aprobar_plan").then(() => toast("¡A filmar! Compartí el plan con quienes filman.")));
+  on("#cambiosPlan", () => act("cambios_plan", { texto: $("#planTxt").value }).then(thenNotify("Avisale a Claude para que corrija el plan")));
+  on("#materialListo", () => {
+    const faltan = (j.pre.plan.tomas || []).filter(t => !(j.tomas_cargadas || {})[String(t.n)]).length;
+    if (faltan && !confirm(`Faltan ${faltan} toma(s). ¿Avisar igual que terminaron de filmar?`)) return;
+    act("material_listo").then(thenNotify("¡Rodaje terminado! Avisale a Claude para que revise el material"));
+  });
+  on("#controlOk", () => act("control_ok", { texto: ($("#controlTxt") || {}).value || "" }).then(thenNotify("¡A editar! Avisale a Claude")));
+  on("#refilmar", () => act("refilmar", { texto: ($("#controlTxt") || {}).value || "" }));
+  document.querySelectorAll("[data-toma]").forEach(b => {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "video/*,image/*"; inp.multiple = true; inp.hidden = true;
+    b.after(inp); b.onclick = () => inp.click();
+    inp.onchange = async () => {
+      const n = b.dataset.toma, bar = $("#bar" + n); bar.style.display = "block"; b.disabled = true;
+      for (const f of inp.files) {
+        try {
+          await upload(`trabajo/${j.id}/toma/${n}`, f, p => bar.querySelector("i").style.width = (p * 100).toFixed(0) + "%");
+          if (!S.job.miniatura) { const bl = await makeThumb(f); if (bl) { await upload(`trabajo/${j.id}/miniatura`, new File([bl], "miniatura.jpg")); S.job.miniatura = 1; } }
+        } catch (e) { toast(e.message, true); }
+      }
+      refreshJob(true);
+    };
+  });
   on("#marcar", () => {
     const t = $("#vid").currentTime, s = `[${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}] `;
     const c = $("#corr"); c.value = (c.value ? c.value.trimEnd() + "\n" : "") + s; c.focus();

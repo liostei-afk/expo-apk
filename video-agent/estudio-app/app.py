@@ -38,6 +38,17 @@ AUDIO_EXT = {".mp3", ".m4a", ".wav", ".aac"}
 # Estados de un trabajo. "quien" = de quién es el próximo paso.
 ESTADOS = {
     "borrador": ("Borrador", "operador"),
+    # preproducción (crear desde cero)
+    "ideas_pendiente": ("Claude está pensando ideas", "claude"),
+    "ideas_listas": ("Elegí una idea", "operador"),
+    "guion_pendiente": ("Claude está escribiendo el guion", "claude"),
+    "guion_listo": ("Guion para aprobar", "operador"),
+    "plan_pendiente": ("Claude está armando el plan de rodaje", "claude"),
+    "plan_listo": ("Plan de rodaje para aprobar", "operador"),
+    "rodaje": ("A filmar: cargá cada toma", "operador"),
+    "control_pendiente": ("Claude está revisando lo filmado", "claude"),
+    "control_listo": ("Revisá el control del material", "operador"),
+    # edición
     "pendiente": ("Esperando a Claude: storyboard", "claude"),
     "cambios_storyboard": ("Esperando a Claude: rehacer storyboard", "claude"),
     "storyboard_listo": ("Storyboard para aprobar", "operador"),
@@ -211,6 +222,20 @@ def job_full(jid):
         if f["nombre"].endswith("_revision.md"):
             texts[f["nombre"]] = (sal / f["nombre"]).read_text(encoding="utf-8")
     s["textos"] = texts
+    pre = d / "preproduccion"
+    s["pre"] = {
+        "ideas": read_json(pre / "ideas.json", {}).get("ideas", []),
+        "guion": (pre / "guion_viral.md").read_text(encoding="utf-8") if (pre / "guion_viral.md").exists() else "",
+        "plan": read_json(pre / "plan_rodaje.json", {}),
+        "plan_html": (pre / "plan_rodaje.html").relative_to(ROOT).as_posix() if (pre / "plan_rodaje.html").exists() else None,
+        "control": (pre / "control_material.md").read_text(encoding="utf-8") if (pre / "control_material.md").exists() else "",
+    }
+    tomas = {}
+    for f in s["brutos"]:
+        m = re.match(r"toma-0*(\d+)[-_.]", f["nombre"])
+        if m:
+            tomas.setdefault(m.group(1), []).append(f)
+    s["tomas_cargadas"] = tomas
     return s
 
 
@@ -254,6 +279,14 @@ def write_cola():
         n += 1
         ped = read_json(d / "pedido.json", {})
         accion = {
+            "ideas_pendiente": "Proponer 5 ideas de reel virales (preproduccion/ideas.json + ideas.md) según "
+                               "references/guionista-viral.md. Dejar en `ideas_listas`.",
+            "guion_pendiente": "Escribir el guion viral (preproduccion/guion_viral.md) de la idea elegida o propuesta "
+                               "(ver pedido.json → idea_elegida y el historial). Dejar en `guion_listo`.",
+            "plan_pendiente": "Armar el plan de rodaje (preproduccion/plan_rodaje.json) según references/plan-de-rodaje.md "
+                              "y generar plan_rodaje.html con shotlist.py. Dejar en `plan_listo`.",
+            "control_pendiente": "Revisar el material filmado contra el plan de rodaje y escribir "
+                                 "preproduccion/control_material.md (toma por toma: OK o repetir y por qué). Dejar en `control_listo`.",
             "pendiente": "Hacer guion propuesto + storyboard (y antes/después si hay color). "
                          + ("El operador pidió **editar directo**: después del storyboard, seguí con la edición sin esperar."
                             if ped.get("directo") else "Dejar en `storyboard_listo`."),
@@ -398,7 +431,9 @@ class Handler(BaseHTTPRequestHandler):
         destino = q.get("destino", [""])[0]
         nombre = safe_name(q.get("nombre", ["archivo"])[0])
         try:
-            if m := re.fullmatch(r"trabajo/([a-z0-9-]+)/(brutos|miniatura)", destino):
+            if m := re.fullmatch(r"trabajo/([a-z0-9-]+)/toma/(\d+)", destino):
+                target = job_dir(m.group(1)) / "brutos" / f"toma-{int(m.group(2)):02d}-{nombre}"
+            elif m := re.fullmatch(r"trabajo/([a-z0-9-]+)/(brutos|miniatura)", destino):
                 d = job_dir(m.group(1))
                 target = d / "miniatura.jpg" if m.group(2) == "miniatura" else d / "brutos" / nombre
             elif m := re.fullmatch(r"estilo/([a-z0-9-]+)/referencias", destino):
@@ -482,7 +517,38 @@ class Handler(BaseHTTPRequestHandler):
             d = job_dir(m.group(1))
             acc, texto = data.get("accion"), (data.get("texto") or "").strip()
             code = read_json(d / "estado.json", {}).get("estado", "borrador")
-            if acc == "enviar":
+            pre_actions = {
+                "pedir_ideas": ("ideas_pendiente", "Pidió ideas a Claude"),
+                "otras_ideas": ("ideas_pendiente", "Pidió otras ideas"),
+                "idea_propia": ("guion_pendiente", "Propuso su propia idea"),
+                "aprobar_guion": ("plan_pendiente", "Guion aprobado"),
+                "cambios_guion": ("guion_pendiente", "Cambios al guion"),
+                "aprobar_plan": ("rodaje", "Plan de rodaje aprobado: a filmar"),
+                "cambios_plan": ("plan_pendiente", "Cambios al plan de rodaje"),
+                "control_ok": ("aprobado", "Material aprobado: a editar"),
+                "refilmar": ("rodaje", "Hay que volver a filmar"),
+            }
+            if acc in ("otras_ideas", "idea_propia", "cambios_guion", "cambios_plan") and not texto:
+                return self.fail("Escribí qué querés.")
+            if acc == "elegir_idea":
+                ped = read_json(d / "pedido.json", {})
+                ped["flujo"] = "completo"
+                ped["idea_elegida"] = data.get("idea") or {}
+                write_json(d / "pedido.json", ped)
+                t = (data.get("idea") or {}).get("titulo", "")
+                set_job_state(d, "guion_pendiente", f"Eligió la idea «{t}»", texto)
+            elif acc == "material_listo":
+                if not list_files(d / "brutos"):
+                    return self.fail("Cargá al menos una toma antes de avisar.")
+                set_job_state(d, "control_pendiente", "Terminó el rodaje: material cargado", texto)
+            elif acc in pre_actions:
+                if acc == "pedir_ideas":
+                    ped = read_json(d / "pedido.json", {})
+                    ped["flujo"] = "completo"
+                    write_json(d / "pedido.json", ped)
+                code2, ev = pre_actions[acc]
+                set_job_state(d, code2, ev, texto)
+            elif acc == "enviar":
                 if not list_files(d / "brutos"):
                     return self.fail("Cargá al menos un video o foto antes de enviar.")
                 set_job_state(d, "pendiente", "Enviado a Claude", texto)
