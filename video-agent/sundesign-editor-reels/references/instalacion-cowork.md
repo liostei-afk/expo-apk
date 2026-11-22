@@ -3,10 +3,10 @@
 Necesitás: Claude de pago (Pro o superior) con la **app de escritorio** (Cowork trabaja con tus carpetas; la web no sirve para esto), una compu Mac o Windows y una tarde libre la primera vez.
 
 ## 1. Carpetas
-Creá en tu compu una carpeta **Reels Sundesign** y adentro estas tres:
+Creá en tu compu una carpeta **MARKETING SUNDESIGN** y adentro estas tres:
 
 ```
-Reels Sundesign/
+MARKETING SUNDESIGN/
 ├── 1 Brutos        ← los videos tal cual los grabás
 ├── 2 Mi estilo     ← reels que te gustan y la ficha de estilo
 └── 3 Listos        ← lo que te devuelve Claude, con su número de versión
@@ -16,7 +16,7 @@ Reels Sundesign/
 En Claude: **Configuración → Capacidades → Skills → Subir skill** y elegí `sundesign-editor-reels.zip`.
 
 ## 3. Conectar la carpeta y dejar todo instalado
-Abrí **Cowork**, empezá una tarea nueva, conectá la carpeta **Reels Sundesign** y pegá este texto:
+Abrí **Cowork**, empezá una tarea nueva, conectá la carpeta **MARKETING SUNDESIGN** y pegá este texto:
 
 ```
 Hola, Claude. Quiero que esta carpeta sea el estudio de edición de reels de Sundesign. Usá la skill sundesign-editor-reels. Hacelo en este orden y avisame con una frase cada vez que termines un punto:

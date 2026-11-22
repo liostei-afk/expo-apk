@@ -341,7 +341,7 @@ async function avisarClaude(titulo = "Avisale a Claude") {
     <div class="paso ${copiado ? "ok" : ""}"><div class="num">${copiado ? "✓" : "1"}</div><div><b>${copiado ? "Mensaje copiado" : "Copiá el mensaje"}</b>
       <p>${copiado ? "Ya está guardado, no tenés que escribir nada." : `<button class="btn" id="mcopy">📋 Copiar</button>`}</p></div></div>
     <div class="paso"><div class="num">2</div><div><b>Andá a Claude</b>
-      <p>${abierto ? "Ya se está abriendo. " : ""}Es el ícono <span class="orange"></span> naranja de la barra de abajo. Entrá a <b>Cowork</b> y abrí la conversación de siempre: <b>“Reels Sundesign”</b>.</p></div></div>
+      <p>${abierto ? "Ya se está abriendo. " : ""}Es el ícono <span class="orange"></span> naranja de la barra de abajo. Entrá a <b>Cowork</b> y abrí la conversación de siempre: <b>“Marketing Sundesign”</b>.</p></div></div>
     <div class="paso"><div class="num">3</div><div><b>Pegá y enviá</b>
       <p>Hacé clic en el cuadro de escribir y apretá <kbd>Ctrl</kbd> + <kbd>V</kbd>, después <kbd>Enter</kbd>.<br>Listo: volvé acá, esta pantalla se actualiza sola cuando Claude termine.</p></div></div>
     <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn pri big" id="mok">Entendido</button></div></div>`;
@@ -571,7 +571,7 @@ const views = {
         <li>Tener Claude (plan pago) con la app de escritorio y <b>Cowork</b>.</li>
         <li>Subir la skill <code>sundesign-editor-reels.zip</code> en Claude → Configuración → Capacidades → Skills.</li>
         <li>En Cowork, conectar la carpeta de trabajo (la de abajo) y pegar el texto de instalación de la skill (references/instalacion-cowork.md).</li>
-        <li>En Cowork, dejar una conversación fija llamada <b>“Reels Sundesign”</b> con la carpeta de trabajo conectada: es la que usa el operador para pegar el aviso.</li>
+        <li>En Cowork, dejar una conversación fija llamada <b>“Marketing Sundesign”</b> con la carpeta de trabajo conectada: es la que usa el operador para pegar el aviso.</li>
         <li>Opcional: en Cowork, crear una <b>tarea programada</b> cada 30 minutos con el mismo mensaje, así Claude revisa solo y el operador no tiene que avisarle.</li>
       </ol></details></div>
       <div class="stack"><div class="card"><h3>Carpeta de trabajo</h3><p class="small">Es la carpeta que hay que conectar en Cowork. Ahí se guardan los videos, los estilos y lo que hace Claude.</p>

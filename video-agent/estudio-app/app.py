@@ -28,6 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
+VERSION = "2026.11.22"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -70,6 +71,9 @@ def load_config():
             cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
         except ValueError:
             cfg = {}
+    if not cfg.get("carpeta") and APP_DIR.parent.name.lower() == "_programa":
+        # instalada dentro de MARKETING SUNDESIGN\_programa\estudio-app → la carpeta base es MARKETING SUNDESIGN
+        cfg["carpeta"] = str(APP_DIR.parent.parent)
     if not cfg.get("carpeta"):
         docs = Path.home() / "Documents"
         if not docs.exists():
@@ -127,8 +131,19 @@ def write_json(p, data):
 
 
 def ensure_workspace():
-    for d in ("trabajos", "estilos", "musica", "productos", "sugerencias"):
+    for d in ("trabajos", "estilos", "musica", "productos", "sugerencias", "marca", "banco-de-material"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
+    leemes = {
+        "marca": "Logos (PNG con fondo transparente), tipografías y manual de marca de Sundesign.\n"
+                 "Claude usa de acá el logo para los videos.\n",
+        "banco-de-material": "Tomas sueltas que se pueden reusar en cualquier video: showroom, fábrica, ambientes,\n"
+                             "detalles de productos. Nombralas con lo que se ve (ej: showroom-entrada-general.mp4).\n",
+        "musica": "Música libre de derechos (mp3, m4a, wav) para usar de fondo.\n",
+    }
+    for d, txt in leemes.items():
+        f = ROOT / d / "LEEME.txt"
+        if not f.exists():
+            f.write_text(txt, encoding="utf-8")
     seed_style()
     write_readme()
     write_cola()
@@ -159,7 +174,13 @@ def write_readme():
         "`references/protocolo-app.md` de esa skill. La lista de lo que hay que hacer está siempre en **COLA.md**.\n\n"
         "- `trabajos/<id>/` — un video por carpeta: `pedido.json`, `guion.md`, `brutos/`, `salida/`, `estado.json`.\n"
         "- `estilos/<id>/` — fichas de estilo: `referencias/` (videos), `estilo.md`, `estilo.json`.\n"
-        "- `musica/` — música libre de derechos para usar de fondo.\n", encoding="utf-8")
+        "- `productos/<id>/` — ficha (`producto.json`) y fotos de cada producto.\n"
+        "- `sugerencias/` — sugerencias de contenido.\n"
+        "- `musica/` — música libre de derechos para usar de fondo.\n"
+        "- `marca/` — logos y tipografías de la marca (usá el logo de acá si existe).\n"
+        "- `banco-de-material/` — tomas reutilizables (showroom, fábrica, ambientes): podés usarlas como recurso en "
+        "cualquier video. Nunca las modifiques.\n"
+        "- `_programa/` — la app y la skill. No lo modifiques salvo que te lo pidan.\n", encoding="utf-8")
 
 
 def job_dir(jid):
@@ -455,7 +476,7 @@ class Handler(BaseHTTPRequestHandler):
                 estilos = [style_summary(d) for d in sorted((ROOT / "estilos").glob("*")) if d.is_dir()]
                 musica = list_files(ROOT / "musica", AUDIO_EXT)
                 productos = [product_summary(d) for d in sorted((ROOT / "productos").glob("*")) if d.is_dir()]
-                return self.send_json({"carpeta": str(ROOT), "trabajos": trabajos, "estilos": estilos,
+                return self.send_json({"version": VERSION, "carpeta": str(ROOT), "trabajos": trabajos, "estilos": estilos,
                                        "productos": productos, "sugerencias": sugerencias_data(),
                                        "musica": musica, "pendientes": cola_count(), "cowork": COWORK_PROMPT,
                                        "estados": {k: v[0] for k, v in ESTADOS.items()}})
@@ -782,6 +803,11 @@ class Handler(BaseHTTPRequestHandler):
                 subprocess.Popen(["xdg-open", str(target)])
             return self.send_json({"ok": True})
 
+        if p == "/api/apagar":  # lo usa una versión nueva de la app para reemplazar a la vieja
+            self.send_json({"ok": True})
+            threading.Thread(target=lambda: (time.sleep(0.3), os._exit(0)), daemon=True).start()
+            return
+
         if p == "/api/abrir-claude":
             return self.send_json({"abierto": open_claude()})
 
@@ -838,10 +864,36 @@ def open_window():
     webbrowser.open(url)
 
 
+def running_info():
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://{HOST}:{PORT}/api/inicio", timeout=2) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception:
+        return None
+
+
 def main():
     if already_running():
-        open_window()
-        return
+        info = running_info() or {}
+        if info.get("version") == VERSION and info.get("carpeta") == str(ROOT):
+            open_window()
+            return
+        # hay otra versión u otra carpeta abierta: la cerramos y arrancamos esta
+        import urllib.request
+        try:
+            req = urllib.request.Request(f"http://{HOST}:{PORT}/api/apagar", data=b"{}", method="POST",
+                                         headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(req, timeout=2)
+        except Exception:
+            pass
+        for _ in range(20):
+            time.sleep(0.25)
+            if not already_running():
+                break
+        if already_running():
+            open_window()  # una versión vieja que no se deja cerrar: hay que reiniciar la PC una vez
+            return
     ensure_workspace()
     srv = ThreadingHTTPServer((HOST, PORT), Handler)
     if "--sin-ventana" not in sys.argv:

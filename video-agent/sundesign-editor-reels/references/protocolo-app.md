@@ -27,7 +27,10 @@ lo que escribís en `salida/` y en `estado.json` aparece en la pantalla del oper
 ├── sugerencias/
 │   ├── estado.json               ← {"estado": "pendiente"|"listo", "pedido": "..."}
 │   └── sugerencias.json          ← lo escribís vos (ver references/agente-marketing.md)
-└── musica/                       ← música libre de derechos
+├── musica/                       ← música libre de derechos
+├── marca/                        ← logos, tipografías, manual de marca (usá el logo de acá si existe)
+├── banco-de-material/            ← tomas reutilizables (showroom, fábrica, ambientes). NUNCA las modifiques
+└── _programa/                    ← la app y la skill. No lo modifiques salvo que te lo pidan
 ```
 
 ## Cómo actualizar `estado.json`
@@ -140,7 +143,9 @@ El texto de la corrección está en el último mensaje del historial (puede trae
 5. En `estilo.json`: `estado` → `listo` y agregá al `historial` `{"fecha", "evento": "Analizado por Claude", "texto": "resumen en una línea"}`.
 
 ## Reglas
-- Nunca modifiques `brutos/` ni `referencias/`. Nunca borres versiones anteriores.
+- Nunca modifiques `brutos/`, `referencias/`, `banco-de-material/` ni `_programa/`.
+- **Banco de material:** antes del plan de rodaje y de la edición, mirá `banco-de-material/`: si ya hay una toma general del showroom, de la fábrica o de un ambiente que sirva, usala (y en el plan de rodaje no la pidas de nuevo).
+- Nunca borres versiones anteriores.
 - Nunca publiques nada: el operador descarga y publica.
 - Si algo falla (falta ffmpeg, un archivo no abre), no dejes el trabajo en `editando`: poné `bloqueado` con un mensaje claro.
 - Al terminar todo lo de la cola, contale al usuario en una línea por ítem qué hiciste.
