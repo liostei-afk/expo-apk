@@ -61,6 +61,23 @@ h3 { font-family: "Oswald"; font-weight: 600; font-size: 16px; margin: 0 0 8px; 
 .chip.nadie { background: var(--green-soft); color: var(--green); }
 .chip.claude::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); animation: pulse 1.4s infinite; }
 @keyframes pulse { 50% { opacity: .25; } }
+/* aviso "le toca a Claude" + ventana de 3 pasos */
+.claudebar { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 16px 20px; display: flex; gap: 16px; align-items: center; margin-bottom: 22px; flex-wrap: wrap; }
+.claudebar .ic { font-size: 30px; }
+.claudebar b { font-family: "Oswald"; font-size: 19px; color: var(--yellow); font-weight: 600; display: block; }
+.claudebar span { color: #cfcfc6; font-size: 14px; }
+.claudebar .btn { margin-left: auto; }
+.btn.huge { padding: 16px 26px; font-size: 20px; border-radius: 12px; }
+.modal { position: fixed; inset: 0; background: rgba(20,20,18,.6); display: grid; place-items: center; z-index: 60; padding: 20px; }
+.modal .box { background: #fff; border-radius: 18px; max-width: 620px; width: 100%; padding: 28px 28px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.modal h2 { font-family: "Anton"; font-weight: 400; font-size: 30px; margin-bottom: 4px; }
+.paso { display: grid; grid-template-columns: 54px 1fr; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+.paso .num { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-family: "Anton"; font-size: 24px; background: var(--gray-soft); }
+.paso.ok .num { background: var(--green); color: #fff; }
+.paso > div > b { font-family: "Oswald"; font-size: 19px; font-weight: 600; display: block; }
+.paso p { margin: 3px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.45; }
+kbd { display: inline-block; border: 1px solid #cfcabd; border-bottom-width: 3px; border-radius: 6px; padding: 1px 8px; font-family: "Segoe UI", sans-serif; font-size: 14px; background: #fbfaf7; font-weight: 600; }
+.orange { display: inline-block; width: 18px; height: 18px; border-radius: 5px; background: #D97757; vertical-align: -3px; }
 /* banner cowork */
 .banner { background: var(--ink); color: #fff; border-radius: var(--radius); padding: 18px 20px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; margin-bottom: 22px; }
 .banner b { font-family: "Oswald"; font-size: 18px; color: var(--yellow); font-weight: 600; }
@@ -272,11 +289,31 @@ async function loadInicio() {
 function coworkBanner() {
   const n = S.inicio.pendientes;
   if (!n) return "";
-  return `<div class="banner"><div><b>Claude tiene ${n} ${n === 1 ? "cosa" : "cosas"} para hacer</b>
-    <div class="small" style="color:#cfcfc6;margin-top:4px">Abrí Claude Cowork con la carpeta de trabajo conectada y pegá este mensaje:</div>
-    <div class="prompt">${esc(S.inicio.cowork)}</div></div>
-    <div class="row"><button class="btn pri" onclick="copy(S.inicio.cowork)">📋 Copiar mensaje</button>
-    <button class="btn ghost" style="color:#fff;border-color:#555" onclick="api('/api/abrir-carpeta',{method:'POST',body:{}})">📂 Carpeta</button></div></div>`;
+  return `<div class="claudebar"><div class="ic">🤖</div><div><b>Claude tiene ${n === 1 ? "un trabajo" : n + " trabajos"} esperando</b>
+    <span>Tocá el botón y seguí los 3 pasos: lleva 10 segundos.</span></div>
+    <button class="btn pri huge" onclick="avisarClaude()">📨 Avisar a Claude</button></div>`;
+}
+
+// Copia el mensaje, intenta abrir la app de Claude y muestra los 3 pasos en grande
+async function avisarClaude(titulo = "Avisale a Claude") {
+  let copiado = true;
+  try { await navigator.clipboard.writeText(S.inicio.cowork); } catch { copiado = false; }
+  let abierto = false;
+  try { abierto = (await api("/api/abrir-claude", { method: "POST", body: {} })).abierto; } catch { }
+  const m = document.createElement("div"); m.className = "modal";
+  m.innerHTML = `<div class="box">
+    <h2>${esc(titulo)}</h2><p class="muted" style="margin:0 0 10px">Claude trabaja en otra ventana. Hay que avisarle que tiene algo para hacer:</p>
+    <div class="paso ${copiado ? "ok" : ""}"><div class="num">${copiado ? "✓" : "1"}</div><div><b>${copiado ? "Mensaje copiado" : "Copiá el mensaje"}</b>
+      <p>${copiado ? "Ya está guardado, no tenés que escribir nada." : `<button class="btn" id="mcopy">📋 Copiar</button>`}</p></div></div>
+    <div class="paso"><div class="num">2</div><div><b>Andá a Claude</b>
+      <p>${abierto ? "Ya se está abriendo. " : ""}Es el ícono <span class="orange"></span> naranja de la barra de abajo. Entrá a <b>Cowork</b> y abrí la conversación de siempre: <b>“Reels Sundesign”</b>.</p></div></div>
+    <div class="paso"><div class="num">3</div><div><b>Pegá y enviá</b>
+      <p>Hacé clic en el cuadro de escribir y apretá <kbd>Ctrl</kbd> + <kbd>V</kbd>, después <kbd>Enter</kbd>.<br>Listo: volvé acá, esta pantalla se actualiza sola cuando Claude termine.</p></div></div>
+    <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn pri big" id="mok">Entendido</button></div></div>`;
+  document.body.appendChild(m);
+  m.onclick = e => { if (e.target === m) m.remove(); };
+  $("#mok", m).onclick = () => m.remove();
+  const mc = $("#mcopy", m); if (mc) mc.onclick = () => copy(S.inicio.cowork);
 }
 
 // ------------------------------------------------------------------ vistas
@@ -423,25 +460,28 @@ const views = {
     $("#view").innerHTML = `<div class="top"><h1>Cómo funciona</h1></div>
       <div class="grid2"><div class="card"><ol class="help">
         <li><b>Cargá el video</b>: «Nuevo video» → arrastrá los crudos, pegá el guion y completá el pedido.</li>
-        <li><b>Enviá a Claude</b> con el botón amarillo. Arriba aparece un aviso negro: copiá el mensaje y pegalo en <b>Claude Cowork</b> (con la carpeta de trabajo conectada).</li>
+        <li><b>Enviá a Claude</b> con el botón amarillo y seguí los 3 pasos que aparecen: el mensaje ya queda copiado, solo hay que pegarlo en Claude (<kbd>Ctrl</kbd> + <kbd>V</kbd> y <kbd>Enter</kbd>).</li>
         <li><b>Aprobá el storyboard</b>: Claude te muestra un cuadro por momento del video. Aprobalo o pedí cambios.</li>
         <li><b>Revisá el video</b>: miralo en la app (y una vez en el celular). Si algo no va, pausá en ese momento, tocá «Marcar este segundo» y escribí la corrección. Cada corrección es una versión nueva.</li>
         <li><b>Publicá</b>: descargá el video, copiá el texto de la publicación y subilo a Instagram o TikTok. Después marcalo como publicado.</li>
       </ol>
-      <h3 style="margin-top:20px">Instalación (una sola vez)</h3>
+      <p class="small muted">Cada vez que le toca a Claude (al enviar, al aprobar y al pedir una corrección) aparece el botón <b>📨 Avisar a Claude</b>.</p>
+      <details style="margin-top:20px"><summary>Para el administrador: instalación (una sola vez)</summary>
       <ol class="help small">
         <li>Tener Claude (plan pago) con la app de escritorio y <b>Cowork</b>.</li>
         <li>Subir la skill <code>sundesign-editor-reels.zip</code> en Claude → Configuración → Capacidades → Skills.</li>
         <li>En Cowork, conectar la carpeta de trabajo (la de abajo) y pegar el texto de instalación de la skill (references/instalacion-cowork.md).</li>
-        <li>Opcional: en Cowork, crear una <b>tarea programada</b> cada 30 minutos con el mismo mensaje del aviso, así Claude revisa la cola solo.</li>
-      </ol></div>
+        <li>En Cowork, dejar una conversación fija llamada <b>“Reels Sundesign”</b> con la carpeta de trabajo conectada: es la que usa el operador para pegar el aviso.</li>
+        <li>Opcional: en Cowork, crear una <b>tarea programada</b> cada 30 minutos con el mismo mensaje, así Claude revisa solo y el operador no tiene que avisarle.</li>
+      </ol></details></div>
       <div class="stack"><div class="card"><h3>Carpeta de trabajo</h3><p class="small">Es la carpeta que hay que conectar en Cowork. Ahí se guardan los videos, los estilos y lo que hace Claude.</p>
         <input type="text" id="carp" value="${esc(d.carpeta)}"><div class="row" style="margin-top:10px">
         <button class="btn" onclick="copy($('#carp').value)">📋 Copiar ruta</button>
         <button class="btn" onclick="api('/api/abrir-carpeta',{method:'POST',body:{}})">📂 Abrir</button>
         <button class="btn ghost" id="cambiar">Cambiar carpeta</button></div></div>
-        <div class="card"><h3>Mensaje para Cowork</h3><div class="prompt" style="background:var(--gray-soft);color:var(--ink)">${esc(d.cowork)}</div>
-        <button class="btn pri" style="margin-top:10px" onclick="copy(S.inicio.cowork)">📋 Copiar</button></div>
+        <div class="card"><h3>Avisar a Claude</h3><p class="small">Si Claude no reaccionó, volvé a avisarle.</p>
+        <button class="btn pri" onclick="avisarClaude()">📨 Avisar a Claude</button>
+        <details style="margin-top:12px"><summary class="small">Ver el mensaje que se copia</summary><div class="prompt" style="background:var(--gray-soft);color:var(--ink)">${esc(d.cowork)}</div></details></div>
         <div class="card small"><h3>Si algo no anda</h3>
         <p>¿Claude no hace nada? Fijate que en Cowork esté conectada <b>esta</b> carpeta y la skill instalada.</p>
         <p>¿La app no abre? Cerrá la ventana y volvé a tocar el ícono del escritorio.</p></div></div></div>`;
@@ -482,7 +522,7 @@ function renderStyle(e) {
       <div class="card"><h2>¿Qué te gusta de estas referencias?</h2>
         <textarea id="notasE" rows="4" placeholder="Ej: los subtítulos grandes de a una palabra, los cortes rápidos, los colores cálidos. No me gusta la música muy fuerte.">${esc(e.notas)}</textarea>
         <div class="row" style="margin-top:12px"><button class="btn pri big" id="analizar" ${e.referencias.length ? "" : "disabled"}>✨ ${e.estado === "listo" ? "Volver a analizar" : "Analizar con Claude"}</button>
-        <span class="small muted">Después pegá el mensaje del aviso en Cowork.</span></div>
+        <span class="small muted">Claude mira los videos y arma la ficha del estilo.</span></div>
       </div></div>
       <div class="stack">
         ${e.muestras.map(m => `<div class="card sb"><img src="${file(m.ruta)}?${Date.now()}" onclick="lightbox(this.src)"></div>`).join("")}
@@ -495,7 +535,7 @@ function renderStyle(e) {
   $("#analizar").onclick = async () => {
     try { await api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "notas", texto: $("#notasE").value } });
       await api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "analizar", texto: $("#notasE").value } });
-      toast("Listo: ahora pegá el mensaje en Cowork"); views.estilos(e.id); } catch (er) { toast(er.message, true); }
+      await views.estilos(e.id); avisarClaude("Listo. Ahora avisale a Claude"); } catch (er) { toast(er.message, true); }
   };
   if ($("#pred")) $("#pred").onclick = async () => { await api(`/api/estilo/${e.id}/accion`, { method: "POST", body: { accion: "predeterminado" } }); views.estilos(e.id); };
   if ($("#borrarE")) $("#borrarE").onclick = async () => {
@@ -511,7 +551,7 @@ function renderJobDynamic() {
   $("#chip").className = "chip " + j.quien; $("#chip").textContent = j.estado_txt;
   $("#steps").innerHTML = ["Material", "Pedido", "Storyboard", "Edición", "Publicar"].map((n, i) =>
     `<div class="${i < cur || (cur === 0 && i < 2 && j.brutos.length && i === 0) ? "done" : i === cur || (cur === 0 && i === 1) ? "now" : ""}"><i>${i < cur ? "✓" : i + 1}</i>${n}</div>`).join("");
-  $("#banner").innerHTML = j.quien === "claude" ? coworkBanner() : "";
+  $("#banner").innerHTML = "";
   $("#brutos").innerHTML = j.brutos.map(b => `<li><span class="n">${/\.(jpe?g|png|webp)$/i.test(b.nombre) ? "🖼️" : "🎞️"} ${esc(b.nombre)} <span class="muted small">${size(b.tam)}</span></span>
     <a class="btn ghost" style="padding:4px 10px" href="${file(b.ruta)}" target="_blank">Ver</a>${["borrador", "bloqueado"].includes(j.estado) ? `<button title="Borrar" data-del="${esc(b.ruta)}">🗑</button>` : ""}</li>`).join("")
     || `<li class="muted small" style="border:0">Todavía no hay material cargado.</li>`;
@@ -535,10 +575,12 @@ function actionHTML(j) {
         <div class="field" style="margin-top:12px"><textarea id="resp" placeholder="Tu respuesta…"></textarea></div>
         <button class="btn pri" id="responder">Responder y volver a enviar</button>`;
     case "pendiente": case "cambios_storyboard": case "aprobado": case "editando": case "correccion":
-      return `<h2>${esc(j.estado_txt)}</h2><p class="small">${j.estado === "editando" ? "Claude está trabajando ahora. Esta pantalla se actualiza sola." :
-        "Pegá el mensaje del aviso negro en Claude Cowork. Esta pantalla se actualiza sola cuando Claude termine."}</p>
-        <div class="row"><button class="btn" onclick="copy(S.inicio.cowork)">📋 Copiar mensaje para Cowork</button>
-        ${j.estado !== "editando" ? `<button class="btn ghost" id="cancelar">Volver a borrador</button>` : ""}</div>
+      return j.estado === "editando"
+        ? `<h2>⏳ Claude está editando</h2><p>Ya está trabajando. No tenés que hacer nada: esta pantalla se actualiza sola cuando termine.</p>`
+        : `<h2>${esc(j.estado_txt)}</h2><p>Ahora le toca a Claude. Si todavía no le avisaste, tocá el botón:</p>
+        <div class="row"><button class="btn pri huge" onclick="avisarClaude()">📨 Avisar a Claude</button>
+        <button class="btn ghost" id="cancelar">Volver a borrador</button></div>
+        <p class="small muted" style="margin-top:10px">Esta pantalla se actualiza sola cuando Claude termine.</p>
         ${vids.length ? `<details style="margin-top:14px"><summary>Ver última versión mientras tanto</summary>${playerHTML(j)}</details>` : ""}`;
     case "storyboard_listo":
       return `<h2>Storyboard para aprobar</h2><p class="small muted">Así va a quedar el video, momento a momento. Tocá la imagen para verla grande.</p>
@@ -580,11 +622,12 @@ function bindAction(j) {
   const act = (accion, extra = {}) => api(`/api/trabajo/${j.id}/accion`, { method: "POST", body: { accion, ...extra } })
     .then(() => refreshJob(true)).catch(e => toast(e.message, true));
   const on = (sel, fn) => { const el = $(sel); if (el) el.onclick = fn; };
-  on("#enviar", () => act("enviar").then(() => toast("Enviado. Ahora pegá el mensaje en Cowork.")));
+  const thenNotify = t => () => avisarClaude(t);
+  on("#enviar", () => act("enviar").then(thenNotify("¡Enviado! Ahora avisale a Claude")));
   on("#cancelar", () => confirm("¿Volver a borrador? Claude no va a procesar este video hasta que lo envíes de nuevo.") && act("cancelar"));
-  on("#aprobar", () => act("aprobar", { texto: ($("#cambiosTxt") || {}).value || "" }));
-  on("#cambios", () => act("cambios", { texto: $("#cambiosTxt").value }));
-  on("#responder", () => act("responder", { texto: $("#resp").value }));
+  on("#aprobar", () => act("aprobar", { texto: ($("#cambiosTxt") || {}).value || "" }).then(thenNotify("¡Aprobado! Ahora avisale a Claude")));
+  on("#cambios", () => $("#cambiosTxt").value.trim() ? act("cambios", { texto: $("#cambiosTxt").value }).then(thenNotify("Cambios pedidos. Avisale a Claude")) : toast("Escribí qué querés cambiar.", true));
+  on("#responder", () => act("responder", { texto: $("#resp").value }).then(thenNotify("Respuesta enviada. Avisale a Claude")));
   on("#publicado", () => act("publicado"));
   on("#archivar", () => act("archivar"));
   on("#reabrir", () => act("reabrir"));
@@ -592,7 +635,7 @@ function bindAction(j) {
     const t = $("#vid").currentTime, s = `[${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}] `;
     const c = $("#corr"); c.value = (c.value ? c.value.trimEnd() + "\n" : "") + s; c.focus();
   });
-  on("#corregir", () => act("correccion", { texto: $("#corr").value, version: (S.job.videos.find(x => x.nombre === S.ver) || S.job.videos.at(-1)).nombre }));
+  on("#corregir", () => !$("#corr").value.trim() ? toast("Escribí qué querés corregir.", true) : act("correccion", { texto: $("#corr").value, version: (S.job.videos.find(x => x.nombre === S.ver) || S.job.videos.at(-1)).nombre }).then(thenNotify("Corrección pedida. Avisale a Claude")));
   document.querySelectorAll("[data-ver]").forEach(b => b.onclick = () => { S.ver = b.dataset.ver; renderJobDynamic(); });
 }
 

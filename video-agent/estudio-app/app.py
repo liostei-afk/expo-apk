@@ -574,6 +574,9 @@ class Handler(BaseHTTPRequestHandler):
                 subprocess.Popen(["xdg-open", str(target)])
             return self.send_json({"ok": True})
 
+        if p == "/api/abrir-claude":
+            return self.send_json({"abierto": open_claude()})
+
         if p == "/api/carpeta":
             nueva = Path(data.get("carpeta", "")).expanduser()
             if not str(nueva).strip():
@@ -586,6 +589,26 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"ok": True, "carpeta": str(ROOT)})
 
         return self.fail("No encontrado", 404)
+
+
+def open_claude():
+    """Intenta abrir (o traer al frente) la app de escritorio de Claude. Devuelve True si la encontró."""
+    if not sys.platform.startswith("win"):
+        return False
+    local = Path(os.environ.get("LOCALAPPDATA", ""))
+    candidatos = [CFG.get("claude_exe", ""),
+                  local / "AnthropicClaude" / "claude.exe",
+                  local / "Programs" / "Claude" / "Claude.exe",
+                  local / "Programs" / "claude" / "Claude.exe",
+                  Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Claude" / "Claude.exe"]
+    for c in candidatos:
+        if c and Path(c).is_file():
+            try:
+                subprocess.Popen([str(c)], close_fds=True)
+                return True
+            except OSError:
+                pass
+    return False
 
 
 def already_running():

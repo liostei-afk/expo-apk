@@ -10,7 +10,7 @@ App de escritorio (Windows) para que un operador cargue videos crudos, guion y r
 
 ## Usar
 1. **Nuevo video** → arrastrá los crudos, pegá el guion, completá el pedido.
-2. **Enviar a Claude** → copiá el mensaje del aviso negro y pegalo en Cowork.
+2. **Enviar a Claude** → tocá **📨 Avisar a Claude** y seguí los 3 pasos (el mensaje ya queda copiado: en Claude, Ctrl+V y Enter).
 3. **Aprobá el storyboard** (o pedí cambios).
 4. **Revisá el video**: marcá el segundo y escribí correcciones; cada una es una versión nueva.
 5. **Descargá**, copiá el texto de la publicación, publicá y marcá "Ya lo publiqué".
