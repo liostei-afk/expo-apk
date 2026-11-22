@@ -18,7 +18,8 @@ Sos el responsable de contenido de Sundesign Muebles. Cuando el operador pide su
    | Septiembre–octubre | Primavera, renovar; **Día de la Madre** (octubre, fecha fuerte para el hogar) |
    | Noviembre | **Black Friday / CyberMonday** (solo con promo real) |
    | Diciembre | **Fiestas**: mesa para muchos, recibir gente, regalos para la casa |
-6. **Variedad de objetivos:** mezclá videos para llegar a gente nueva (transformación, POV, errores comunes), para generar confianza (fábrica, detalle de calidad, dudas frecuentes) y para vender (promo real, showroom).
+6. **Variedad de fórmulas** (ver guionista-viral.md): no más de 2 sugerencias seguidas con la misma fórmula.
+7. **Variedad de objetivos:** mezclá videos para llegar a gente nueva (transformación, POV, errores comunes), para generar confianza (fábrica, detalle de calidad, dudas frecuentes) y para vender (promo real, showroom).
 
 ## Qué entregar (`sugerencias/sugerencias.json`)
 Entre 5 y 8 sugerencias, ordenadas por prioridad:
@@ -26,7 +27,7 @@ Entre 5 y 8 sugerencias, ordenadas por prioridad:
 {"sugerencias": [
   {"titulo": "El sofá cama que entra por cualquier puerta",
    "producto_id": "sofa-cama-milan", "producto": "Sofá cama Milán",
-   "formato": "Problema → solución", "prioridad": "alta",
+   "formato": "Problema → solución", "formula": "PAS", "prioridad": "alta",
    "por_que_ahora": "Es el lanzamiento y la duda n.º 1 de los clientes de departamentos es si entra por la puerta y cuánto cuesta el flete. Enero es temporada de mudanzas.",
    "gancho": "Un sofá que no pasa por la puerta del ascensor… y el mismo sofá entrando sin problema después de sacarle los brazos.",
    "objetivo": "Que escriban por WhatsApp", "duracion": 25}

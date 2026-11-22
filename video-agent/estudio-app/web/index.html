@@ -434,6 +434,7 @@ const views = {
             </div>
             <div class="cols2">
               <div class="field"><label class="f">¿Quién aparece?</label><select data-k="quien_aparece">${["Presentador a cámara", "Solo producto (sin persona)", "Presentador + otras personas", "Voz en off sobre el producto", "Que lo elija Claude"].map(o => `<option ${p.quien_aparece === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
+              <div class="field"><label class="f">Fórmula del guion</label><select data-k="formula">${["Que la elija Claude", "Gancho + historia + pago", "PAS (problema, agitación, solución)", "Lista o paso a paso", "Mito vs. realidad", "Antes / después", "Demostración / prueba", "Comparación (¿cuál elegís?)"].map(o => `<option ${p.formula === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
               <div class="field"><label class="f">¿Dónde se filma?</label><select data-k="locacion">${["Showroom Caballito", "Fábrica", "Casa de un cliente", "Otro lugar"].map(o => `<option ${p.locacion === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>
             </div>
             <div class="field"><label class="f">Notas para Claude</label><textarea data-k="notas" rows="3" placeholder="Ej: en el segundo 20 me equivoqué con el precio, no lo uses. Que se vea bien la tela.">${esc(p.notas || "")}</textarea></div>
@@ -520,7 +521,7 @@ const views = {
         ${sg.actualizado ? `<span class="small muted">Últimas: ${esc(sg.actualizado)}</span>` : ""}</div></div>
       ${sg.estado === "pendiente" ? `<div class="card" style="margin-bottom:18px"><h2>⏳ Esperando a Claude</h2><p>Si todavía no le avisaste:</p><button class="btn pri huge" onclick="avisarClaude()">📨 Avisar a Claude</button></div>` : ""}
       ${items.length ? `<div class="ideas">${items.map(x => `<div class="idea ${x.prioridad === "alta" ? "rec" : ""}">
-        <div class="row" style="gap:6px">${x.prioridad ? `<span class="badge ${x.prioridad === "alta" ? "" : "g"}">Prioridad ${esc(x.prioridad)}</span>` : ""}${x.formato ? `<span class="badge g">${esc(x.formato)}</span>` : ""}${x.duracion ? `<span class="badge g">${esc(x.duracion)} s</span>` : ""}</div>
+        <div class="row" style="gap:6px">${x.prioridad ? `<span class="badge ${x.prioridad === "alta" ? "" : "g"}">Prioridad ${esc(x.prioridad)}</span>` : ""}${x.formato ? `<span class="badge g">${esc(x.formato)}</span>` : ""}${x.formula ? `<span class="badge g">📐 ${esc(x.formula)}</span>` : ""}${x.duracion ? `<span class="badge g">${esc(x.duracion)} s</span>` : ""}</div>
         <h3>${esc(x.titulo)}</h3>
         ${x.producto ? `<div class="small"><b>📦 ${esc(x.producto)}</b></div>` : ""}
         <div><div class="k">Por qué ahora</div><div class="v">${esc(x.por_que_ahora || "")}</div></div>
@@ -799,7 +800,7 @@ function ideasHTML(j) {
   const ideas = j.pre.ideas || [];
   return `<h2>💡 Elegí la idea para este video</h2><p class="small muted">Claude propone ideas pensadas para que el video se vea, se guarde y se comparta. La ⭐ es su recomendada.</p>
     <div class="ideas">${ideas.map((x, k) => `<div class="idea ${x.recomendada ? "rec" : ""}">
-      <div class="row" style="gap:6px">${x.recomendada ? '<span class="badge">⭐ Recomendada</span>' : ""}<span class="badge g">${esc(x.formato || "")}</span>${x.duracion ? `<span class="badge g">${esc(x.duracion)} s</span>` : ""}</div>
+      <div class="row" style="gap:6px">${x.recomendada ? '<span class="badge">⭐ Recomendada</span>' : ""}<span class="badge g">${esc(x.formato || "")}</span>${x.formula ? `<span class="badge g">📐 ${esc(x.formula)}</span>` : ""}${x.duracion ? `<span class="badge g">${esc(x.duracion)} s</span>` : ""}</div>
       <h3>${esc(x.titulo)}</h3>
       <div><div class="k">El gancho</div><div class="v">${esc(x.gancho)}</div></div>
       <div><div class="k">Por qué funciona</div><div class="v">${esc(x.por_que_funciona)}</div></div>

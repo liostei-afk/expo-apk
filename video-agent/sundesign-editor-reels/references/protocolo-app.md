@@ -118,6 +118,8 @@ El texto de la corrección está en el último mensaje del historial (puede trae
 | `efectos` | Si viene vacío, decidí según el estilo. Si trae ítems, usá esos: `titulos`, `subtitulos`, `lista`, `zoom_cortes` (`jump_zoom`), `logo` (sticker), `promo_gigante`, `sonidos` (`sfx`) |
 | `color` | `""`, `calido`, `luminoso`, `vivo`, `frio`, `oscuro` → `color` del plan |
 | `directo` | `true` = no esperar aprobación del storyboard |
+| `formula` | Fórmula del cuerpo del guion pedida por el operador (ver guionista-viral.md). "Que la elija Claude" o vacío = elegila vos según el objetivo; si pidió una, usala en el guion y en al menos 2 de las 5 ideas |
+| `quien_aparece`, `locacion` | Quién sale en cámara y dónde se filma: las ideas y el plan tienen que poder hacerse con eso |
 | `notas` | Indicaciones libres del operador. Tienen prioridad sobre el estilo |
 
 ## Estilos: `por_analizar` → ficha
