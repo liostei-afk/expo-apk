@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
-VERSION = "2026.11.23b"
+VERSION = "2026.11.24"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -131,7 +131,7 @@ def write_json(p, data):
 
 
 def ensure_workspace():
-    for d in ("trabajos", "estilos", "musica", "productos", "sugerencias", "marca", "banco-de-material", "calendario"):
+    for d in ("trabajos", "estilos", "musica", "productos", "sugerencias", "marca", "banco-de-material", "calendario", "referentes"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
     leemes = {
         "marca": "Logos (PNG con fondo transparente), tipografías y manual de marca de Sundesign.\n"
@@ -351,6 +351,25 @@ def style_summary(d):
             "historial": meta.get("historial", [])[-8:]}
 
 
+def ref_dir(rid):
+    d = ROOT / "referentes" / rid
+    if not re.fullmatch(r"[a-z0-9-]+", rid) or not d.is_dir():
+        raise KeyError(rid)
+    return d
+
+
+def ref_summary(d, full=False):
+    f = read_json(d / "referente.json", {})
+    mat = list_files(d / "material", IMG_EXT | VIDEO_EXT)
+    out = {"id": d.name, "nombre": f.get("nombre", d.name), "red": f.get("red", "instagram"), "tipo": f.get("tipo", ""),
+           "estado": f.get("estado", "borrador"), "material": mat, "actualizado": f.get("actualizado", "")}
+    if full:
+        out["ficha"] = f
+        out["informe"] = (d / "informe.md").read_text(encoding="utf-8") if (d / "informe.md").exists() else ""
+        out["propuestas"] = read_json(d / "propuestas.json", {})
+    return out
+
+
 def prod_dir(pid):
     d = ROOT / "productos" / pid
     if not re.fullmatch(r"[a-z0-9-]+", pid) or not d.is_dir():
@@ -439,6 +458,19 @@ def write_cola():
             n += 1
             lines += [f"## {n}. Estilo `estilos/{d.name}` — analizar referencias",
                       "- Estudiar los videos de `referencias/` y escribir `estilo.md` + `muestra.jpg`. Dejar en `listo`.", ""]
+    for d in sorted((ROOT / "referentes").glob("*")):
+        if d.is_dir() and read_json(d / "referente.json", {}).get("estado") == "por_analizar":
+            n += 1
+            f = read_json(d / "referente.json", {})
+            lines += [f"## {n}. Referente `referentes/{d.name}` — {f.get('nombre', d.name)}",
+                      "- Analizar el material de `material/` según `references/referentes.md` y escribir `informe.md` + "
+                      "`propuestas.json`. Dejar `referente.json` en `listo`.", ""]
+    rc = read_json(ROOT / "referentes" / "estado.json", {})
+    if rc.get("estado") == "pendiente":
+        n += 1
+        lines += [f"## {n}. Comparativo de referentes — `referentes/comparativo.md`",
+                  "- Comparar los referentes analizados entre sí y con Sundesign según `references/referentes.md`. "
+                  "Dejar `referentes/estado.json` en `listo`.", ""]
     cp = read_json(ROOT / "calendario" / "estado.json", {})
     if cp.get("estado") == "pendiente":
         n += 1
@@ -475,6 +507,11 @@ def cola_count():
     if read_json(ROOT / "sugerencias" / "estado.json", {}).get("estado") == "pendiente":
         n += 1
     if read_json(ROOT / "calendario" / "estado.json", {}).get("estado") == "pendiente":
+        n += 1
+    for d in (ROOT / "referentes").glob("*"):
+        if d.is_dir() and read_json(d / "referente.json", {}).get("estado") == "por_analizar":
+            n += 1
+    if read_json(ROOT / "referentes" / "estado.json", {}).get("estado") == "pendiente":
         n += 1
     return n
 
@@ -573,6 +610,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(job_full(m.group(1)))
             if m := re.fullmatch(r"/api/producto/([a-z0-9-]+)", p):
                 return self.send_json(product_summary(prod_dir(m.group(1)), True))
+            if p == "/api/referentes":
+                refs = [ref_summary(d) for d in sorted((ROOT / "referentes").glob("*")) if d.is_dir()]
+                comp = ROOT / "referentes" / "comparativo.md"
+                return self.send_json({"referentes": refs, "estado": read_json(ROOT / "referentes" / "estado.json", {}),
+                                       "comparativo": comp.read_text(encoding="utf-8") if comp.exists() else ""})
+            if m := re.fullmatch(r"/api/referente/([a-z0-9-]+)", p):
+                return self.send_json(ref_summary(ref_dir(m.group(1)), True))
             if p == "/api/calendario":
                 return self.send_json(calendar_data())
             if p == "/api/cola":
@@ -598,6 +642,8 @@ class Handler(BaseHTTPRequestHandler):
                 target = d / "miniatura.jpg" if m.group(2) == "miniatura" else d / "brutos" / nombre
             elif m := re.fullmatch(r"estilo/([a-z0-9-]+)/referencias", destino):
                 target = style_dir(m.group(1)) / "referencias" / nombre
+            elif m := re.fullmatch(r"referente/([a-z0-9-]+)/material", destino):
+                target = ref_dir(m.group(1)) / "material" / nombre
             elif m := re.fullmatch(r"producto/([a-z0-9-]+)/fotos", destino):
                 target = prod_dir(m.group(1)) / "fotos" / nombre
             elif destino == "musica":
@@ -742,7 +788,7 @@ class Handler(BaseHTTPRequestHandler):
 
         if p == "/api/borrar-archivo":
             f = (ROOT / data.get("ruta", "")).resolve()
-            ok = inside(f, ROOT) and f.is_file() and (f.parent.name in ("brutos", "referencias", "musica", "fotos"))
+            ok = inside(f, ROOT) and f.is_file() and (f.parent.name in ("brutos", "referencias", "musica", "fotos", "material"))
             if not ok:
                 return self.fail("Solo se pueden borrar archivos cargados por el operador.", 403)
             f.unlink()
@@ -793,6 +839,90 @@ class Handler(BaseHTTPRequestHandler):
             write_json(jd / "estado.json", {"estado": "borrador", "actualizado": now(),
                                             "historial": [{"fecha": now(), "quien": "operador", "evento": "Creado desde el catálogo"}]})
             return self.send_json({"id": jd.name})
+
+        if p == "/api/referente":
+            nombre = (data.get("nombre") or "referente").strip()
+            rid = slug(nombre.lstrip("@"), 40)
+            d = ROOT / "referentes" / rid
+            k = 2
+            while d.exists():
+                d = ROOT / "referentes" / f"{rid}-{k}"
+                k += 1
+            (d / "material").mkdir(parents=True)
+            write_json(d / "referente.json", {"nombre": nombre if nombre.startswith("@") else "@" + nombre, "red": "instagram",
+                                              "tipo": "", "estado": "borrador", "creado": now(), "actualizado": now(),
+                                              "historial": [{"fecha": now(), "evento": "Creado"}]})
+            return self.send_json({"id": d.name})
+
+        if m := re.fullmatch(r"/api/referente/([a-z0-9-]+)/(guardar|analizar|borrar|crear-estilo|a-sugerencias|a-calendario)", p):
+            d = ref_dir(m.group(1))
+            f = read_json(d / "referente.json", {})
+            acc = m.group(2)
+            if acc == "guardar":
+                f.update({k: v for k, v in data.items() if k not in ("estado", "historial", "creado")})
+            elif acc == "analizar":
+                if not list_files(d / "material"):
+                    return self.fail("Cargá al menos un video o una captura de esta cuenta.")
+                f["estado"] = "por_analizar"
+                f.setdefault("historial", []).append({"fecha": now(), "evento": "Enviado a analizar"})
+            elif acc == "borrar":
+                shutil.rmtree(d)
+                write_cola()
+                return self.send_json({"ok": True})
+            elif acc == "crear-estilo":  # copia el material como referencias de un estilo nuevo
+                nombre = f"Estilo de {f.get('nombre', d.name)}"
+                sid = slug(nombre, 30)
+                sd = ROOT / "estilos" / sid
+                k = 2
+                while sd.exists():
+                    sd = ROOT / "estilos" / f"{sid}-{k}"
+                    k += 1
+                (sd / "referencias").mkdir(parents=True)
+                for x in (d / "material").iterdir():
+                    if x.is_file():
+                        shutil.copy2(x, sd / "referencias" / x.name)
+                notas = (read_json(d / "propuestas.json", {}).get("estilo") or {}).get("notas", "") or f.get("porque", "")
+                write_json(sd / "estilo.json", {"nombre": nombre, "estado": "por_analizar", "creado": now(), "notas": notas,
+                                                "origen_referente": d.name,
+                                                "historial": [{"fecha": now(), "evento": f"Creado desde el referente {f.get('nombre', '')}"}]})
+                f.setdefault("historial", []).append({"fecha": now(), "evento": f"Se creó el estilo «{nombre}»"})
+                write_json(d / "referente.json", f)
+                write_cola()
+                return self.send_json({"ok": True, "estilo": sd.name})
+            elif acc == "a-sugerencias":  # pasa ideas propuestas a Sugerencias
+                props = read_json(d / "propuestas.json", {})
+                idx = data.get("ideas")
+                ideas = [x for i, x in enumerate(props.get("ideas", [])) if idx is None or i in idx]
+                sg = read_json(ROOT / "sugerencias" / "sugerencias.json", {"sugerencias": []})
+                for x in ideas:
+                    sg["sugerencias"].insert(0, {**x, "por_que_ahora": x.get("por_que", x.get("por_que_ahora", "")),
+                                                 "origen": f"Referente {f.get('nombre', '')}", "prioridad": x.get("prioridad", "media")})
+                write_json(ROOT / "sugerencias" / "sugerencias.json", sg)
+                for i, x in enumerate(props.get("ideas", [])):
+                    if idx is None or i in idx:
+                        x["en_sugerencias"] = True
+                write_json(d / "propuestas.json", props)
+                return self.send_json({"ok": True, "n": len(ideas)})
+            elif acc == "a-calendario":  # usar un formato propuesto como formato fijo de un día
+                c = ROOT / "calendario"
+                cfg = read_json(c / "config.json", {})
+                dia, formato = data.get("dia"), (data.get("formato") or "").strip()
+                if not dia or not formato:
+                    return self.fail("Falta el día o el formato")
+                ff = [x for x in cfg.get("formatos_fijos", []) if x.get("dia") != dia] + [{"dia": dia, "formato": formato}]
+                cfg["formatos_fijos"] = ff
+                write_json(c / "config.json", cfg)
+                return self.send_json({"ok": True})
+            f["actualizado"] = now()
+            write_json(d / "referente.json", f)
+            write_cola()
+            return self.send_json({"ok": True})
+
+        if p == "/api/referentes/comparativo":
+            write_json(ROOT / "referentes" / "estado.json", {"estado": "pendiente", "actualizado": now(),
+                                                             "pedido": (data.get("texto") or "").strip()})
+            write_cola()
+            return self.send_json({"ok": True})
 
         if p == "/api/calendario/config":
             c = ROOT / "calendario"

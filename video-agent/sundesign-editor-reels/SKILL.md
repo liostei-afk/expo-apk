@@ -28,6 +28,9 @@ Cuando el pedido es crear un video **desde cero** ("ideas para reels", "escribim
 Si piden sugerencias ("qué reels hacemos", "qué publicamos este mes"), seguí `references/agente-marketing.md` (catálogo, productos nuevos, lo ya hecho, resultados, jerarquía de la marca y calendario comercial argentino).
 Si piden un **calendario o plan del mes** ("armá el calendario de diciembre", "qué publicamos cada día"), seguí `references/calendario.md` (ritmo sostenible, pilares, series, fechas comerciales, días de rodaje en tanda, publicación y métricas).
 
+## Referentes: aprender de otras cuentas
+Si piden analizar cuentas de competidores o referentes ("mirá esta cuenta", "qué podemos copiar de…"), seguí `references/referentes.md`: mecanismo y no superficie, honestidad sobre lo que no es replicable, y todo traducido a lo que Sundesign puede hacer con su equipo.
+
 ## Modo app (Estudio de Reels)
 Si la carpeta conectada tiene **`COLA.md`** y `trabajos/` (la arma la app de escritorio "Estudio de Reels"), seguí **`references/protocolo-app.md`**: procesá la cola en orden, trabajá dentro de cada `trabajos/<id>/salida/`, usá el estilo elegido en `estilos/<id>/estilo.md` y comunicate con el operador solo a través de `estado.json`, `caption.md` y `resumen.md`. Ese protocolo manda sobre las carpetas descriptas abajo.
 

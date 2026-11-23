@@ -28,6 +28,12 @@ lo que escribís en `salida/` y en `estado.json` aparece en la pantalla del oper
 │   ├── config.json               ← ritmo, pilares y series (los edita el operador)
 │   ├── piezas.json               ← piezas del calendario y fechas comerciales
 │   └── estado.json               ← {"estado": "pendiente"|"listo", "mes": "AAAA-MM", "pedido": "..."}
+├── referentes/<id>/
+│   ├── referente.json            ← cuenta de referencia (la carga el operador)
+│   ├── material/                 ← videos y capturas de esa cuenta. NUNCA los modifiques
+│   ├── informe.md                ← tu análisis
+│   └── propuestas.json           ← formatos, ideas, estilo y qué no copiar
+├── referentes/comparativo.md + estado.json
 ├── sugerencias/
 │   ├── estado.json               ← {"estado": "pendiente"|"listo", "pedido": "..."}
 │   └── sugerencias.json          ← lo escribís vos (ver references/agente-marketing.md)
@@ -67,6 +73,9 @@ Antes de ideas, guion, plan o edición, leé `productos/<producto_id>/producto.j
 
 ### Plan del calendario (`calendario/estado.json` en `pendiente`)
 Seguí **`references/calendario.md`**: armá las piezas del mes pedido en `calendario/piezas.json` (sin borrar las existentes) según ritmo, pilares, catálogo, métricas y fechas comerciales; dejá `estado.json` en `listo`. Cuando el operador crea un video desde una pieza, la app genera un trabajo en `guion_pendiente` con la pieza en `pedido.json → idea_elegida` (incluye `pilar` y `fecha_publicacion`).
+
+### Referentes (`referente.json` en `por_analizar`) y comparativo
+Seguí **`references/referentes.md`**: analizá el material, escribí `informe.md` y `propuestas.json`, y dejá el referente en `listo`. El operador después pasa con un botón los formatos al calendario, las ideas a Sugerencias o crea un estilo nuevo con el material. Si `referentes/estado.json` está en `pendiente`, escribí `referentes/comparativo.md`.
 
 ### Sugerencias de contenido (`sugerencias/estado.json` en `pendiente`)
 Seguí **`references/agente-marketing.md`**: mirá el catálogo, los trabajos hechos, la fecha y el pedido del operador; escribí `sugerencias/sugerencias.json` y dejá `estado.json` en `listo`. Cuando el operador elige una, la app crea un trabajo nuevo en `guion_pendiente` con la sugerencia en `pedido.json → idea_elegida`.
