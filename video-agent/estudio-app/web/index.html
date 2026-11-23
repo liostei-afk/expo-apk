@@ -551,13 +551,19 @@ const views = {
     const sinFecha = C.piezas.filter(x => !x.fecha);
     const cells = [];
     for (let k = 0; k < offset; k++) cells.push(`<div class="day out"></div>`);
+    const H = { ...DEF_CAL.historias, ...(C.config.historias || {}) }, CR = { ...DEF_CAL.carrusel, ...(C.config.carrusel || {}) };
+    const FF = Object.fromEntries((C.config.formatos_fijos || []).map(x => [x.dia, x.formato]));
+    const dname = dt => DIAS[(dt.getDay() + 6) % 7];
     for (let d = 1; d <= days; d++) {
-      const f = `${ym}-${String(d).padStart(2, "0")}`;
+      const f = `${ym}-${String(d).padStart(2, "0")}`, dn = dname(new Date(Y, M - 1, d));
+      const hint = [ (C.config.ritmo || {}).dias && C.config.ritmo.dias.includes(dn) ? `🎬 ${esc(FF[dn] || "reel")}` : "",
+        CR.activo && CR.dia === dn ? "🖼️ carrusel" : "", H.activo ? (H.descanso === dn ? "😴 sin historias" : "📱 historias") : "" ].filter(Boolean).join(" · ");
       const moms = (C.momentos || []).filter(m => m.fecha === f);
       const pzs = C.piezas.filter(x => x.fecha === f);
       cells.push(`<div class="day ${f === today ? "today" : ""}"><div class="dn">${d}<button class="add" data-add="${f}" title="Agregar">＋</button></div>
+        <div class="st small" style="font-size:10.5px;color:var(--ink-3);line-height:1.3">${hint}</div>
         ${moms.map(m => `<div class="mom" title="${esc(m.nota || "")}">${esc(m.nombre)}</div>`).join("")}
-        ${pzs.map(x => `<div class="pz" data-pz="${x.id}" style="--c:${(pil[x.pilar] || {}).color || "#ccc"}">${icon[x.estado] || "💡"} ${esc(x.titulo || "(sin título)")}<div class="st">${esc(x.hora || "")} ${esc(x.formato || "reel")}</div></div>`).join("")}
+        ${pzs.map(x => `<div class="pz" data-pz="${x.id}" style="--c:${(pil[x.pilar] || {}).color || "#ccc"}">${icon[x.estado] || "💡"} ${esc(x.titulo || "(sin título)")}<div class="st">${esc(x.hora || "")} ${esc(x.formato === "reel" || !x.formato ? (x.formato_video || "reel") : x.formato)}</div></div>`).join("")}
       </div>`);
     }
     const n = delMes.length || 1;
@@ -565,9 +571,9 @@ const views = {
     const pedido = C.pedido.estado === "pendiente";
     $("#view").innerHTML = `
       <div class="top"><h1>Calendario</h1><span class="sp"></span>
-        <button class="btn" id="ritmo">⚙️ Ritmo y pilares</button>
+        <button class="btn" id="ritmo">⚙️ Ritmo, formatos y equipo</button>
         <button class="btn pri big" id="pedirPlan">🧠 Pedir el plan del mes</button></div>
-      ${C.config.propuesta_inicial ? `<div class="notice" style="margin-bottom:14px">Los <b>pilares</b> (los temas fijos de la cuenta) y el <b>ritmo</b> (cuántos videos por semana y qué días) son una propuesta inicial. Revisalos en <b>⚙️ Ritmo y pilares</b> antes de pedir el primer plan.</div>` : ""}
+      ${C.config.propuesta_inicial ? `<div class="notice" style="margin-bottom:14px">Los <b>pilares</b> (los temas fijos de la cuenta) y el <b>ritmo</b> (cuántos videos por semana y qué días) son una propuesta inicial. Revisalos en <b>⚙️ Ritmo, formatos y equipo</b> y completá <b>quién mira</b> los videos y <b>qué equipo tenés</b> antes de pedir el primer plan.</div>` : ""}
       ${pedido ? `<div class="claudebar"><div class="ic">🧠</div><div><b>Claude tiene que armar el plan de ${esc(C.pedido.mes || "")}</b><span>Si todavía no le avisaste, tocá el botón.</span></div><button class="btn pri huge" onclick="avisarClaude()">📨 Avisar a Claude</button></div>` : ""}
       <div class="card">
         <div class="calbar"><button class="btn ghost" id="prevM">‹</button><h2>${meses[M - 1]} ${Y}</h2><button class="btn ghost" id="nextM">›</button>
@@ -705,6 +711,8 @@ function openPieza(pz) {
       <div class="field"><label class="f">Producto</label><select id="pPro"><option value="">— Marca / showroom —</option>${prods.map(x => `<option value="${x.id}" ${pz.producto_id === x.id ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></div>
       <div class="field"><label class="f">Estado</label><select id="pEst">${[["idea", "💡 Idea"], ["en_produccion", "🎬 En producción"], ["listo", "✅ Listo para publicar"], ["programado", "🗓️ Programado"], ["publicado", "📤 Publicado"]].map(([v, l]) => `<option value="${v}" ${(pz.estado || "idea") === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
     </div>
+    <div class="cols2"><div class="field"><label class="f">Formato de video</label><select id="pFv"><option value="">—</option>${FORMATOS_12.map(f => `<option ${pz.formato_video === f ? "selected" : ""}>${f}</option>`).join("")}</select></div>
+      <div class="field"><label class="f">Enfoque</label><select id="pEnf"><option value="">—</option>${["Enseñar", "Romper una creencia", "Caso real", "Conectar"].map(f => `<option ${pz.enfoque === f ? "selected" : ""}>${f}</option>`).join("")}</select></div></div>
     <div class="field"><label class="f">Gancho</label><textarea id="pGan" rows="2">${esc(pz.gancho || "")}</textarea></div>
     <div class="field"><label class="f">Notas / por qué</label><textarea id="pNot" rows="2">${esc(pz.notas || "")}</textarea></div>
     <div class="checks" style="margin-bottom:12px">${[["instagram", "Instagram"], ["tiktok", "TikTok"], ["facebook", "Facebook"]].map(([v, l]) => `<label><input type="checkbox" data-can="${v}" ${(pz.canales || []).includes(v) ? "checked" : ""}> ${l}</label>`).join("")}</div>
@@ -727,6 +735,7 @@ function openPieza(pz) {
     return { ...pz, titulo: $("#pTit", m).value, fecha: $("#pFec", m).value.trim(), hora: $("#pHor", m).value.trim(), pilar: $("#pPil", m).value,
       formato: $("#pFor", m).value, producto_id: pr ? pr.id : "", producto: pr ? pr.nombre : (pz.producto_id ? "" : pz.producto || ""),
       estado: $("#pEst", m).value, gancho: $("#pGan", m).value, notas: $("#pNot", m).value,
+      formato_video: $("#pFv", m).value, enfoque: $("#pEnf", m).value,
       canales: [...m.querySelectorAll("[data-can]:checked")].map(i => i.dataset.can),
       links: { instagram: $("#pLig", m).value.trim(), tiktok: $("#pLtt", m).value.trim() }, metricas: met2 };
   };
@@ -741,15 +750,42 @@ function openPieza(pz) {
     location.hash = "#/trabajo/" + r.id; setTimeout(() => avisarClaude("¡Video creado! Avisale a Claude para que escriba el guion"), 700); };
 }
 
+const FORMATOS_12 = ["Antes y después", "Pregunta y respuesta", "Errores comunes", "Mitos y verdades", "Tutorial", "Ranking",
+  "Comparativa", "Historia o caso real", "Escena de doble personaje", "Doble pantalla", "Yap (hablar a cámara)", "Reacciona a una noticia"];
+const DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+const DEF_CAL = { formatos_fijos: [], carrusel: { activo: true, dia: "miercoles" }, historias: { activo: true, por_semana: 4, descanso: "domingo" },
+  min_horas_entre_reels: 24, publico: "", equipo: { quien_filma: "", quien_aparece: "", horas_semana: "", dias_rodaje_mes: 2, edita: "Claude (app)", notas: "" } };
+
 function openRitmo() {
   const cfg = S.cal.config, r = cfg.ritmo || {};
   const dias = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
   const m = document.createElement("div"); m.className = "modal";
-  m.innerHTML = `<div class="box wide"><h2>⚙️ Ritmo y pilares</h2>
+  const X = { ...DEF_CAL, ...cfg, carrusel: { ...DEF_CAL.carrusel, ...(cfg.carrusel || {}) }, historias: { ...DEF_CAL.historias, ...(cfg.historias || {}) }, equipo: { ...DEF_CAL.equipo, ...(cfg.equipo || {}) } };
+  const ff = Object.fromEntries((X.formatos_fijos || []).map(x => [x.dia, x.formato]));
+  const Dname = d => d === "miercoles" ? "Miércoles" : d === "sabado" ? "Sábado" : d[0].toUpperCase() + d.slice(1);
+  m.innerHTML = `<div class="box wide"><h2>⚙️ Ritmo, formatos y equipo</h2>
+    <h3>¿Quién mira nuestros videos?</h3>
+    <div class="field"><textarea id="rPub" rows="2" placeholder="Ej: parejas y familias de 28 a 55 años de CABA y GBA que se mudan o renuevan; departamentos chicos; reciben gente los fines de semana.">${esc(X.publico || "")}</textarea></div>
+    <h3>Equipo y capacidad real</h3><p class="small muted" style="margin-top:-4px">Claude arma el plan para que este equipo lo pueda cumplir, no para un equipo ideal.</p>
+    <div class="cols2">
+      <div class="field"><label class="f">¿Quién filma?</label><input type="text" id="eFil" value="${esc(X.equipo.quien_filma)}" placeholder="Ej: Juan (vendedor), con el celular"></div>
+      <div class="field"><label class="f">¿Quién aparece en cámara?</label><input type="text" id="eApa" value="${esc(X.equipo.quien_aparece)}" placeholder="Ej: Pablo (presentador); los demás prefieren no salir"></div>
+      <div class="field"><label class="f">Horas por semana para contenido (entre todos)</label><input type="text" id="eHs" value="${esc(X.equipo.horas_semana)}" placeholder="Ej: 4 horas"></div>
+      <div class="field"><label class="f">Días de rodaje por mes</label><select id="eDr">${[1, 2, 3, 4, 6, 8].map(v => `<option ${+X.equipo.dias_rodaje_mes === v ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+    </div>
+    <div class="field"><label class="f">Otras limitaciones</label><input type="text" id="eNot" value="${esc(X.equipo.notas)}" placeholder="Ej: solo se puede filmar en el showroom antes de las 10; la fábrica, los viernes"></div>
     <h3>Ritmo</h3><p class="small muted" style="margin-top:-4px">Mejor un ritmo que se pueda sostener todo el año que uno ambicioso que se abandona en un mes.</p>
     <div class="cols2"><div class="field"><label class="f">Reels por semana</label><select id="rN">${[1, 2, 3, 4, 5, 7].map(v => `<option ${+r.reels_por_semana === v ? "selected" : ""}>${v}</option>`).join("")}</select></div>
       <div class="field"><label class="f">Hora habitual</label><input type="text" id="rH" value="${esc(r.hora || "19:00")}"></div></div>
     <div class="field"><label class="f">Días de publicación</label><div class="checks">${dias.map(d => `<label><input type="checkbox" data-dia="${d}" ${(r.dias || []).includes(d) ? "checked" : ""}> ${d[0].toUpperCase() + d.slice(1)}</label>`).join("")}</div></div>
+    <h3 style="margin-top:16px">Formatos fijos por día</h3><p class="small muted" style="margin-top:-4px">Mientras la cuenta crece, conviene <b>elegir 2 formatos y repetirlos</b> siempre el mismo día: lo que cambia es el tema, no el formato. Se puede repetir uno en el tercer día.</p>
+    <div class="cols2">${DIAS.filter(d => (r.dias || []).includes(d)).map(d => `<div class="field"><label class="f">${Dname(d)}</label><select data-ff="${d}"><option value="">— Que lo elija Claude —</option>${FORMATOS_12.map(f => `<option ${ff[d] === f ? "selected" : ""}>${f}</option>`).join("")}</select></div>`).join("") || '<p class="muted small">Elegí primero los días de publicación.</p>'}</div>
+    <div class="cols2">
+      <div class="field"><label class="f">Carrusel semanal (en un día sin reel)</label><select id="cDia"><option value="">Sin carrusel</option>${DIAS.map(d => `<option value="${d}" ${X.carrusel.activo && X.carrusel.dia === d ? "selected" : ""}>${Dname(d)}</option>`).join("")}</select></div>
+      <div class="field"><label class="f">Historias por semana</label><select id="hN"><option value="0">Sin historias</option>${[3, 4, 5, 6].map(v => `<option ${X.historias.activo && +X.historias.por_semana === v ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+      <div class="field"><label class="f">Día sin historias (descanso)</label><select id="hD">${DIAS.map(d => `<option value="${d}" ${X.historias.descanso === d ? "selected" : ""}>${Dname(d)}</option>`).join("")}</select></div>
+      <div class="field"><label class="f">Mínimo entre reels</label><select id="mH">${[24, 48].map(v => `<option value="${v}" ${+X.min_horas_entre_reels === v ? "selected" : ""}>${v} horas</option>`).join("")}</select></div>
+    </div>
     <div class="field"><label class="f">Lugar para lo que surja (tendencias, novedades)</label><select id="rR">${[10, 20, 30].map(v => `<option value="${v}" ${+r.reactivo === v ? "selected" : ""}>${v} % del mes sin planificar</option>`).join("")}</select></div>
     <h3 style="margin-top:16px">Pilares</h3><p class="small muted" style="margin-top:-4px">Los 3 a 5 temas fijos de la cuenta. Son <b>temas</b> (no "educativo" o "promo"). El de mesas y sillas es el principal.</p>
     <div id="pils">${(cfg.pilares || []).map((x, k) => `<div class="feat" data-pil="${k}"><div class="fi">
@@ -759,15 +795,26 @@ function openRitmo() {
     <button class="btn" id="addPil">＋ Agregar pilar</button>
     <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn ghost" id="rCx">Cancelar</button><button class="btn pri big" id="rOk">Guardar</button></div></div>`;
   document.body.appendChild(m);
-  const collect = () => ({ ritmo: { reels_por_semana: +$("#rN", m).value, hora: $("#rH", m).value, reactivo: +$("#rR", m).value,
+  const collect = () => ({ publico: $("#rPub", m).value,
+    equipo: { quien_filma: $("#eFil", m).value, quien_aparece: $("#eApa", m).value, horas_semana: $("#eHs", m).value, dias_rodaje_mes: +$("#eDr", m).value, edita: X.equipo.edita, notas: $("#eNot", m).value },
+    formatos_fijos: [...m.querySelectorAll("[data-ff]")].filter(i => i.value).map(i => ({ dia: i.dataset.ff, formato: i.value })),
+    carrusel: { activo: !!$("#cDia", m).value, dia: $("#cDia", m).value || X.carrusel.dia },
+    historias: { activo: +$("#hN", m).value > 0, por_semana: +$("#hN", m).value || X.historias.por_semana, descanso: $("#hD", m).value },
+    min_horas_entre_reels: +$("#mH", m).value,
+    ritmo: { reels_por_semana: +$("#rN", m).value, hora: $("#rH", m).value, reactivo: +$("#rR", m).value,
       dias: [...m.querySelectorAll("[data-dia]:checked")].map(i => i.dataset.dia), canales: r.canales || ["instagram", "tiktok"] },
     pilares: [...m.querySelectorAll("[data-pil]")].map((row, k) => ({ id: (cfg.pilares[k] || {}).id || "p" + Date.now() + k,
       nombre: $("[data-pk=nombre]", row).value, color: $("[data-pk=color]", row).value, objetivo: +$("[data-pk=objetivo]", row).value, descripcion: $("[data-pk=descripcion]", row).value })) });
   $("#rCx", m).onclick = () => m.remove();
   m.querySelectorAll("[data-delpil]").forEach(b => b.onclick = () => b.closest("[data-pil]").remove());
-  $("#addPil", m).onclick = () => { cfg.pilares = collect().pilares.concat([{ id: "p" + Date.now(), nombre: "Nuevo pilar", color: "#cccccc", objetivo: 10, descripcion: "" }]); m.remove(); openRitmo(); };
+  m.querySelectorAll("[data-dia]").forEach(i => i.onchange = () => { Object.assign(cfg, collect()); m.remove(); openRitmo(); });
+  $("#addPil", m).onclick = () => { Object.assign(cfg, collect()); cfg.pilares = collect().pilares.concat([{ id: "p" + Date.now(), nombre: "Nuevo pilar", color: "#cccccc", objetivo: 10, descripcion: "" }]); m.remove(); openRitmo(); };
   $("#rOk", m).onclick = async () => { const c = collect(); const tot = c.pilares.reduce((a, x) => a + (x.objetivo || 0), 0);
     if (tot !== 100 && !confirm(`Los porcentajes de los pilares suman ${tot} % (lo ideal es 100 %). ¿Guardar igual?`)) return;
+    const ds = c.ritmo.dias.map(d => DIAS.indexOf(d)).sort((a, b) => a - b);
+    const juntos = ds.some((d, k) => k > 0 && d - ds[k - 1] < 1 + (c.min_horas_entre_reels >= 48 ? 1 : 0));
+    if (juntos && !confirm(`Hay días de reel con menos de ${c.min_horas_entre_reels} horas de diferencia. ¿Guardar igual?`)) return;
+    if (c.carrusel.activo && c.ritmo.dias.includes(c.carrusel.dia) && !confirm("El carrusel cae un día que ya tiene reel. La recomendación es un día libre. ¿Guardar igual?")) return;
     await api("/api/calendario/config", { method: "POST", body: c }); m.remove(); views.calendario(); };
 }
 

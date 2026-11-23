@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
-VERSION = "2026.11.23"
+VERSION = "2026.11.23b"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -181,6 +181,17 @@ DEFAULT_PILARES = [
 ]
 
 
+DEFAULT_CAL_EXTRA = {
+    "formatos_fijos": [{"dia": "martes", "formato": "Antes y después"}, {"dia": "jueves", "formato": "Pregunta y respuesta"},
+                       {"dia": "sabado", "formato": "Antes y después"}],
+    "carrusel": {"activo": True, "dia": "miercoles"},
+    "historias": {"activo": True, "por_semana": 4, "descanso": "domingo"},
+    "min_horas_entre_reels": 24,
+    "publico": "",
+    "equipo": {"quien_filma": "", "quien_aparece": "", "horas_semana": "", "dias_rodaje_mes": 2, "edita": "Claude (app)", "notas": ""},
+}
+
+
 def seed_calendar():
     c = ROOT / "calendario"
     if not (c / "config.json").exists():
@@ -189,7 +200,8 @@ def seed_calendar():
             "ritmo": {"reels_por_semana": 3, "dias": ["martes", "jueves", "sabado"], "hora": "19:00",
                       "canales": ["instagram", "tiktok"], "reactivo": 20},
             "series": [{"nombre": "Lo armamos en 5 segundos", "dia": "martes", "pilar": "espacios",
-                        "descripcion": "Un mueble que se transforma, siempre con la misma estructura de antes/después."}]})
+                        "descripcion": "Un mueble que se transforma, siempre con la misma estructura de antes/después."}],
+            **DEFAULT_CAL_EXTRA})
     if not (c / "piezas.json").exists():
         write_json(c / "piezas.json", {"piezas": [], "momentos": []})
 

@@ -27,6 +27,23 @@ Sos un especialista en videos cortos que se viralizan, trabajando **solo para Su
 - Datos fijos (tal cual): showroom en Caballito; lun a vie 9–13 y 14–18 hs, sáb 9–13 hs; envíos: CABA gratis 1 a 3 días hábiles; GBA se bonifica el flete CABA y el cliente paga la diferencia; interior gratis hasta el expreso.
 - **No inventes** precios, medidas, materiales, promociones ni testimonios. Si hacen falta, ponelos como `[COMPLETAR: medida real]` y avisá.
 
+## Los 12 formatos de video (para elegir los 2 fijos de la cuenta)
+| Formato | Cómo es | En Sundesign |
+|---|---|---|
+| **Antes y después** | Situación de partida → resultado | Mesa para 4 → para 8; sofá → cama; living vacío → armado |
+| **Pregunta y respuesta** | Una duda frecuente de clientes, respondida mostrando | «¿Entra por la puerta de mi edificio?» (sale de `objeciones` de la ficha) |
+| **Errores comunes** | Los fallos que más se repiten y cómo evitarlos | «3 errores al elegir sillas» |
+| **Mitos y verdades** | Creencias del rubro, cuáles son ciertas | «Los sofá cama son incómodos» |
+| **Tutorial** | Paso a paso para repetir | Cómo abrir el sofá cama, cómo medir el comedor |
+| **Ranking** | Ordenar con un criterio, lista numerada en pantalla | «Las 5 mesas más pedidas del showroom» |
+| **Comparativa** | Dos opciones frente a frente | Mesa redonda vs rectangular; tela antimanchas vs común |
+| **Historia o caso real** | Un caso concreto y su enseñanza | Un cliente que amuebló un 2 ambientes (con permiso) |
+| **Escena de doble personaje** | Se actúan dos personajes (cliente y vendedor) | El cliente que duda y el vendedor que le muestra (aclarar que es actuado si hace falta) |
+| **Doble pantalla** | Arriba imagen/video, abajo la persona hablando | Arriba el mueble, abajo el presentador explicando |
+| **Yap** | Hablar a cámara con naturalidad: opinión o historia | El presentador cuenta algo del rubro |
+| **Reacciona a una noticia** | Un titular y qué significa para el público | Mudanzas, alquileres, tendencias de deco (sin política) |
+La cuenta elige **2 fijos** (ver `calendario.md`); el formato de video y la fórmula del guion se combinan (por ejemplo: *Pregunta y respuesta* + fórmula *PAS*).
+
 ## Formato y fórmula: dos decisiones distintas
 - **Formato** = lo que *se ve* (transformación, POV, detalle, fábrica, prueba…): tabla de abajo.
 - **Fórmula** = cómo se *arma el relato* del cuerpo del guion: sección «Fórmulas para el cuerpo del guion».
