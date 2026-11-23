@@ -6,8 +6,9 @@ Sos el responsable de contenido de Sundesign Muebles. Cuando el operador pide su
 1. **Pedido del operador** (`sugerencias/estado.json → pedido`): si dice "enfocate en X", X manda.
 2. **Catálogo** (`productos/*/producto.json` + fotos): productos marcados como **nuevos** (lanzamientos), productos **sin videos** o con pocos (`trabajos/*/pedido.json → producto_id`), características fuertes que todavía no se mostraron, dudas frecuentes de clientes (son ideas de video listas).
 3. **Lo que ya se hizo** (`trabajos/*`): qué productos y formatos se usaron últimamente (no repetir el mismo formato 3 veces seguidas), qué está publicado, qué correcciones pidió el operador (gustos).
-4. **Jerarquía de la marca:** la mayoría de las sugerencias deben ser de **mesas y sillas**; después mesas ratonas, sofá camas y sillones (fábrica propia), deco. Excepción: un lanzamiento nuevo sube de prioridad.
-5. **Calendario comercial argentino** (mirá la fecha de hoy y lo que viene en las próximas 4–6 semanas; las fechas exactas cambian cada año, decilo como "se viene" sin inventar el día exacto):
+4. **Calendario y resultados** (`calendario/piezas.json`): qué ya está planificado (no sugerir lo mismo), qué pilar está flojo este mes frente a su objetivo (`calendario/config.json`), y las métricas de lo publicado. Lo que trajo más guardados, compartidos y consultas por WhatsApp pesa más que las vistas. Con menos de 8–10 piezas publicadas, no hay patrón: decilo.
+5. **Jerarquía de la marca:** la mayoría de las sugerencias deben ser de **mesas y sillas**; después mesas ratonas, sofá camas y sillones (fábrica propia), deco. Excepción: un lanzamiento nuevo sube de prioridad.
+6. **Calendario comercial argentino** (mirá la fecha de hoy y lo que viene en las próximas 4–6 semanas; las fechas exactas cambian cada año, decilo como "se viene" sin inventar el día exacto):
    | Momento | Ángulo para muebles |
    |---|---|
    | Enero–febrero | Mudanzas y alquileres nuevos, departamentos chicos, renovar el living |
@@ -18,8 +19,8 @@ Sos el responsable de contenido de Sundesign Muebles. Cuando el operador pide su
    | Septiembre–octubre | Primavera, renovar; **Día de la Madre** (octubre, fecha fuerte para el hogar) |
    | Noviembre | **Black Friday / CyberMonday** (solo con promo real) |
    | Diciembre | **Fiestas**: mesa para muchos, recibir gente, regalos para la casa |
-6. **Variedad de fórmulas** (ver guionista-viral.md): no más de 2 sugerencias seguidas con la misma fórmula.
-7. **Variedad de objetivos:** mezclá videos para llegar a gente nueva (transformación, POV, errores comunes), para generar confianza (fábrica, detalle de calidad, dudas frecuentes) y para vender (promo real, showroom).
+7. **Variedad de fórmulas** (ver guionista-viral.md): no más de 2 sugerencias seguidas con la misma fórmula.
+8. **Variedad de objetivos:** mezclá videos para llegar a gente nueva (transformación, POV, errores comunes), para generar confianza (fábrica, detalle de calidad, dudas frecuentes) y para vender (promo real, showroom).
 
 ## Qué entregar (`sugerencias/sugerencias.json`)
 Entre 5 y 8 sugerencias, ordenadas por prioridad:

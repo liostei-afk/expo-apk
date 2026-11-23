@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
-VERSION = "2026.11.22"
+VERSION = "2026.11.23"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -131,7 +131,7 @@ def write_json(p, data):
 
 
 def ensure_workspace():
-    for d in ("trabajos", "estilos", "musica", "productos", "sugerencias", "marca", "banco-de-material"):
+    for d in ("trabajos", "estilos", "musica", "productos", "sugerencias", "marca", "banco-de-material", "calendario"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
     leemes = {
         "marca": "Logos (PNG con fondo transparente), tipografías y manual de marca de Sundesign.\n"
@@ -145,6 +145,7 @@ def ensure_workspace():
         if not f.exists():
             f.write_text(txt, encoding="utf-8")
     seed_style()
+    seed_calendar()
     write_readme()
     write_cola()
 
@@ -164,6 +165,71 @@ def seed_style():
                                             "subtítulos blancos, barridos, logo en círculo, promo gigante.",
                                    "historial": [{"fecha": now(), "evento": "Creado desde el reel de referencia"}]})
     write_json(est / "estilos.json", {"predeterminado": "sundesign-clasico"})
+
+
+DEFAULT_PILARES = [
+    {"id": "mesa", "nombre": "La mesa del encuentro", "color": "#F9D20A", "objetivo": 40,
+     "descripcion": "Mesas y sillas: elegir, combinar y recibir gente en casa. Pilar principal (firma de la marca)."},
+    {"id": "espacios", "nombre": "Espacios chicos que rinden", "color": "#7FB3D5", "objetivo": 25,
+     "descripcion": "Muebles que se transforman o guardan: sofá camas, mesas extensibles, baulera. Departamentos reales."},
+    {"id": "fabrica", "nombre": "Hecho en nuestra fábrica", "color": "#C39BD3", "objetivo": 15,
+     "descripcion": "Proceso, materiales y calidad de los sofá camas y sillones de fábrica propia."},
+    {"id": "ideas", "nombre": "Ideas para tu casa", "color": "#82E0AA", "objetivo": 10,
+     "descripcion": "Combinaciones, mesas ratonas, deco, cómo armar un ambiente."},
+    {"id": "showroom", "nombre": "Vení al showroom", "color": "#F5B7B1", "objetivo": 10,
+     "descripcion": "Promociones reales, showroom en Caballito, envíos. Nunca más del 10–20 % del mes."},
+]
+
+
+def seed_calendar():
+    c = ROOT / "calendario"
+    if not (c / "config.json").exists():
+        write_json(c / "config.json", {
+            "propuesta_inicial": True, "pilares": DEFAULT_PILARES,
+            "ritmo": {"reels_por_semana": 3, "dias": ["martes", "jueves", "sabado"], "hora": "19:00",
+                      "canales": ["instagram", "tiktok"], "reactivo": 20},
+            "series": [{"nombre": "Lo armamos en 5 segundos", "dia": "martes", "pilar": "espacios",
+                        "descripcion": "Un mueble que se transforma, siempre con la misma estructura de antes/después."}]})
+    if not (c / "piezas.json").exists():
+        write_json(c / "piezas.json", {"piezas": [], "momentos": []})
+
+
+ESTADO_PIEZA_DESDE_TRABAJO = {"listo": "listo", "publicado": "publicado"}
+
+
+def calendar_data():
+    c = ROOT / "calendario"
+    data = read_json(c / "piezas.json", {"piezas": [], "momentos": []})
+    for pz in data.get("piezas", []):
+        tid = pz.get("trabajo_id")
+        if tid and (ROOT / "trabajos" / tid).is_dir():
+            est = read_json(ROOT / "trabajos" / tid / "estado.json", {}).get("estado", "borrador")
+            if pz.get("estado") not in ("programado", "publicado") or est == "publicado":
+                pz["estado"] = ESTADO_PIEZA_DESDE_TRABAJO.get(est, "en_produccion")
+            pz["trabajo_estado"] = ESTADOS.get(est, (est, ""))[0]
+    return {"config": read_json(c / "config.json", {}), "piezas": data.get("piezas", []),
+            "momentos": data.get("momentos", []), "pedido": read_json(c / "estado.json", {})}
+
+
+def new_job_from_idea(it, pf=None, flujo="completo", estado="guion_pendiente", evento="Creado"):
+    jid = f"{datetime.now():%Y%m%d-%H%M}-{slug(it.get('titulo', 'video'), 30)}"
+    jd = ROOT / "trabajos" / jid
+    k = 2
+    while jd.exists():
+        jd = ROOT / "trabajos" / f"{jid}-{k}"
+        k += 1
+    (jd / "brutos").mkdir(parents=True)
+    (jd / "salida").mkdir()
+    pf = pf or {}
+    default = read_json(ROOT / "estilos" / "estilos.json", {}).get("predeterminado", "")
+    write_json(jd / "pedido.json", {"titulo": it.get("titulo", "Video"), "producto": it.get("producto") or pf.get("nombre", ""),
+                                    "producto_id": it.get("producto_id", ""), "categoria": pf.get("categoria", ""),
+                                    "objetivo": it.get("objetivo", "Que escriban por WhatsApp"), "estilo": default,
+                                    "duracion": it.get("duracion", 30), "plataformas": ["instagram", "tiktok"],
+                                    "formula": it.get("formula", ""), "flujo": flujo, "idea_elegida": it, "creado": now()})
+    write_json(jd / "estado.json", {"estado": estado, "actualizado": now(),
+                                    "historial": [{"fecha": now(), "quien": "operador", "evento": evento}]})
+    return jd.name
 
 
 def write_readme():
@@ -361,6 +427,15 @@ def write_cola():
             n += 1
             lines += [f"## {n}. Estilo `estilos/{d.name}` — analizar referencias",
                       "- Estudiar los videos de `referencias/` y escribir `estilo.md` + `muestra.jpg`. Dejar en `listo`.", ""]
+    cp = read_json(ROOT / "calendario" / "estado.json", {})
+    if cp.get("estado") == "pendiente":
+        n += 1
+        lines += [f"## {n}. Plan del calendario — `calendario/` ({cp.get('mes', '')})",
+                  "- Armar el plan del mes en `calendario/piezas.json` según `references/calendario.md` "
+                  "(ritmo y pilares de `calendario/config.json`). Dejar `calendario/estado.json` en `listo`."]
+        if cp.get("pedido"):
+            lines.append(f"- Pedido del operador: «{cp['pedido']}»")
+        lines.append("")
     sg = read_json(ROOT / "sugerencias" / "estado.json", {})
     if sg.get("estado") == "pendiente":
         n += 1
@@ -386,6 +461,8 @@ def cola_count():
         if d.is_dir() and read_json(d / "estilo.json", {}).get("estado") == "por_analizar":
             n += 1
     if read_json(ROOT / "sugerencias" / "estado.json", {}).get("estado") == "pendiente":
+        n += 1
+    if read_json(ROOT / "calendario" / "estado.json", {}).get("estado") == "pendiente":
         n += 1
     return n
 
@@ -484,6 +561,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(job_full(m.group(1)))
             if m := re.fullmatch(r"/api/producto/([a-z0-9-]+)", p):
                 return self.send_json(product_summary(prod_dir(m.group(1)), True))
+            if p == "/api/calendario":
+                return self.send_json(calendar_data())
             if p == "/api/cola":
                 write_cola()
                 return self.send_json({"texto": (ROOT / "COLA.md").read_text(encoding="utf-8")})
@@ -703,6 +782,78 @@ class Handler(BaseHTTPRequestHandler):
                                             "historial": [{"fecha": now(), "quien": "operador", "evento": "Creado desde el catálogo"}]})
             return self.send_json({"id": jd.name})
 
+        if p == "/api/calendario/config":
+            c = ROOT / "calendario"
+            cfg = read_json(c / "config.json", {})
+            cfg.update(data)
+            cfg["propuesta_inicial"] = False
+            write_json(c / "config.json", cfg)
+            return self.send_json({"ok": True})
+
+        if p == "/api/calendario/pedir":
+            write_json(ROOT / "calendario" / "estado.json", {"estado": "pendiente", "mes": data.get("mes", ""),
+                                                             "pedido": (data.get("texto") or "").strip(), "actualizado": now()})
+            write_cola()
+            return self.send_json({"ok": True})
+
+        if p == "/api/calendario/pieza":  # crear o editar una pieza
+            c = ROOT / "calendario"
+            pzs = read_json(c / "piezas.json", {"piezas": [], "momentos": []})
+            pz = data.get("pieza") or {}
+            if not pz.get("id"):
+                pz["id"] = f"p{datetime.now():%Y%m%d%H%M%S%f}"[:20]
+                pz.setdefault("estado", "idea")
+                pz.setdefault("creada", now())
+                pzs["piezas"].append(pz)
+            else:
+                for k, old in enumerate(pzs["piezas"]):
+                    if old.get("id") == pz["id"]:
+                        old.update(pz)
+                        pz = old
+                        break
+            pz.pop("trabajo_estado", None)
+            write_json(c / "piezas.json", pzs)
+            return self.send_json({"ok": True, "id": pz["id"]})
+
+        if m := re.fullmatch(r"/api/calendario/pieza/([a-z0-9]+)/(borrar|video)", p):
+            c = ROOT / "calendario"
+            pzs = read_json(c / "piezas.json", {"piezas": [], "momentos": []})
+            pz = next((x for x in pzs["piezas"] if x.get("id") == m.group(1)), None)
+            if not pz:
+                return self.fail("No existe esa pieza", 404)
+            if m.group(2) == "borrar":
+                pzs["piezas"].remove(pz)
+                write_json(c / "piezas.json", pzs)
+                return self.send_json({"ok": True})
+            pf = read_json(ROOT / "productos" / str(pz.get("producto_id", "")) / "producto.json", {}) if pz.get("producto_id") else {}
+            it = {k: pz.get(k) for k in ("titulo", "gancho", "formato", "formula", "producto_id", "producto", "objetivo", "duracion", "pilar")}
+            it["por_que_ahora"] = pz.get("notas", "")
+            it["fecha_publicacion"] = pz.get("fecha", "")
+            tid = new_job_from_idea(it, pf, evento=f"Creado desde el calendario ({pz.get('fecha', 'sin fecha')})")
+            pz["trabajo_id"] = tid
+            pz["estado"] = "en_produccion"
+            write_json(c / "piezas.json", pzs)
+            write_cola()
+            return self.send_json({"id": tid})
+
+        if p == "/api/calendario/desde-sugerencia":
+            sg = read_json(ROOT / "sugerencias" / "sugerencias.json", {"sugerencias": []})
+            i = int(data.get("i", -1))
+            if not 0 <= i < len(sg.get("sugerencias", [])):
+                return self.fail("No existe esa sugerencia")
+            it = sg["sugerencias"][i]
+            c = ROOT / "calendario"
+            pzs = read_json(c / "piezas.json", {"piezas": [], "momentos": []})
+            pz = {"id": f"p{datetime.now():%Y%m%d%H%M%S%f}"[:20], "fecha": data.get("fecha", ""), "estado": "idea",
+                  "formato": "reel", "canales": ["instagram", "tiktok"], "creada": now(),
+                  **{k: it.get(k) for k in ("titulo", "gancho", "formula", "producto_id", "producto", "objetivo", "duracion")},
+                  "notas": it.get("por_que_ahora", "")}
+            pzs["piezas"].append(pz)
+            it["en_calendario"] = pz["id"]
+            write_json(c / "piezas.json", pzs)
+            write_json(ROOT / "sugerencias" / "sugerencias.json", sg)
+            return self.send_json({"ok": True, "id": pz["id"]})
+
         if p == "/api/sugerencias/pedir":
             sd = ROOT / "sugerencias"
             sd.mkdir(exist_ok=True)
@@ -719,27 +870,12 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 <= i < len(items):
                 return self.fail("No existe esa sugerencia")
             it = items[i]
-            jid = f"{datetime.now():%Y%m%d-%H%M}-{slug(it.get('titulo', 'video'), 30)}"
-            jd = ROOT / "trabajos" / jid
-            k = 2
-            while jd.exists():
-                jd = ROOT / "trabajos" / f"{jid}-{k}"
-                k += 1
-            (jd / "brutos").mkdir(parents=True)
-            (jd / "salida").mkdir()
             pf = read_json(ROOT / "productos" / str(it.get("producto_id", "")) / "producto.json", {}) if it.get("producto_id") else {}
-            default = read_json(ROOT / "estilos" / "estilos.json", {}).get("predeterminado", "")
-            write_json(jd / "pedido.json", {"titulo": it.get("titulo", "Video"), "producto": it.get("producto") or pf.get("nombre", ""),
-                                            "producto_id": it.get("producto_id", ""), "categoria": pf.get("categoria", ""),
-                                            "objetivo": it.get("objetivo", "Que escriban por WhatsApp"), "estilo": default,
-                                            "duracion": it.get("duracion", 30), "plataformas": ["instagram", "tiktok"],
-                                            "flujo": "completo", "idea_elegida": it, "creado": now()})
-            write_json(jd / "estado.json", {"estado": "guion_pendiente", "actualizado": now(), "historial": [
-                {"fecha": now(), "quien": "operador", "evento": f"Creado desde una sugerencia: «{it.get('titulo', '')}»"}]})
-            it["usada"] = jd.name
+            tid = new_job_from_idea(it, pf, evento=f"Creado desde una sugerencia: «{it.get('titulo', '')}»")
+            it["usada"] = tid
             write_json(sd / "sugerencias.json", sg)
             write_cola()
-            return self.send_json({"id": jd.name})
+            return self.send_json({"id": tid})
 
         if p == "/api/sugerencias/descartar":
             sd = ROOT / "sugerencias"

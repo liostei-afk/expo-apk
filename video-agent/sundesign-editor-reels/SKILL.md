@@ -25,7 +25,8 @@ Cuando el pedido es crear un video **desde cero** ("ideas para reels", "escribim
 - Después del rodaje, controlá el material contra el plan antes de editar (ver `references/protocolo-app.md`, "control del material").
 
 ## Agente de marketing: qué conviene publicar
-Si piden sugerencias ("qué reels hacemos", "qué publicamos este mes"), seguí `references/agente-marketing.md` (catálogo, productos nuevos, lo ya hecho, jerarquía de la marca y calendario comercial argentino).
+Si piden sugerencias ("qué reels hacemos", "qué publicamos este mes"), seguí `references/agente-marketing.md` (catálogo, productos nuevos, lo ya hecho, resultados, jerarquía de la marca y calendario comercial argentino).
+Si piden un **calendario o plan del mes** ("armá el calendario de diciembre", "qué publicamos cada día"), seguí `references/calendario.md` (ritmo sostenible, pilares, series, fechas comerciales, días de rodaje en tanda, publicación y métricas).
 
 ## Modo app (Estudio de Reels)
 Si la carpeta conectada tiene **`COLA.md`** y `trabajos/` (la arma la app de escritorio "Estudio de Reels"), seguí **`references/protocolo-app.md`**: procesá la cola en orden, trabajá dentro de cada `trabajos/<id>/salida/`, usá el estilo elegido en `estilos/<id>/estilo.md` y comunicate con el operador solo a través de `estado.json`, `caption.md` y `resumen.md`. Ese protocolo manda sobre las carpetas descriptas abajo.

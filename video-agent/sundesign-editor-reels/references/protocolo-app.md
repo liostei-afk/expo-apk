@@ -24,6 +24,10 @@ lo que escribís en `salida/` y en `estado.json` aparece en la pantalla del oper
 ├── productos/<id>/
 │   ├── producto.json             ← ficha del producto (la carga el operador)
 │   └── fotos/                    ← fotos y videos del producto
+├── calendario/
+│   ├── config.json               ← ritmo, pilares y series (los edita el operador)
+│   ├── piezas.json               ← piezas del calendario y fechas comerciales
+│   └── estado.json               ← {"estado": "pendiente"|"listo", "mes": "AAAA-MM", "pedido": "..."}
 ├── sugerencias/
 │   ├── estado.json               ← {"estado": "pendiente"|"listo", "pedido": "..."}
 │   └── sugerencias.json          ← lo escribís vos (ver references/agente-marketing.md)
@@ -60,6 +64,9 @@ Antes de ideas, guion, plan o edición, leé `productos/<producto_id>/producto.j
 - En el plan de rodaje agregá `"foto_producto": "productos/<id>/fotos/<la mejor foto>"` (ruta relativa a la carpeta de trabajo) para que quienes filman vean el producto.
 - Las fotos del producto pueden usarse como segmentos de foto en la edición.
 - Si la ficha tiene un dato vacío que el guion necesita, usá `[COMPLETAR: …]` y no lo inventes.
+
+### Plan del calendario (`calendario/estado.json` en `pendiente`)
+Seguí **`references/calendario.md`**: armá las piezas del mes pedido en `calendario/piezas.json` (sin borrar las existentes) según ritmo, pilares, catálogo, métricas y fechas comerciales; dejá `estado.json` en `listo`. Cuando el operador crea un video desde una pieza, la app genera un trabajo en `guion_pendiente` con la pieza en `pedido.json → idea_elegida` (incluye `pilar` y `fecha_publicacion`).
 
 ### Sugerencias de contenido (`sugerencias/estado.json` en `pendiente`)
 Seguí **`references/agente-marketing.md`**: mirá el catálogo, los trabajos hechos, la fecha y el pedido del operador; escribí `sugerencias/sugerencias.json` y dejá `estado.json` en `listo`. Cuando el operador elige una, la app crea un trabajo nuevo en `guion_pendiente` con la sugerencia en `pedido.json → idea_elegida`.
