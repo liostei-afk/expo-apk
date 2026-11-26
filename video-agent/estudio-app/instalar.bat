@@ -18,10 +18,10 @@ echo   para terminar (Windows necesita reiniciar la ventana para encontrarlo).
 pause
 exit /b
 :tengo_python
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0crear-acceso-directo.ps1" -dir "%~dp0."
+echo   Creando el icono "App Sundesign" en el Escritorio...
 echo.
 echo   Abriendo la App...
-start "" pyw "%~dp0app.py" 2>nul || start "" pythonw "%~dp0app.py"
+start "" pyw app.py 2>nul || start "" pythonw app.py
 echo.
 echo   Desde ahora abrilo con el icono "App Sundesign" del Escritorio.
 timeout /t 6 >nul

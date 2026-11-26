@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
-VERSION = "2026.11.26"
+VERSION = "2026.11.26b"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -1151,6 +1151,44 @@ def running_info():
         return None
 
 
+def crear_acceso_directo():
+    """Crea/repara el ícono "App Sundesign" (Escritorio y menú Inicio) en Windows.
+    Lo hace Python y no el .bat porque las rutas con emojis o acentos (p. ej. carpetas de
+    Google Drive) se rompen al pasar por la consola; acá van en Unicode de punta a punta."""
+    if os.name != "nt":
+        return
+    try:
+        import base64
+        exe = Path(sys.executable)
+        if exe.name.lower() == "python.exe" and exe.with_name("pythonw.exe").exists():
+            exe = exe.with_name("pythonw.exe")
+        ico_dir = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "SundesignApp"
+        ico_dir.mkdir(parents=True, exist_ok=True)
+        ico = ico_dir / "icono.ico"
+        if (APP_DIR / "icono.ico").exists():
+            shutil.copyfile(APP_DIR / "icono.ico", ico)
+        q = lambda x: "'" + str(x).replace("'", "''") + "'"
+        ps = (
+            "$ws = New-Object -ComObject WScript.Shell\n"
+            "foreach ($f in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) {\n"
+            "  Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $f 'Estudio de Reels.lnk')\n"
+            "  $l = $ws.CreateShortcut((Join-Path $f 'App Sundesign.lnk'))\n"
+            f"  $l.TargetPath = {q(exe)}\n"
+            f"  $l.Arguments = {q(chr(34) + str(APP_DIR / 'app.py') + chr(34))}\n"
+            f"  $l.WorkingDirectory = {q(APP_DIR)}\n"
+            f"  $l.IconLocation = {q(str(ico) + ',0')}\n"
+            "  $l.Description = 'App Sundesign - central de marketing'\n"
+            "  $l.Save()\n"
+            "}\n"
+        )
+        enc = base64.b64encode(ps.encode("utf-16-le")).decode()
+        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", enc],
+                       timeout=60, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        print("No pude crear el acceso directo:", e)
+
+
 def main():
     if already_running():
         info = running_info() or {}
@@ -1174,6 +1212,7 @@ def main():
             return
     ensure_workspace()
     srv = ThreadingHTTPServer((HOST, PORT), Handler)
+    threading.Thread(target=crear_acceso_directo, daemon=True).start()
     if "--sin-ventana" not in sys.argv:
         threading.Timer(0.6, open_window).start()
     print(f"App Sundesign en http://{HOST}:{PORT}/  ·  carpeta: {ROOT}")
