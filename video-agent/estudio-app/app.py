@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
-VERSION = "2026.11.26c"
+VERSION = "2026.11.26d"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -71,6 +71,8 @@ def load_config():
             cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
         except ValueError:
             cfg = {}
+    if cfg.get("carpeta") and not Path(cfg["carpeta"]).exists():
+        cfg.pop("carpeta")  # la carpeta guardada ya no existe (p. ej. se movió a Google Drive)
     if not cfg.get("carpeta") and APP_DIR.parent.name.lower() == "_programa":
         # instalada dentro de MARKETING SUNDESIGN\_programa\estudio-app → la carpeta base es MARKETING SUNDESIGN
         cfg["carpeta"] = str(APP_DIR.parent.parent)
@@ -1236,5 +1238,31 @@ def main():
         pass
 
 
+def avisar_error():
+    """Si la app no puede arrancar, guarda el error y lo muestra en una ventanita (en pyw no hay consola)."""
+    import traceback
+    txt = traceback.format_exc()
+    try:
+        d = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "SundesignApp"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "error.txt").write_text(f"{datetime.now()}  version {VERSION}\n{APP_DIR}\n\n{txt}", encoding="utf-8")
+    except Exception:
+        pass
+    print(txt)
+    if os.name == "nt":
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(None, "La App Sundesign no pudo abrir.\n\n" + txt[-900:] +
+                                             "\n\nMandale una captura de este mensaje a Claude.",
+                                             "App Sundesign", 0x10)
+        except Exception:
+            pass
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except BaseException:
+        avisar_error()
