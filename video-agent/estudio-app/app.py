@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
-VERSION = "2026.11.26b"
+VERSION = "2026.11.26c"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -1167,15 +1167,29 @@ def crear_acceso_directo():
         ico = ico_dir / "icono.ico"
         if (APP_DIR / "icono.ico").exists():
             shutil.copyfile(APP_DIR / "icono.ico", ico)
+        # El acceso directo de Windows (WScript.Shell) no guarda bien caracteres especiales
+        # (la carpeta de Drive tiene uno), así que apunta a un lanzador en una ruta simple de la PC
+        # que tiene guardada la ruta real en UTF-8.
+        lanzador = ico_dir / "abrir_app_sundesign.pyw"
+        lanzador.write_text(
+            "# Abre la App Sundesign (lo crea la app; no editar)\n"
+            "import os, sys, runpy\n"
+            f"app = {str(APP_DIR / 'app.py')!r}\n"
+            "os.chdir(os.path.dirname(app))\n"
+            "sys.path.insert(0, os.path.dirname(app))\n"
+            "sys.argv = [app]\n"
+            "runpy.run_path(app, run_name='__main__')\n",
+            encoding="utf-8")
         q = lambda x: "'" + str(x).replace("'", "''") + "'"
         ps = (
             "$ws = New-Object -ComObject WScript.Shell\n"
             "foreach ($f in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) {\n"
             "  Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $f 'Estudio de Reels.lnk')\n"
+            "  Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $f 'App Sundesign.lnk')\n"
             "  $l = $ws.CreateShortcut((Join-Path $f 'App Sundesign.lnk'))\n"
             f"  $l.TargetPath = {q(exe)}\n"
-            f"  $l.Arguments = {q(chr(34) + str(APP_DIR / 'app.py') + chr(34))}\n"
-            f"  $l.WorkingDirectory = {q(APP_DIR)}\n"
+            f"  $l.Arguments = {q(chr(34) + str(lanzador) + chr(34))}\n"
+            f"  $l.WorkingDirectory = {q(ico_dir)}\n"
             f"  $l.IconLocation = {q(str(ico) + ',0')}\n"
             "  $l.Description = 'App Sundesign - central de marketing'\n"
             "  $l.Save()\n"
