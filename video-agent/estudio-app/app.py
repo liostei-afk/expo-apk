@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Estudio de Reels — Sundesign Muebles.
+"""App Sundesign — Sundesign Muebles.
 
 App local (solo en esta PC) para que un operador cargue videos crudos, guion y referencias de estilo,
 y siga la edición que hace Claude en Cowork: storyboard para aprobar, video final, correcciones y caption.
@@ -28,7 +28,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 APP_DIR = Path(__file__).resolve().parent
 WEB = APP_DIR / "web"
 CONFIG = APP_DIR / "config.json"
-VERSION = "2026.11.24"
+VERSION = "2026.11.26"
 PORT = 8765
 HOST = "127.0.0.1"   # solo accesible desde esta PC
 
@@ -247,8 +247,8 @@ def new_job_from_idea(it, pf=None, flujo="completo", estado="guion_pendiente", e
 def write_readme():
     p = ROOT / "LEEME-CLAUDE.md"
     p.write_text(
-        "# Carpeta del Estudio de Reels de Sundesign\n\n"
-        "Esta carpeta la maneja la app **Estudio de Reels**. Claude: usá la skill **sundesign-editor-reels** y seguí "
+        "# Carpeta de la App Sundesign\n\n"
+        "Esta carpeta la maneja la **App Sundesign** (antes \"Estudio de Reels\"). Claude: usá la skill **sundesign-editor-reels** y seguí "
         "`references/protocolo-app.md` de esa skill. La lista de lo que hay que hacer está siempre en **COLA.md**.\n\n"
         "- `trabajos/<id>/` — un video por carpeta: `pedido.json`, `guion.md`, `brutos/`, `salida/`, `estado.json`.\n"
         "- `estilos/<id>/` — fichas de estilo: `referencias/` (videos), `estilo.md`, `estilo.json`.\n"
@@ -1176,7 +1176,7 @@ def main():
     srv = ThreadingHTTPServer((HOST, PORT), Handler)
     if "--sin-ventana" not in sys.argv:
         threading.Timer(0.6, open_window).start()
-    print(f"Estudio de Reels en http://{HOST}:{PORT}/  ·  carpeta: {ROOT}")
+    print(f"App Sundesign en http://{HOST}:{PORT}/  ·  carpeta: {ROOT}")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
-title Instalar Estudio de Reels - Sundesign
+title Instalar App Sundesign
 cd /d "%~dp0"
 echo.
-echo   ESTUDIO DE REELS - Sundesign Muebles
+echo   APP SUNDESIGN - Sundesign Muebles
 echo   ------------------------------------
 echo.
 where pyw >nul 2>nul
@@ -20,8 +20,8 @@ exit /b
 :tengo_python
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0crear-acceso-directo.ps1" -dir "%~dp0."
 echo.
-echo   Abriendo el Estudio...
+echo   Abriendo la App...
 start "" pyw "%~dp0app.py" 2>nul || start "" pythonw "%~dp0app.py"
 echo.
-echo   Desde ahora abrilo con el icono "Estudio de Reels" del Escritorio.
+echo   Desde ahora abrilo con el icono "App Sundesign" del Escritorio.
 timeout /t 6 >nul

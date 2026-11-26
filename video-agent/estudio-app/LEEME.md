@@ -1,11 +1,11 @@
-# Estudio de Reels — Sundesign Muebles
+# App Sundesign — Sundesign Muebles
 
 App de escritorio (Windows) para que un operador cargue videos crudos, guion y reels de referencia, y siga la edición que hace **Claude en Cowork** hasta tener el video final para Instagram o TikTok.
 
 ## Instalar (una sola vez)
 1. Copiá la carpeta `estudio-app` y la carpeta `sundesign-editor-reels` juntas, por ejemplo en `Documentos\Estudio de Reels\`.
 2. Doble clic en **`instalar.bat`**. Si no hay Python, lo instala (después hay que volver a abrir `instalar.bat`).
-3. Queda el ícono **Estudio de Reels** en el Escritorio. La primera vez crea la carpeta de trabajo `Documentos\Reels Sundesign`.
+3. Queda el ícono **App Sundesign** en el Escritorio. La primera vez crea la carpeta de trabajo `Documentos\Reels Sundesign`.
 4. En Claude (app de escritorio): subí la skill `sundesign-editor-reels.zip` (Configuración → Capacidades → Skills) y, en **Cowork**, conectá la carpeta `Documentos\Reels Sundesign`. La primera vez pegá el texto de instalación de `sundesign-editor-reels/references/instalacion-cowork.md` para que instale ffmpeg y la transcripción.
 
 ## Antes que nada: cargá los productos

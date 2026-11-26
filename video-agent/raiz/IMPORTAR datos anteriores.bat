@@ -17,12 +17,12 @@ if "%ORIGEN%"=="" (
   exit /b
 )
 echo   Encontre: %ORIGEN%
-echo   Cerra la app "Estudio de Reels" antes de seguir.
+echo   Cerra la "App Sundesign" antes de seguir.
 pause
 for %%D in (trabajos estilos productos musica sugerencias) do (
   if exist "%ORIGEN%\%%D" robocopy "%ORIGEN%\%%D" "%~dp0%%D" /E /XC /XN /XO /NFL /NDL /NJH /NJS >nul
 )
 echo.
-echo   Listo. Abri el Estudio y revisa que esten tus videos.
+echo   Listo. Abri la App y revisa que esten tus videos.
 echo   Cuando confirmes que esta todo, podes borrar a mano la carpeta vieja (es opcional).
 pause

@@ -13,12 +13,12 @@ Todo el marketing en video de Sundesign vive en esta carpeta. Para respaldarlo, 
   marca\               Logos, tipografías y manual de marca.
   musica\              Música libre de derechos.
   sugerencias\         Lo que Claude propone publicar.
-  _programa\           La app "Estudio de Reels" y la skill de Claude. No hace falta tocarlo.
+  _programa\           La "App Sundesign" y la skill de Claude. No hace falta tocarlo.
 
   COLA.md y LEEME-CLAUDE.md los genera la app para Claude: no los edites.
 
 PRIMERA VEZ
-  1. Doble clic en "INSTALAR (una sola vez).bat"  → crea el ícono "Estudio de Reels" en el Escritorio.
+  1. Doble clic en "INSTALAR (una sola vez).bat"  → crea el ícono "App Sundesign" en el Escritorio.
   2. Si ya usabas la carpeta "Reels Sundesign": doble clic en "IMPORTAR datos anteriores.bat" (copia, no borra).
   3. En Claude (escritorio) → Configuración → Capacidades → Skills: subí _programa\sundesign-editor-reels.zip
   4. En Cowork: conversación "Marketing Sundesign" con ESTA carpeta conectada.
